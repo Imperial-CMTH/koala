@@ -71,3 +71,7 @@ def generate_hyperuniform(nx, ny, kickstrength=1e-3):
     final_points = initial_points+kicks
     # Crop to interval [0, 1]
     return final_points[np.where(np.all(final_points > 0, axis=-1) & np.all(final_points < 1, axis=-1))]
+
+def generate_random(n):
+    points = np.random.uniform(size=(n,2))
+    return points
