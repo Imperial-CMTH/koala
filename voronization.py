@@ -15,7 +15,7 @@ def points_near_unit_image(vor, idx):
     """
     point = vor.vertices[idx]
     point = point % 1
-    return np.where(np.linalg.norm(vor.vertices - point, axis=-1) < 1e-6)
+    return np.argmin(np.linalg.norm(vor.vertices - point, axis=-1))
 
 
 def generate_point_array(points):
