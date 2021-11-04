@@ -92,6 +92,8 @@ def generate_pbc_voronoi_adjacency(points):
         list(map(lambda x: old_idx_to_new[x], pbc_ridges.flatten())))
     # use mapping to create list of new indices
     new_indices = new_indices.reshape(pbc_ridges.shape)
+    # remove duplicates by sorting and calling unique
+    new_indices = np.unique(np.sort(new_indices, axis=-1), axis=0)
     return vertices_to_copy, new_indices
 
 
