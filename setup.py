@@ -1,10 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="topo-kwant",
+    name="topamorph",
     version='0.0',
-    description='Topological quantum system simulations',
+    description='Topological Amorphous quantum system simulations',
+    long_description='',
     author="Peru D'Ornellas, Gino Cassella, Tom Hodson",
-    # author_email='',
-    packages=find_packages(),
+    author_email='',
+    license='Apache Software License',
+    home_page='',
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
 )
