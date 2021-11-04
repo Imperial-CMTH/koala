@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
 
-def plot_lattice(vertices, adjacency, edge_colors = None):
+def plot_lattice(vertices, adjacency, edge_colors = None, vertex_colors = None, scatter_args = None):
 
     edge_vertices = vertices[adjacency]
     displacements = edge_vertices[:,0,:] - edge_vertices[:,1,:]
@@ -42,9 +42,11 @@ def plot_lattice(vertices, adjacency, edge_colors = None):
     ax.add_collection(lc_inside)
     ax.add_collection(lc_first)
     ax.add_collection(lc_second)
-    # ax.scatter(
-    #     vertices[:,0],
-    #     vertices[:,1]
-    # )
+    if scatter_args is not None: ax.scatter(
+        vertices[:,0],
+        vertices[:,1],
+        zorder = 3,
+        **scatter_args,
+    )
 
     #TODO - look at what this should return
