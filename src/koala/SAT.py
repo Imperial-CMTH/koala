@@ -1,3 +1,8 @@
+############################################################################
+#                    Use SAT solvers to color graphs                       #
+#                                                                          #
+############################################################################
+
 #graph colouring g_ij where i is node and edge is color
 #two types of contraints:
     #a bunch of atmost1s for each of g_i1 gi2 gi3
@@ -11,7 +16,60 @@ import numpy as np
 from pysat.solvers import Solver
 from pysat.card import *
 
-def vertex_color(vertices, adjacency, n_colors):
+from .graph_utils import edge_neighbours
+
+""""
+Both routines in this file encode their problems in Conjunctive Normal Form (CNF) and then pass them to
+a SAT solver through pysat (called python-sat in pip).
+
+
+## Encoding
+Conjunctive normal form just means we have a bunch of clauses (i, j, ... k) where each integer represents 
+a boolean variable and they're all OR'd together. The clauses are then and together to make a boolean formula:
+f(x_1, x_2, x_3... x_N) = (x_2 OR x_5) AND (-x_1) AND ... AND (x_5 OR -x_4 OR -x_3 OR -x_2 OR -x_1)
+
+-x_i means NOT(x_i)
+Encoded in python F would just be [(2, 5), (-1), (5, -4, -3, -2, -1)]
+
+The SAT solver tries to find a solution that assigs a True/False value to each x_i such that f(...) = True
+
+For both graph and edge coloring we define l_ij == True if vertex/edge i has color j and False otherwise.
+This means we need to use n_colors * n_vertices + 1 integers (0 is not allowed because -0 = 0)
+
+We then encode two kinds of constraints:
+
+### At most one of the colors can be assigned to a vertex
+`cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)``
+where lits = [l_i1, l_i2, l_i3, ... l_i,n_colors], bound = 1 means exactly 1 of them must be true, 
+vpool is an object to make sure we don't reuse the same variable, and encoding chooses on of multiople ways to envode this constraint in CNF
+
+For instance for three colors [r,g,b], encoding=EncType.pairwise would spits out
+r OR g OR b #ensures one of more is true
+(-r OR -b) AND (-r OR -g) AND (-b OR -g) #ensures no pair is simultanenously true. 
+
+### No two adjacent vertices can have the same color
+For this one we want that for all edges that connect i,j:
+NOT(l_i1 AND l_i1) AND NOT(l_i2 AND l_i2) AND NOT(l_i3 AND l_i3) 
+
+We use NOT(l_i1 AND l_i1) = (-l_i1 OR -l_i1) to encode this in CNF.
+
+At the end we get back a solutions that looks like [1, -2, -3, -4, 5, 6...]
+which means vertex 0 is red, vertex 1 is green etc
+
+"""
+
+def vertex_color(adjacency, n_colors):
+    """
+    Return a coloring of the vertices using n_colors.
+    Note the code assumes that all vertices actually appear in the adjacency list 
+    because it calculates n_vertices = np.max(adjacency) + 1
+
+    Args:
+        adjacency: (M, 2) A list of pairs of vertices representing edges
+        n_colors: the maximum number of colors we can use
+    Returns:
+        coloring (N), a color for each vertex
+    """
     #graph colouring g_ij where i is node and edge is color
     #two types of contraints:
         #a bunch of atmost1s for each of g_i1 gi2 gi3
@@ -20,37 +78,28 @@ def vertex_color(vertices, adjacency, n_colors):
     #CNF is an AND of ORs so something like:
     #(a OR b OR c) AND (b or d) AND () AND
         
-    n_vertices = len(vertices)
+    n_vertices = np.max(adjacency) + 1
     n_reserved_literals = n_colors * n_vertices
+
+    #l[i,j] = k where x_k is the variable that tells us if vertex i has color j
     l = np.arange(n_reserved_literals, dtype = int).reshape(n_vertices, n_colors) + 1
+    
+    #many different solvers can be used
     s = Solver(name='g3')
 
-    # encoding will be:
-    # g[i,j] == 1 means vertex i has color j and 0 means it doesn't have that color
-
-    # and we have a mapping from i,j to literals which is
-    #l[i,j] = n_colors * i + j
-
-    #we need to allocate n_vertices*n_colors to represent our main variables
-    #the encoding process will introduce some dummy variables too so we'll make sure they don't overlap
+    #we need to allocate n_reserved_literals to represent our main variables
+    #the encoding process might introduce some dummy variables too so we'll make sure they don't overlap with a vpool
     vpool = IDPool(start_from=n_vertices * n_colors)
 
-    #the first constraint is that at most one of [gi0, gi1, gi2... gin_colors] is true
-    #classmethod atleast(lits, bound=1, top_id=None, vpool=None, encoding=1)
+    #constraint: nodes only have one color
     for i in range(n_vertices):
         lits = list(map(int, [l[i,0], l[i,1], l[i,2],]))
         cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
         s.append_formula(cnf)
         
-    #the second contraint is that niehgbouring nodes are not the same color
-    #a bunch of not(g_i1 and g_j1) and not(gi2 and gj2) and not(gi3 and gj3)
-
-    #de morgans says not(g_i1 and g_j1) <=> (not(g_i1) or not(g_j1))
-    #so the second statement becomes
-    # (-gi1 OR -gj2) AND (-gi2 OR -gj2) AND (-gi3 OR -gj3)
+    #constraint: nieghbouring nodes are not the same color
     for i,j in adjacency:
         cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
-        
         s.append_formula(cnf)
 
 
@@ -67,46 +116,21 @@ def edge_color(adjacency, n_colors):
     #define the integer literals we will use
     l = np.arange(n_reserved_literals, dtype = int).reshape(n_edges, n_colors) + 1
 
-    # encoding will be:
-    # g[i,j] == 1 means edge i has color j and 0 means it doesn't have that color
-
-    # and we have a mapping from i,j to literals which is
-    #l[i,j] = n_colors * i + j
-
     #we need to allocate n_edges*n_colors to represent our main variables
     #the encoding process will introduce some dummy variables too so we'll make sure they don't overlap
     vpool = IDPool(start_from=n_reserved_literals)
 
-    #the first constraint is that at most one of [gi0, gi1, gi2... gin_colors] is true
-    #classmethod atleast(lits, bound=1, top_id=None, vpool=None, encoding=1)
+    #the first constraint is that each edge had one color
     for i in range(n_edges):
-        lits = list(map(int, [l[i,0], l[i,1], l[i,2],]))
+        lits = [int(l[i,j]) for j in range(n_colors)]
         cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
-        #cnf = CardEnc.equals(lits=[int(g[i,j]) for j in range(n_colors)], bound = 1, vpool = vpool, encoding=EncType.pairwise)
         s.append_formula(cnf)
         
-    #the second contraint is that niehgbouring nodes are not the same color
-    #a bunch of not(g_i1 and g_j1) and not(gi2 and gj2) and not(gi3 and gj3)
-
-    #de morgans says not(g_i1 and g_j1) <=> (not(g_i1) or not(g_j1))
-    #so the second statement becomes
-    # (-gi1 OR -gj2) AND (-gi2 OR -gj2) AND (-gi3 OR -gj3)
-
-    def neighbours(edge_i, adjacency):
-        edge = adjacency[edge_i]
-        v1 = edge[0]
-        v2 = edge[1]
-        mask = np.any(v1 == adjacency, axis = -1) | np.any(v2 == adjacency, axis=-1)
-        mask[edge_i] = False #not a neighbour of itself
-        return np.where(mask)[0]
-
+    #the second contraint is that nieghbouring nodes are not the same color
     for i in range(n_edges):
-        for j in neighbours(i, adjacency):
-            #cnf = [[-l[i,0], -l[j,0]], [-l[i,1], -l[j,1]], [-l[i,2], -l[j,2]]]
-            cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(3)]
-
+        for j in edge_neighbours(i, adjacency):
+            cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
             s.append_formula(cnf)
-
 
     s.solve()
     s.get_model()
@@ -114,25 +138,25 @@ def edge_color(adjacency, n_colors):
     return solution
 
 #examples!
-# n = 1000
-
-# from topamorph.pointsets import generate_random
+# n = 40
+# from koala.pointsets import generate_random
 # points = generate_random(n)
 
-# from topamorph.voronization import generate_pbc_voronoi_adjacency, cut_boundaries
+# from koala.voronization import generate_pbc_voronoi_adjacency
 # vertices, adjacency = generate_pbc_voronoi_adjacency(points)
+    
+# from koala.plotting import plot_lattice
+# plot_lattice(vertices, adjacency)
 
-# from topamorph.plotting import plot_lattice
-# colors = np.random.choice(np.array(['red', 'green', 'blue']), size = vertices.shape[0])
 
-# from topamorph.SAT import vertex_color
-# solution = vertex_color(vertices, adjacency, n_colors = 3)
+# from koala.SAT import vertex_color
+# solution = vertex_color(adjacency, n_colors = 3)
 # colors = np.array(['orange', 'b', 'k'])[solution]
 
 # plot_lattice(vertices, adjacency, scatter_args = dict(color = colors))
 
-# from topamorph.SAT import edge_color
-# solution = edge_color(adjacency, n_colors)
+# from koala.SAT import edge_color
+# solution = edge_color(adjacency, n_colors = 3)
 # colors = np.array(['orange', 'b', 'k'])[solution]
 
 # plot_lattice(vertices, adjacency, edge_colors = colors)
