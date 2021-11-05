@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="topamorph",
+    name="koala",
     version='0.0',
     description='Topological Amorphous quantum system simulations',
     long_description='',
