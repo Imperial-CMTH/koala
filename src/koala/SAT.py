@@ -2,6 +2,11 @@
 #                    Use SAT solvers to color graphs                       #
 #                                                                          #
 ############################################################################
+#TODO:
+# add the code to fix a specic node to have a specific color 
+# - refactor so that the two functions share the same main code, this can be done by reformulating the edge coloring in terms of an adjacency matrix of edges. 
+# - make sure that clauses for edges i,j are not being added twice as i,j and j,i
+# - test the code that breaks the permutation degeneracy
 
 #graph colouring g_ij where i is node and edge is color
 #two types of contraints:
@@ -58,7 +63,7 @@ which means vertex 0 is red, vertex 1 is green etc
 
 """
 
-def vertex_color(adjacency, n_colors):
+def vertex_color(adjacency, n_colors, all_solutions = False):
     """
     Return a coloring of the vertices using n_colors.
     Note the code assumes that all vertices actually appear in the adjacency list 
@@ -83,32 +88,40 @@ def vertex_color(adjacency, n_colors):
 
     #l[i,j] = k where x_k is the variable that tells us if vertex i has color j
     l = np.arange(n_reserved_literals, dtype = int).reshape(n_vertices, n_colors) + 1
-    
-    #many different solvers can be used
-    s = Solver(name='g3')
 
     #we need to allocate n_reserved_literals to represent our main variables
     #the encoding process might introduce some dummy variables too so we'll make sure they don't overlap with a vpool
     vpool = IDPool(start_from=n_vertices * n_colors)
 
-    #constraint: nodes only have one color
-    for i in range(n_vertices):
-        lits = list(map(int, [l[i,0], l[i,1], l[i,2],]))
-        cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
-        s.append_formula(cnf)
+    #many different solvers can be used
+    with Solver(name='g3') as s:
+        #constraint: nodes only have one color
+        for i in range(n_vertices):
+            lits = list(map(int, [l[i,0], l[i,1], l[i,2],]))
+            cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
+            s.append_formula(cnf)
+            
+        #constraint: nieghbouring nodes are not the same color
+        for i,j in adjacency:
+            cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
+            s.append_formula(cnf)
+
+
+        solveable = s.solve()
+        if solveable:
+            if all_solutions:
+                solutions = np.array(list(s.enum_models())).reshape(-1, n_vertices, n_colors).argmax(axis = -1)
+                return solutions
+            else:
+                solution = np.array(s.get_model()).reshape(n_vertices, n_colors).argmax(axis = -1)
+                return solution
         
-    #constraint: nieghbouring nodes are not the same color
-    for i,j in adjacency:
-        cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
-        s.append_formula(cnf)
+        if not solveable:
+            return s.get_core()
 
+from .graph_utils import clockwise_edges_about
 
-    s.solve()
-    s.get_model()
-    solution = np.array(s.get_model()).reshape(n_vertices, n_colors).argmax(axis = -1)
-    return solution
-
-def edge_color(adjacency, n_colors):
+def edge_color(adjacency, n_colors, all_solutions = False, fixed = []):
     s = Solver(name='g3')
     n_edges = adjacency.shape[0]
     n_reserved_literals = n_colors * n_edges
@@ -120,22 +133,35 @@ def edge_color(adjacency, n_colors):
     #the encoding process will introduce some dummy variables too so we'll make sure they don't overlap
     vpool = IDPool(start_from=n_reserved_literals)
 
-    #the first constraint is that each edge had one color
-    for i in range(n_edges):
-        lits = [int(l[i,j]) for j in range(n_colors)]
-        cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
-        s.append_formula(cnf)
-        
-    #the second contraint is that nieghbouring nodes are not the same color
-    for i in range(n_edges):
-        for j in edge_neighbours(i, adjacency):
-            cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
+    with Solver(name = 'g3') as s:
+        #the first constraint is that each edge had one color
+        for i in range(n_edges):
+            lits = [int(l[i,j]) for j in range(n_colors)]
+            cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)
             s.append_formula(cnf)
+            
+        #the second contraint is that nieghbouring nodes are not the same color
+        for i in range(n_edges):
+            for j in edge_neighbours(i, adjacency):
+                cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
+                s.append_formula(cnf)
+        
+        #fix any edges to the colors given in fixed
+        cnf = [[int(l[edge,color],)] for color,edge in fixed]
+        s.append_formula(cnf)
 
-    s.solve()
-    s.get_model()
-    solution = np.array(s.get_model()).reshape(n_edges, n_colors).argmax(axis = -1)
-    return solution
+
+        solveable = s.solve()
+        if solveable:
+            if all_solutions:
+                solutions = np.array(list(s.enum_models())).reshape(-1, n_edges, n_colors).argmax(axis = -1)
+                return solutions
+            else:
+                solution = np.array(s.get_model()).reshape(n_edges, n_colors).argmax(axis = -1)
+                return solution
+        
+        elif not solveable:
+            return False, s.get_core()
 
 #examples!
 # n = 40
