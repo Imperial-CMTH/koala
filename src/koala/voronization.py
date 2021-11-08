@@ -57,6 +57,8 @@ def plot_lines(ax, lines, **kwargs):
     lc = LineCollection(lines, **kwargs)
     ax.add_collection(lc)
 
+#TODO:
+# - Factor out debugging plot code
 def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     """
     From a given point set on [0, 1]^n, generate a PBC respecting adjacency
@@ -91,9 +93,6 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     crossing_ridges = ridge_indices[ridges_vertices_in_unit_cell == 1 & np.all(ridge_indices != -1, axis = -1)]
     outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & np.all(ridge_indices != -1, axis = -1)]
 
-    print('line 62', ridge_indices.shape, inside_ridges.shape, crossing_ridges.shape, outer_ridges.shape)
-    print('inside:', inside_ridges, 'crossing:',crossing_ridges)
-    
     if debug_plot:
         fig, axes = plt.subplots(ncols = 2, figsize = (20,10))
         plot_lines(axes[0], vor.vertices[inside_ridges])
@@ -131,8 +130,6 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
         axes[1].set(xlim = (-1,2), ylim = (-1,2))
     
     pbc_ridges = np.concatenate([inside_ridges, crossing_ridges])
-    
-    print(adjacency_crossing.shape)
     adjacency_crossing = np.concatenate([np.zeros_like(inside_ridges), adjacency_crossing])
     
     indices_to_copy = list(set(pbc_ridges.flatten()))
@@ -144,8 +141,6 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     idx_mapper = np.vectorize(old_idx_to_new.get)
     
     new_pbc_ridges = idx_mapper(pbc_ridges)
-    
-    print(inside_ridges.shape, crossing_ridges.shape, pbc_ridges.shape, adjacency_crossing.shape)
 
     return PBC_Voronoi(
         vertices = new_vertices,

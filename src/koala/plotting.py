@@ -17,7 +17,6 @@ def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors
     mask = np.any(adjacency_crossing != 0, axis = -1)
     outside_idx = np.where(mask)[0]
     inside_idx = np.where(np.logical_not(mask))[0]
-    print('mask', mask)
 
     inside_edges = adjacency[inside_idx]
     outside_edges = adjacency[outside_idx]
