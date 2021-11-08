@@ -85,12 +85,14 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
             axis = 1)
     
     #the indices of ridges either fully inside, or half inside the unit cell
+    # the & np.all(ridge_indices != -1, axis = -1) deals with the case where (-1,-1) into vertices happens to lie within the unit cell
+    #so we have to check for this in both crossing_ridges and outer_ridges
     inside_ridges = ridge_indices[ridges_vertices_in_unit_cell == 2]
-    crossing_ridges = ridge_indices[ridges_vertices_in_unit_cell == 1]
+    crossing_ridges = ridge_indices[ridges_vertices_in_unit_cell == 1 & np.all(ridge_indices != -1, axis = -1)]
     outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & np.all(ridge_indices != -1, axis = -1)]
-    
-    #sort now so that adjacency_crossing doesn't get messed up later
-    crossing_ridges = np.sort(crossing_ridges, axis = -1)
+
+    print('line 62', ridge_indices.shape, inside_ridges.shape, crossing_ridges.shape, outer_ridges.shape)
+    print('inside:', inside_ridges, 'crossing:',crossing_ridges)
     
     if debug_plot:
         fig, axes = plt.subplots(ncols = 2, figsize = (20,10))
@@ -101,6 +103,7 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
         axes[0].set(xlim = (-1,2), ylim = (-1,2))
 
     #record if each edge crossed a cell boundary in the x or y direction
+    crossing_ridges = np.sort(crossing_ridges, axis = -1) #this sort has to happen because we need it to set the direction of the adjacency_crossing vector
     crossing_ridge_vertices = vor.vertices[crossing_ridges]
     adjacency_crossing = np.floor(crossing_ridge_vertices[:, 1, :]) - np.floor(crossing_ridge_vertices[:, 0, :])
     adjacency_crossing = adjacency_crossing.astype(int)
@@ -109,9 +112,14 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     kdtree = KDTree(vor.vertices)
     _, crossing_ridges = kdtree.query(vor.vertices[crossing_ridges] % 1, k = 1)
     
+    # We make a temp sorted version just to get the indices from np.unique
+    sorted_crossing_ridges = np.sort(crossing_ridges, axis=-1)
+
+    #NB yes we are sorting twice, we do actually need to
     #deduplicate by first sorting the index order and then calling unique
     #use the returned indices to also dedup the adjacency_crossing array
-    crossing_ridges, idx = np.unique(crossing_ridges, axis = 0, return_index = True)
+    _, idx = np.unique(sorted_crossing_ridges, axis = 0, return_index = True)
+    crossing_ridges = crossing_ridges[idx]
     adjacency_crossing = adjacency_crossing[idx]
         
     if debug_plot:
