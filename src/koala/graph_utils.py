@@ -50,3 +50,12 @@ def order_clockwise(vectors):
     angles = np.arctan2(vectors[:, 1], vectors[:,0])
     return np.argsort(-angles)
 
+def clockwise_edges_about(vertex_i, vertices, adjacency):
+    #get the edges and vertices around vertex 0
+    vertex_indices, edge_indices = vertex_neighbours(vertex_i, adjacency)
+    #get the vectors along the edges
+    edge_vectors = vertices[edge_indices] - vertices[vertex_i]
+    #order them clockwise from the positive x axis
+    ordering = order_clockwise(edge_vectors)
+    ordered_edge_indices = edge_indices[ordering]
+    return ordered_edge_indices
