@@ -5,6 +5,7 @@
 
 import numpy as np
 from scipy.spatial import Voronoi
+from matplotlib.collections import LineCollection
 
 
 def points_near_unit_image(vor, idx):
@@ -36,7 +37,26 @@ def generate_point_array(points):
     ))
 
 
-def generate_pbc_voronoi_adjacency(points):
+
+square = np.array([[[0,0],[0,1]],
+                          [[0,1],[1,1]],
+                          [[1,1],[1,0]],
+                          [[1,0],[0,0]],
+                        ])
+
+from dataclasses import dataclass
+
+@dataclass
+class PBC_Voronoi:
+    vertices: np.ndarray
+    adjacency: np.ndarray
+    adjacency_crossing: np.ndarray
+        
+def plot_lines(ax, lines, **kwargs):
+    lc = LineCollection(lines, **kwargs)
+    ax.add_collection(lc)
+
+def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     """
     From a given point set on [0, 1]^n, generate a PBC respecting adjacency
     list from the vertices of the Voronoi diagram.
@@ -50,51 +70,79 @@ def generate_pbc_voronoi_adjacency(points):
         adjacency: np.array shape (nedges, 2) - List of edges connecting points.
             Values are integers corresponding to indices in vertices.
     """
-    points = generate_point_array(points)
+    #Create periodic boundary conditions by replicating the point set across 3x3 unit cells 
+    points = generate_point_array(original_points)
+
     # Generate Voronoi diagram w/ SciPy
     vor = Voronoi(points)
-    ridge_vertices = np.array(vor.ridge_vertices)
-    # Select all ridges that begin in the unit cell
-    start_vertices = vor.vertices[ridge_vertices[:, 0]]
-    main_cell_indices = np.where(
-        np.all(start_vertices > 0, axis=-
-               1) & np.all(start_vertices < 1, axis=-1)
-    )
-    main_cell_ridges = np.array(ridge_vertices[main_cell_indices])
-    # Map endpoints of ridges back to images in unit cell
-    unit_images = np.array(
-        list(map(lambda x: points_near_unit_image(vor, x), main_cell_ridges[:, 1])))
-    # Replace endpoints of ridges with points inside unit cell
-    pbc_start_ridges = main_cell_ridges
-    pbc_start_ridges[:, 1] = np.squeeze(unit_images)
-    # Repeat procedure for edges that end in the unit cell, replacing start
-    # points
-    end_vertices = vor.vertices[ridge_vertices[:, 1]]
-    main_cell_indices = np.where(
-        np.all(end_vertices > 0, axis=-1) & np.all(end_vertices < 1, axis=-1)
-    )
-    main_cell_ridges = np.array(ridge_vertices[main_cell_indices])
-    unit_images = np.array(
-        list(map(lambda x: points_near_unit_image(vor, x), main_cell_ridges[:, 0])))
-    pbc_end_ridges = main_cell_ridges
-    pbc_end_ridges[:, 0] = np.squeeze(unit_images)
-    # Combine and remove duplicates (ridges that both start and end in unit)
-    pbc_ridges = np.unique(np.concatenate(
-        (pbc_start_ridges, pbc_end_ridges)), axis=0)
-    # Create new list of vertices and indices of vertexes inside unit cell
-    # generate list of unique indices
+    ridge_indices = np.array(vor.ridge_vertices)
+    ridge_vertices = vor.vertices[ridge_indices]
+
+    #count how many of each ridges points fall in the unit cell
+    ridges_vertices_in_unit_cell = np.sum( 
+                np.all( (0 < ridge_vertices)&(ridge_vertices < 1), axis = 2), #select points that are in the unit cell
+            axis = 1)
+    
+    #the indices of ridges either fully inside, or half inside the unit cell
+    inside_ridges = ridge_indices[ridges_vertices_in_unit_cell == 2]
+    crossing_ridges = ridge_indices[ridges_vertices_in_unit_cell == 1]
+    outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & np.all(ridge_indices != -1, axis = -1)]
+    
+    #sort now so that adjacency_crossing doesn't get messed up later
+    crossing_ridges = np.sort(crossing_ridges, axis = -1)
+    
+    if debug_plot:
+        fig, axes = plt.subplots(ncols = 2, figsize = (20,10))
+        plot_lines(axes[0], vor.vertices[inside_ridges])
+        plot_lines(axes[0], vor.vertices[crossing_ridges], colors = 'r')
+        plot_lines(axes[0], vor.vertices[outer_ridges], colors = 'grey', alpha = 0.5)
+        plot_lines(axes[0], square, linestyle = '--', colors = 'k')
+        axes[0].set(xlim = (-1,2), ylim = (-1,2))
+
+    #record if each edge crossed a cell boundary in the x or y direction
+    crossing_ridge_vertices = vor.vertices[crossing_ridges]
+    adjacency_crossing = np.floor(crossing_ridge_vertices[:, 1, :]) - np.floor(crossing_ridge_vertices[:, 0, :])
+    adjacency_crossing = adjacency_crossing.astype(int)
+    
+    # Replace the half inside ridges with their corresponding indices in the unit cell
+    kdtree = scipy.spatial.KDTree(vor.vertices)
+    _, crossing_ridges = kdtree.query(vor.vertices[crossing_ridges] % 1, k = 1)
+    
+    #deduplicate by first sorting the index order and then calling unique
+    #use the returned indices to also dedup the adjacency_crossing array
+    crossing_ridges, idx = np.unique(crossing_ridges, axis = 0, return_index = True)
+    adjacency_crossing = adjacency_crossing[idx]
+        
+    if debug_plot:
+        plot_lines(axes[1], vor.vertices[inside_ridges])
+        for i,s in [[0,-1],[1,+1]]:
+            a = vor.vertices[crossing_ridges].copy()
+            a[:, i, :] = a[:, i, :] + s*adjacency_crossing
+            plot_lines(axes[1], a, colors = 'r')
+        axes[1].set(xlim = (-1,2), ylim = (-1,2))
+    
+    pbc_ridges = np.concatenate([inside_ridges, crossing_ridges])
+    
+    print(adjacency_crossing.shape)
+    adjacency_crossing = np.concatenate([np.zeros_like(inside_ridges), adjacency_crossing])
+    
     indices_to_copy = list(set(pbc_ridges.flatten()))
     # list of vertices in same order as index list
-    vertices_to_copy = vor.vertices[indices_to_copy]
+    new_vertices = vor.vertices[indices_to_copy]
+    
     # map old indices to position in index list
     old_idx_to_new = {old: new for new, old in enumerate(indices_to_copy)}
-    new_indices = np.array(
-        list(map(lambda x: old_idx_to_new[x], pbc_ridges.flatten())))
-    # use mapping to create list of new indices
-    new_indices = new_indices.reshape(pbc_ridges.shape)
-    # remove duplicates by sorting and calling unique
-    new_indices = np.unique(np.sort(new_indices, axis=-1), axis=0)
-    return vertices_to_copy, new_indices
+    idx_mapper = np.vectorize(old_idx_to_new.get)
+    
+    new_pbc_ridges = idx_mapper(pbc_ridges)
+    
+    print(inside_ridges.shape, crossing_ridges.shape, pbc_ridges.shape, adjacency_crossing.shape)
+
+    return PBC_Voronoi(
+        vertices = new_vertices,
+        adjacency = new_pbc_ridges,
+        adjacency_crossing = adjacency_crossing,
+    )
 
 
 def cut_boundaries(vertices, adjacency, axis=[0]):
