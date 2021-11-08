@@ -4,8 +4,9 @@
 ############################################################################
 
 import numpy as np
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi, KDTree
 from matplotlib.collections import LineCollection
+from matplotlib import pyplot as plt
 
 
 def points_near_unit_image(vor, idx):
@@ -105,7 +106,7 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     adjacency_crossing = adjacency_crossing.astype(int)
     
     # Replace the half inside ridges with their corresponding indices in the unit cell
-    kdtree = scipy.spatial.KDTree(vor.vertices)
+    kdtree = KDTree(vor.vertices)
     _, crossing_ridges = kdtree.query(vor.vertices[crossing_ridges] % 1, k = 1)
     
     #deduplicate by first sorting the index order and then calling unique
