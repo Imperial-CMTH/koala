@@ -96,6 +96,7 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
 
     if debug_plot:
         fig, axes = plt.subplots(ncols = 2, figsize = (20,10))
+        axes[0].scatter(*points.T, s = 0.1, color = 'k')
         plot_lines(axes[0], vor.vertices[inside_ridges])
         plot_lines(axes[0], vor.vertices[crossing_ridges], colors = 'r')
         plot_lines(axes[0], vor.vertices[outer_ridges], colors = 'grey', alpha = 0.5)
