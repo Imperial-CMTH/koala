@@ -89,9 +89,10 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     #the indices of ridges either fully inside, or half inside the unit cell
     # the & np.all(ridge_indices != -1, axis = -1) deals with the case where (-1,-1) into vertices happens to lie within the unit cell
     #so we have to check for this in both crossing_ridges and outer_ridges
-    inside_ridges = ridge_indices[ridges_vertices_in_unit_cell == 2]
-    crossing_ridges = ridge_indices[ridges_vertices_in_unit_cell == 1 & np.all(ridge_indices != -1, axis = -1)]
-    outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & np.all(ridge_indices != -1, axis = -1)]
+    finite = np.all(ridge_indices != -1, axis = -1) #this ignores ridges at the boundary that have no second vertex (scipy puts (-1,-1) instead)
+    inside_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 2) & finite]
+    crossing_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 1) & finite]
+    outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & finite]
 
     if debug_plot:
         fig, axes = plt.subplots(ncols = 2, figsize = (20,10))
