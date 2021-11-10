@@ -78,3 +78,20 @@ def plot_degeneracy_breaking(vertex_i, g, ax = None):
 
     plot_lattice(g.vertices, g.adjacency, g.adjacency_crossing, edge_colors = highlight_edge_neighbours, scatter_args = dict(color = vertex_colors), ax = ax)
     
+def plot_vertex_indices(g, ax = None, offset = 0.01):
+    """
+    Plot the indices of the vertices on a graph
+    """
+    if ax is None: ax = plt.gca()
+    for i, v in enumerate(g.vertices): ax.text(*(v+offset), f"{i}")
+    
+#TODO: Make this work with edges that cross the boundaries
+def plot_edge_indices(g, ax = None, offset = 0.01):
+    """
+    Plot the indices of the edges on a graph
+    """
+    if ax is None: ax = plt.gca()
+    for i, e in enumerate(g.adjacency): 
+        midpoint = g.vertices[e].mean(axis = 0)
+        if not np.any(g.adjacency_crossing[i]) != 0:
+            ax.text(*(midpoint+offset), f"{i}", color = 'g')
