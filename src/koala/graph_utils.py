@@ -14,11 +14,14 @@ def vertex_neighbours(vertex_i, adjacency):
     Returns:
         vertex_indices: (k), the indices into vertices of the neighbours
         edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours 
+        
+    Note that previous version of this function broke the expectation that edge_indices[i] is the edge that links 
+    vertex_i to vertex_indices[i], make sure to preserve this property.
     """
     edge_indices = np.where(np.any(vertex_i == adjacency, axis=-1))[0]
-    vertex_indices = np.unique(adjacency[edge_indices])
-    vertex_indices = vertex_indices[np.logical_not(vertex_indices == vertex_i)]
-                          
+    edges = adjacency[edge_indices]
+    vertex_indices = edges[edges != vertex_i]
+    assert(vertex_indices.shape == edge_indices.shape)
     return vertex_indices, edge_indices
 
 def edge_neighbours(edge_i, adjacency):
@@ -38,24 +41,33 @@ def edge_neighbours(edge_i, adjacency):
     mask[edge_i] = False #not a neighbour of itself
     return np.where(mask)[0]
 
-def order_clockwise(vectors): 
+def clockwise_edges_about(vertex_i, g):
     """
-    return the indices that order vectors clockwise starting from (0,0)
+    Finds the edges that border vertex_i, orders them clockwise starting from the positive x axis
+    and returns those indices in order. Use this to break the degeneracy of graph coloring.
 
     Args:
-        vectors: shape (N, 2) 
+        vertex_i: int the index into g.vertices of the node we want to use. Generally use 0
+        g: a graph object with keys vertices, adjacency, adjacency_crossing
     Returns:
-        indices: shape (N), the indices that order vecs clockwise starting from vecs[0]
+        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
     """
-    angles = np.arctan2(vectors[:, 1], vectors[:,0])
-    return np.argsort(-angles)
-
-def clockwise_edges_about(vertex_i, vertices, adjacency):
     #get the edges and vertices around vertex 0
-    vertex_indices, edge_indices = vertex_neighbours(vertex_i, adjacency)
+    vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.adjacency)
+    edges = g.adjacency[edge_indices]
+    
+    #this is a bit nontrivial, g.adjacency_crossing tells us if the edge crossed into another unit cell but 
+    #it is directional, hence we need to check for each edge if vertex_i was the first of second vertex stored
+    #the next few lines do that so we can add g.adjacency_crossing with the right sign
+    start_or_end = (edges != vertex_i)[:, 1] #this is true if vertex_i starts the edge and false if it ends it
+    offset_sign = (2*start_or_end - 1) #now it's +/-1
+    
     #get the vectors along the edges
-    edge_vectors = vertices[edge_indices] - vertices[vertex_i]
+    edge_vectors = g.vertices[vertex_indices] - g.vertices[vertex_i] + offset_sign[:, None] * g.adjacency_crossing[edge_indices]
+    
     #order them clockwise from the positive x axis
-    ordering = order_clockwise(edge_vectors)
+    angles = np.arctan2(edge_vectors[:, 1], edge_vectors[:,0])
+    angles = np.where(angles > 0, angles, 2*np.pi + angles) #move from [-pi, pi] to [0, 2*pi]
+    ordering = np.argsort(angles)
     ordered_edge_indices = edge_indices[ordering]
     return ordered_edge_indices
