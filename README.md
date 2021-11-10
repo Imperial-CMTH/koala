@@ -16,6 +16,7 @@ Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-p
 - make function convert from colorings to lists of color strings and put it in plotting.py
 - Compute a histogram of the nummber of edsges in each plaquette
 - Make adjacency_crossing an optional argument to the plot_lattice function.
+- Implement a way to plot colourings using Peru's Theorem
 
 ## Examples
 
