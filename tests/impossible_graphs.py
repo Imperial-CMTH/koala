@@ -12,8 +12,8 @@ def rotate(vector, angle):
 
 
 def create_peterson_graph():
-    points_outer = np.tile(np.array([0, 0.2]), (5, 1))
-    points_inner = np.tile(np.array([0, 0.1]), (5, 1))
+    points_outer = np.tile(np.array([0, 0.45]), (5, 1))
+    points_inner = np.tile(np.array([0, 0.27]), (5, 1))
 
     angles = np.linspace(0, 2*np.pi, 5, endpoint=False)
     print(angles)
