@@ -7,6 +7,8 @@ import numpy as np
 from scipy.spatial import Voronoi, KDTree
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
+import itertools
+import scipy
 
 
 def points_near_unit_image(vor, idx):
@@ -20,22 +22,18 @@ def points_near_unit_image(vor, idx):
     return np.argmin(np.linalg.norm(vor.vertices - point, axis=-1))
 
 
-def generate_point_array(points):
-    dxdy = [
-        [0, 0],
-        [-1, -1],
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 1],
-        [-1, 0]
-    ]
-
-    return np.concatenate(tuple(
-        points + np.array(d) for d in dxdy
-    ))
+def generate_point_array(points, padding = 1):
+    """"
+    Repeats points into a 3x3, 5x5 etc grid.
+    Args:
+        points: np.ndarray (n_points, 2) - Array of points to be replicated.
+        padding: int - how many layers to add, 1 -> 3x3, 2 -> 5x5 etc.
+    Returns:
+        points: np.ndarray (n_points * (2*padding+1)**2, 2) - Array of replicated points.
+    """
+    linear_pad = np.arange(-padding,padding+1) #(-1,0,1), (-2,-1,0,1,2) etc
+    dxdy = np.array(list(itertools.product(linear_pad, repeat = 2))) #the above but running over all pairs in 2d
+    return np.concatenate(points[None, ...] + dxdy[:, None, :])
 
 
 
@@ -52,6 +50,7 @@ class PBC_Voronoi:
     vertices: np.ndarray
     adjacency: np.ndarray
     adjacency_crossing: np.ndarray
+    vor: scipy.spatial.Voronoi
         
 def plot_lines(ax, lines, **kwargs):
     lc = LineCollection(lines, **kwargs)
@@ -73,8 +72,9 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
         adjacency: np.array shape (nedges, 2) - List of edges connecting points.
             Values are integers corresponding to indices in vertices.
     """
+    padding = 1 if original_points.shape[0] > 10 else 2 #how many layers to add, 1 -> 3x3, 2 -> 5x5 etc.
     #Create periodic boundary conditions by replicating the point set across 3x3 unit cells 
-    points = generate_point_array(original_points)
+    points = generate_point_array(original_points, padding)
 
     # Generate Voronoi diagram w/ SciPy
     vor = Voronoi(points)
@@ -100,8 +100,9 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
         plot_lines(axes[0], vor.vertices[inside_ridges])
         plot_lines(axes[0], vor.vertices[crossing_ridges], colors = 'r')
         plot_lines(axes[0], vor.vertices[outer_ridges], colors = 'grey', alpha = 0.5)
-        plot_lines(axes[0], square, linestyle = '--', colors = 'k')
-        axes[0].set(xlim = (-1,2), ylim = (-1,2))
+        for v in generate_point_array(np.array(0), padding=padding):
+            plot_lines(axes[0], square + v[..., :], linestyle = '--', colors = 'k', alpha = 0.2)
+        axes[0].set(xlim = (-padding,padding+1), ylim = (-padding,padding+1))
 
     #record if each edge crossed a cell boundary in the x or y direction
     crossing_ridges = np.sort(crossing_ridges, axis = -1) #this sort has to happen because we need it to set the direction of the adjacency_crossing vector
@@ -113,13 +114,21 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     kdtree = KDTree(vor.vertices)
     _, crossing_ridges = kdtree.query(vor.vertices[crossing_ridges] % 1, k = 1)
     
-    # We make a temp sorted version just to get the indices from np.unique
-    sorted_crossing_ridges = np.sort(crossing_ridges, axis=-1)
+    # We make a temp sorted version of crossing_ridges and adjacency_crossing just
+    #  to get the indices from np.unique
+    # we need adjacency_crossing because technically we can have two edges between the same
+    # vertices if they go different ways around the torus
+    # and the sign of adjacency flips if swap the ordering of i,j in crossing_ridges
+    idx = np.argsort(crossing_ridges, axis=-1)
+    sorted_crossing_ridges = np.take_along_axis(crossing_ridges, idx, axis=-1)
+    swapped = idx[:, 0] #if we swapped the ordering of that ridge
+    sorted_adjacency_crossing = adjacency_crossing * (2*swapped - 1)[:, None] #then we flip the sign of this 
+    edge_key = np.concatenate([sorted_crossing_ridges, sorted_adjacency_crossing], axis = -1)
 
     #NB yes we are sorting twice, we do actually need to
     #deduplicate by first sorting the index order and then calling unique
     #use the returned indices to also dedup the adjacency_crossing array
-    _, idx = np.unique(sorted_crossing_ridges, axis = 0, return_index = True)
+    _, idx = np.unique(edge_key, axis = 0, return_index = True)
     crossing_ridges = crossing_ridges[idx]
     adjacency_crossing = adjacency_crossing[idx]
         
@@ -143,11 +152,13 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     idx_mapper = np.vectorize(old_idx_to_new.get)
     
     new_pbc_ridges = idx_mapper(pbc_ridges)
+    # assert np.all(np.bincount(new_pbc_ridges.flatten()) == 3), """You've hit an edge case where for low point densities where a 3x3 unit cell is not enough to prevent one of the ridges being infinite in length, try again."""
 
     return PBC_Voronoi(
         vertices = new_vertices,
         adjacency = new_pbc_ridges,
         adjacency_crossing = adjacency_crossing,
+        vor = vor,
     )
 
 
