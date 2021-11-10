@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Specific to this repo - ie directories we use to test stuff
+python_notebooks/
+
