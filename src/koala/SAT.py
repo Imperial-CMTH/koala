@@ -111,13 +111,13 @@ def vertex_color(adjacency, n_colors, all_solutions = False):
         if solveable:
             if all_solutions:
                 solutions = np.array(list(s.enum_models())).reshape(-1, n_vertices, n_colors).argmax(axis = -1)
-                return solutions
+                return solveable, solutions
             else:
                 solution = np.array(s.get_model()).reshape(n_vertices, n_colors).argmax(axis = -1)
-                return solution
+                return solveable, solution
         
         if not solveable:
-            return s.get_core()
+            return solveable, s.get_core()
 
 from .graph_utils import clockwise_edges_about
 
@@ -155,13 +155,13 @@ def edge_color(adjacency, n_colors, all_solutions = False, fixed = []):
         if solveable:
             if all_solutions:
                 solutions = np.array(list(s.enum_models())).reshape(-1, n_edges, n_colors).argmax(axis = -1)
-                return solutions
+                return solveable, solutions
             else:
                 solution = np.array(s.get_model()).reshape(n_edges, n_colors).argmax(axis = -1)
-                return solution
+                return solveable, solution
         
         elif not solveable:
-            return False, s.get_core()
+            return solveable, s.get_core()
 
 #examples!
 # n = 40
