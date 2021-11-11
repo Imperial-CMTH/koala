@@ -19,6 +19,10 @@ def test_small_multigraph():
     assert(solveable)
     assert(solutions.shape[0] == 2)
 
+    solveable, solutions = edge_color(g.adjacency, n_colors = 3, fixed = fixed, n_solutions = 1)
+    assert(solveable)
+    assert(solutions.shape[0] == 1)
+
     colors = np.array(['r', 'g', 'b'])[solutions[0]]
 
     for i in range(colors.shape[0]):
