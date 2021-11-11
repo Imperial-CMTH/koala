@@ -20,6 +20,7 @@ import numpy as np
 #pysat.params['data_dirs'] = '/Users/tom/pysat' ???
 from pysat.solvers import Solver
 from pysat.card import *
+import itertools as it
 
 from .graph_utils import edge_neighbours
 
@@ -111,17 +112,29 @@ def vertex_color(adjacency, n_colors, all_solutions = False):
         if solveable:
             if all_solutions:
                 solutions = np.array(list(s.enum_models())).reshape(-1, n_vertices, n_colors).argmax(axis = -1)
-                return solutions
+                return solveable, solutions
             else:
                 solution = np.array(s.get_model()).reshape(n_vertices, n_colors).argmax(axis = -1)
-                return solution
+                return solveable, solution
         
         if not solveable:
-            return s.get_core()
+            return solveable, s.get_core()
 
 from .graph_utils import clockwise_edges_about
 
-def edge_color(adjacency, n_colors, all_solutions = False, fixed = []):
+def edge_color(adjacency, n_colors, all_solutions = False, n_solutions = None, fixed = []):
+    """
+    Return a coloring of the edges using n_colors.
+
+    Args:
+        adjacency: (M, 2) A list of pairs of vertices representing edges
+        n_colors: the maximum number of colors we can use
+        all_solutions: None, if True, return all solutions, otherwise return just one
+        n_solutions: None, if an integer, return at most this many solutions
+        fixed: a list of edges that are fixed to a particular color
+    Returns:
+        coloring (N), a color for each vertex
+    """
     s = Solver(name='g3')
     n_edges = adjacency.shape[0]
     n_reserved_literals = n_colors * n_edges
@@ -154,14 +167,20 @@ def edge_color(adjacency, n_colors, all_solutions = False, fixed = []):
         solveable = s.solve()
         if solveable:
             if all_solutions:
-                solutions = np.array(list(s.enum_models())).reshape(-1, n_edges, n_colors).argmax(axis = -1)
-                return solutions
+                solutions = np.array(np.array(list(s.enum_models())).reshape(-1, n_edges, n_colors).argmax(axis = -1))
+                return solveable, solutions
+            
+            elif n_solutions is not None:
+                models = it.islice(s.enum_models(), n_solutions)
+                solutions = np.array(np.array(list(models)).reshape(-1, n_edges, n_colors).argmax(axis = -1))
+                return solveable, solutions
+
             else:
                 solution = np.array(s.get_model()).reshape(n_edges, n_colors).argmax(axis = -1)
-                return solution
+                return solveable, solution
         
         elif not solveable:
-            return False, s.get_core()
+            return solveable, s.get_core()
 
 #examples!
 # n = 40

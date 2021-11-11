@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
+from .graph_utils import vertex_neighbours, clockwise_edges_about
 
 def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors = None, vertex_colors = None, scatter_args = None):
     """"
@@ -49,3 +50,48 @@ def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors
     )
 
     return ax
+
+def plot_degeneracy_breaking(vertex_i, g, ax = None):
+    """
+    Companion function to graph_utils.clockwise_edges_about, 
+    plots the edges on an axis with labelled angles and the positive x axis as a dotted line
+    """
+    if ax is None: ax = plt.gca()
+    #we choose the 0th vertex
+    vertex = g.vertices[vertex_i]
+    
+    vertex_colors = np.array(['k' for _ in g.vertices])
+    
+    #label the main vertex red
+    vertex_colors[vertex_i] = 'r'
+    
+    #label its neighbours green
+    vertex_colors[vertex_neighbours(vertex_i, g.adjacency)[0]] = 'g'
+
+    #color the edges in a clockwise fashion
+    ordered_edge_indices = clockwise_edges_about(vertex_i, g)
+
+    highlight_edge_neighbours = np.array(['k' for i in range(g.adjacency.shape[0])])
+    highlight_edge_neighbours[ordered_edge_indices] = ['r', 'g', 'b']
+ 
+    ax.hlines(y = vertex[1], xmin = vertex[0], xmax = ax.get_ylim()[1], linestyle = 'dotted', alpha = 0.5, color = 'k')
+
+    plot_lattice(g.vertices, g.adjacency, g.adjacency_crossing, edge_colors = highlight_edge_neighbours, scatter_args = dict(color = vertex_colors), ax = ax)
+    
+def plot_vertex_indices(g, ax = None, offset = 0.01):
+    """
+    Plot the indices of the vertices on a graph
+    """
+    if ax is None: ax = plt.gca()
+    for i, v in enumerate(g.vertices): ax.text(*(v+offset), f"{i}")
+    
+#TODO: Make this work with edges that cross the boundaries
+def plot_edge_indices(g, ax = None, offset = 0.01):
+    """
+    Plot the indices of the edges on a graph
+    """
+    if ax is None: ax = plt.gca()
+    for i, e in enumerate(g.adjacency): 
+        midpoint = g.vertices[e].mean(axis = 0)
+        if not np.any(g.adjacency_crossing[i]) != 0:
+            ax.text(*(midpoint+offset), f"{i}", color = 'g')

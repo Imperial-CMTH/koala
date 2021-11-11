@@ -24,7 +24,6 @@ def create_peterson_graph():
     points_inner = np.tile(np.array([0, 0.27]), (5, 1))
 
     angles = np.linspace(0, 2*np.pi, 5, endpoint=False)
-    print(angles)
     for n, a in enumerate(angles):
         points_outer[n, :] = rotate(points_outer[n, :], a)
         points_inner[n, :] = rotate(points_inner[n, :], a)
