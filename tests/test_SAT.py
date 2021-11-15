@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from koala.pointsets import generate_random
 from koala.voronization import generate_pbc_voronoi_adjacency
-from koala.SAT import vertex_color, edge_color
+from koala.graph_color import vertex_color, edge_color
 from koala.graph_utils import edge_neighbours
 
 pytestmark = pytest.mark.filterwarnings("ignore:numpy")

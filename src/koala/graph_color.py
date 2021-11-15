@@ -8,20 +8,11 @@
 # - make sure that clauses for edges i,j are not being added twice as i,j and j,i
 # - test the code that breaks the permutation degeneracy
 
-#graph colouring g_ij where i is node and edge is color
-#two types of contraints:
-    #a bunch of atmost1s for each of g_i1 gi2 gi3
-    #a bunch of not(g_i1 and g_j1) and not(gi2 and gj2) and not(gi3 and gj3)
 
-#CNF is an AND of ORs so something like:
-#(a OR b OR c) AND (b or d) AND () AND
-import pysat
 import numpy as np
-#pysat.params['data_dirs'] = '/Users/tom/pysat' ???
 from pysat.solvers import Solver
 from pysat.card import *
 import itertools as it
-
 from .graph_utils import edge_neighbours
 
 """"
@@ -64,18 +55,21 @@ which means vertex 0 is red, vertex 1 is green etc
 
 """
 
-def vertex_color(adjacency, n_colors, all_solutions = False):
-    """
-    Return a coloring of the vertices using n_colors.
+def vertex_color(adjacency: np.ndarray, n_colors:int = 4, all_solutions = False):
+    """Return a coloring of the vertices using n_colors.
     Note the code assumes that all vertices actually appear in the adjacency list 
     because it calculates n_vertices = np.max(adjacency) + 1
 
     Args:
-        adjacency: (M, 2) A list of pairs of vertices representing edges
-        n_colors: the maximum number of colors we can use
+        adjacency (np.ndarray, (... ,2)): A list of pairs of vertex indices representing edges.
+        n_colors (int): The maximum number of colors we can use.
+        all_solutions (bool, optional): If True, ooutputs a list of all possible solutions for the colouring. Defaults to False.
+
     Returns:
-        coloring (N), a color for each vertex
+        np.ndarray: An integer label for each vertex.
     """
+
+    
     #graph colouring g_ij where i is node and edge is color
     #two types of contraints:
         #a bunch of atmost1s for each of g_i1 gi2 gi3
@@ -122,19 +116,20 @@ def vertex_color(adjacency, n_colors, all_solutions = False):
 
 from .graph_utils import clockwise_edges_about
 
-def edge_color(adjacency, n_colors, all_solutions = False, n_solutions = None, fixed = []):
-    """
-    Return a coloring of the edges using n_colors.
+def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n_solutions = None, fixed = []):
+    """Return a coloring of the edges using n_colors different labels.
 
     Args:
-        adjacency: (M, 2) A list of pairs of vertices representing edges
-        n_colors: the maximum number of colors we can use
-        all_solutions: None, if True, return all solutions, otherwise return just one
-        n_solutions: None, if an integer, return at most this many solutions
-        fixed: a list of edges that are fixed to a particular color
+        adjacency (np.ndarray): A list of pairs of vertex indices representing edges.
+        n_colors (int): The maximum number of colors we can use.
+        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the colouring. Defaults to False.. Defaults to False.
+        n_solutions (int, optional): If not None, returns up to this number of solutions. Defaults to None.
+        fixed ( list of tuples (label, edge_index), optional): A list of edges indices that are fixed to a particular label. Defaults to [].
+
     Returns:
-        coloring (N), a color for each vertex
+        np.ndarray: A label for every edge. if n_solutions or all_solutions are used, gives an array containing all the colourings.
     """
+    
     s = Solver(name='g3')
     n_edges = adjacency.shape[0]
     n_reserved_literals = n_colors * n_edges

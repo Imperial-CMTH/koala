@@ -46,7 +46,7 @@ square = np.array([[[0,0],[0,1]],
 from dataclasses import dataclass
 
 @dataclass
-class PBC_Voronoi:
+class Lattice:
     vertices: np.ndarray
     adjacency: np.ndarray
     adjacency_crossing: np.ndarray
@@ -154,7 +154,7 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
     new_pbc_ridges = idx_mapper(pbc_ridges)
     # assert np.all(np.bincount(new_pbc_ridges.flatten()) == 3), """You've hit an edge case where for low point densities where a 3x3 unit cell is not enough to prevent one of the ridges being infinite in length, try again."""
 
-    return PBC_Voronoi(
+    return Lattice(
         vertices = new_vertices,
         adjacency = new_pbc_ridges,
         adjacency_crossing = adjacency_crossing,

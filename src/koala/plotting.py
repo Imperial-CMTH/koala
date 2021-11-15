@@ -3,13 +3,24 @@ from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
 from .graph_utils import vertex_neighbours, clockwise_edges_about
 
-def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors = None, vertex_colors = None, scatter_args = None):
-    """"
+def plot_lattice(lattice, ax = None, edge_labels = None, edge_color_scheme = ['r','g','b'], vertex_labels = None, vertex_color_scheme = ['r','b'], scatter_args = None):
+    """Plots a 2d graph. Optionally with coloured edges or vertices.
 
     Args:
+        lattice (Lattice): A koala lattice dataclass containing the vertices, adjacency and adjacency_crossing
+        ax (matplotlib axis, optional): Axis to plot to. Defaults to plt.gca().
+        edge_labels (np.ndarray, optional): A list of integer edge labels, length must be the same as adjacency, If None, then all edges are plotted in black. Defaults to None.
+        edge_color_scheme (list, optional): List of matplotlib  colour strings for edge colouring. Defaults to ['r','g','b'].
+        vertex_labels (np.ndarray, optional): A list of labels for colouring the vertices, if None, vertices are not plotted. Defaults to None.
+        vertex_color_scheme (list, optional): List of matplotlib  colour strings for vertex colouring. Defaults to ['r','b'].
+        scatter_args ([type], optional): Directly passes arguments to plt.scatter for the vertices. Use if you want to put in custom vertex attributes. Defaults to None.
 
-        adjacency_crossing: np.ndarray (n_edges, 2), 
+    Returns:
+        matplotlib axis: The axis that we have plotted to.
     """
+
+    vertices, adjacency, adjacency_crossing = lattice.vertices, lattice.adjacency, lattice.adjacency_crossing
+
     if ax is None: ax = plt.gca()
 
     edge_vertices = vertices[adjacency]
@@ -22,12 +33,13 @@ def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors
     inside_edges = adjacency[inside_idx]
     outside_edges = adjacency[outside_idx]
 
-    if edge_colors is not None:
-        inside_colors = edge_colors[inside_idx]
-        outside_colors = edge_colors[outside_idx]
+    edge_color_scheme = np.array(edge_color_scheme)
+    if edge_labels is not None:
+        inside_colors = edge_color_scheme[edge_labels[inside_idx]]
+        outside_colors = edge_color_scheme[edge_labels[outside_idx]]
     else:
         inside_colors = 'k'
-        outside_colors = 'r'
+        outside_colors = 'k'
 
     inside_edge_vertices = vertices[inside_edges]
     outside_edge_vertices = vertices[outside_edges]
@@ -42,7 +54,13 @@ def plot_lattice(vertices, adjacency, adjacency_crossing, ax = None, edge_colors
         ax.add_collection(lc_outside)
 
     ax.set(xlim = (0,1), ylim = (0,1))
-    if scatter_args is not None: ax.scatter(
+    vertex_color_scheme = np.array(vertex_color_scheme)
+
+    if vertex_labels is not None:
+        vertex_colors = vertex_color_scheme[vertex_labels]
+        scatter_args = dict(c = vertex_colors)
+
+    if (scatter_args is not None) or (vertex_labels is not None): ax.scatter(
         vertices[:,0],
         vertices[:,1],
         zorder = 3,

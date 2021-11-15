@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
-from koala import plotting
-from koala import SAT
+from koala import graph_color, plotting
+from koala import graph_color
 def rotate(vector, angle):
     rm = np.array([
         [np.cos(angle), -np.sin(angle)],
@@ -183,7 +183,7 @@ def create_tutte_graph():
 vertices, adjacency = create_tutte_graph()
 #plotting.plot_lattice(vertices, adjacency, adjacency_crossing= np.zeros(adjacency.shape))
 #plt.show()
-out = SAT.edge_color(adjacency, 3)
+out = graph_color.edge_color(adjacency, 3)
 color_dict = {0: 'r', 1: 'y', 2: 'b'}
 edgecolors = np.array([color_dict[c] for c in out])
 plotting.plot_lattice(vertices, adjacency, adjacency_crossing=np.zeros(adjacency.shape), edge_colors=edgecolors)

@@ -1,6 +1,6 @@
 import numpy as np
 from koala.graph_utils import edge_neighbours, clockwise_edges_about
-from koala.SAT import edge_color
+from koala.graph_color import edge_color
 from koala.voronization import generate_pbc_voronoi_adjacency
 
 
