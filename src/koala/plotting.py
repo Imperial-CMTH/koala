@@ -49,8 +49,8 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
     return cross
 
 def plot_lattice(lattice, ax = None, 
-                 edge_labels = None, edge_color_scheme = ['r','g','b'],
-                 vertex_labels = None, vertex_color_scheme = ['r','b'],
+                 edge_labels = None, edge_color_scheme = ['r','g','b','k'],
+                 vertex_labels = None, vertex_color_scheme = ['r','b','k'],
                  edge_arrows = False, edge_index_labels = False,
                  scatter_args = None):
     """Plots a 2d graph. Optionally with coloured edges or vertices.
