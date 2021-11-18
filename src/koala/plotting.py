@@ -33,8 +33,14 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
     """
     start, end = lines[:, 0, None, :], lines[:, 1, None, :] #start.shape = (n_lines, 1, 2)
     l = np.array([[0,0],[1,1]])[None, :, :] #shape (1, 2, 2)
-    t = (l - end) / (start - end) #shape (n_lines, 2, 2)
     
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t = (l - end) / (start - end) #shape (n_lines, 2, 2)
+    
+    #values of the above where start - end has zeros mean the lines are axis aligned
+    #so just check if l == end
+    t[~np.isfinite(t)] = 0.5*(l == end)[~np.isfinite(t)] 
+
     #flip the last axis of start and end so that we use the t that made the x coord cross to compute the y coord
     #t.shape (n_lines, 0/1, x/y) start[..., ::-1].shape (n_lines, 1, y,x)
     other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
@@ -45,7 +51,7 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
 def plot_lattice(lattice, ax = None, 
                  edge_labels = None, edge_color_scheme = ['r','g','b'],
                  vertex_labels = None, vertex_color_scheme = ['r','b'],
-                 edge_arrows = False,
+                 edge_arrows = False, edge_index_labels = False,
                  scatter_args = None):
     """Plots a 2d graph. Optionally with coloured edges or vertices.
 
@@ -56,7 +62,9 @@ def plot_lattice(lattice, ax = None,
         edge_color_scheme (list, optional): List of matplotlib  colour strings for edge colouring. Defaults to ['r','g','b'].
         vertex_labels (np.ndarray, optional): A list of labels for colouring the vertices, if None, vertices are not plotted. Defaults to None.
         vertex_color_scheme (list, optional): List of matplotlib  colour strings for vertex colouring. Defaults to ['r','b'].
-        scatter_args ([type], optional): Directly passes arguments to plt.scatter for the vertices. Use if you want to put in custom vertex attributes. Defaults to None.
+        edge_arrows (bool): If True, arrows are drawn on the edges. Defaults to False.
+        edge_index_labels (bool): If True, edge indices are plotted on the edges. Defaults to False.
+        scatter_args (dict, optional): Directly passes arguments to plt.scatter for the vertices. Use if you want to put in custom vertex attributes. Defaults to None.
 
     Returns:
         matplotlib axis: The axis that we have plotted to.
@@ -84,14 +92,19 @@ def plot_lattice(lattice, ax = None,
     lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis])
     ax.add_collection(lc)
     
-    if edge_arrows:
-        for color, (start, end) in zip(edge_colors[vis], replicated_edges[vis, ...]):
+    if edge_arrows or edge_index_labels:
+        original_edge_indices = np.tile(np.arange(lattice.adjacency.shape[0]), 9)
+        for i, color, (start, end) in zip(original_edge_indices[vis], edge_colors[vis], replicated_edges[vis, ...]):
             center = 1/2 * (end + start)
-            direction = 0.001 * (end - start) / np.linalg.norm((end - start))
+            head_length = 0.04
+            direction = head_length * (end - start) / np.linalg.norm((end - start))
             arrow_start = center - direction
-            ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
+            if edge_arrows: 
+                ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
                      color = color,
-                     head_width = 0.03, head_length = 0.03, width = 0, zorder = 4)
+                     head_width = head_length, head_length = head_length, width = 0, zorder = 4, head_starts_at_zero = True, length_includes_head = True)
+            if edge_index_labels:
+                ax.text(*(center), f"{i}", color = 'w' if edge_arrows else 'k', ha = 'center', va = 'center', zorder = 5)
 
 
 
