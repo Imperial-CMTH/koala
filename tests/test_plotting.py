@@ -3,7 +3,8 @@ import numpy as np
 from koala.pointsets import generate_bluenoise
 from koala.voronization import generate_pbc_voronoi_adjacency
 from koala.graph_color import edge_color
-from koala.plotting import plot_lattice
+from koala.plotting import plot_lattice, plot_vertex_indices, plot_degeneracy_breaking
+from koala.voronization import Lattice
 
 def test_plotting():
     n = 20
@@ -17,3 +18,15 @@ def test_plotting():
     plot_lattice(g,edge_labels=solution,edge_color_scheme=['k','lightgrey','blue'],vertex_labels=point_coloring,vertex_color_scheme=['k','g'])
     plot_lattice(g,edge_labels=solution,edge_color_scheme=['k','lightgrey','blue'],scatter_args= {'c': 'r'} )
     plot_lattice(g,edge_labels=solution,edge_color_scheme=['k','lightgrey','blue'],scatter_args= {'c': 'r'}, edge_arrows=True)
+
+g = Lattice(
+    vertices = np.array([[0.5,0.5], [0.1,0.1], [0.5,0.9], [0.9,0.1]]),
+    adjacency = np.array([[0,1],[0,2],[0,3]]),
+    adjacency_crossing = np.array([[0,0],[0,0],[0,0]]),
+    vor = None,
+    )
+
+def test_plot_vertex_indices():
+    plot_lattice(g, edge_arrows = True, edge_index_labels = True, vertex_labels = 0)
+    plot_vertex_indices(g)
+    plot_degeneracy_breaking(0, g)
