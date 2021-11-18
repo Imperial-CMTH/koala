@@ -62,8 +62,8 @@ def plot_lattice(lattice, ax = None,
         edge_color_scheme (list, optional): List of matplotlib  colour strings for edge colouring. Defaults to ['r','g','b'].
         vertex_labels (np.ndarray, optional): A list of labels for colouring the vertices, if None, vertices are not plotted. Defaults to None.
         vertex_color_scheme (list, optional): List of matplotlib  colour strings for vertex colouring. Defaults to ['r','b'].
-        edge_arrows (bool): If True, arrows are drawn on the edges. Defaults to False.
-        edge_index_labels (bool): If True, edge indices are plotted on the edges. Defaults to False.
+        edge_arrows (bool | np.ndarray): If True or boolean array, arrows are drawn on the edges. Defaults to False.
+        edge_index_labels (bool | np.ndarray): If True or boolean array, edge indices are plotted on the edges. Defaults to False.
         scatter_args (dict, optional): Directly passes arguments to plt.scatter for the vertices. Use if you want to put in custom vertex attributes. Defaults to None.
 
     Returns:
@@ -92,20 +92,25 @@ def plot_lattice(lattice, ax = None,
     lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis])
     ax.add_collection(lc)
     
-    if edge_arrows or edge_index_labels:
+    if np.any(edge_arrows) or np.any(edge_index_labels):
         original_edge_indices = np.tile(np.arange(lattice.adjacency.shape[0]), 9)
+        if isinstance(edge_arrows, bool): edge_arrows = np.full(fill_value = edge_arrows, shape = lattice.adjacency.shape[0])
+        if isinstance(edge_index_labels, bool): edge_index_labels = np.full(fill_value = edge_index_labels, shape = lattice.adjacency.shape[0])
+        edge_arrows = np.tile(edge_arrows, 9)
+        edge_index_labels = np.tile(edge_index_labels, 9)
+
         for i, color, (start, end) in zip(original_edge_indices[vis], edge_colors[vis], replicated_edges[vis, ...]):
             center = 1/2 * (end + start)
             length = np.linalg.norm(end - start)
             head_length = min(0.2 * length, 0.02)
             direction = head_length * (end - start) / length
             arrow_start = center - direction
-            if edge_arrows: 
+            if edge_arrows[i]: 
                 ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
                      color = color,
                      head_width = head_length, head_length = head_length, width = 0, zorder = 4, head_starts_at_zero = True, length_includes_head = True)
-            if edge_index_labels:
-                ax.text(*(center), f"{i}", color = 'w' if edge_arrows else 'k', ha = 'center', va = 'center', zorder = 5)
+            if edge_index_labels[i]:
+                ax.text(*(center), f"{i}", color = 'w' if edge_arrows[i] else 'k', ha = 'center', va = 'center', zorder = 5)
 
 
 
