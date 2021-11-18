@@ -131,3 +131,4 @@ dmypy.json
 # Specific to this repo - ie directories we use to test stuff
 python_notebooks/
 
+.DS_Store
