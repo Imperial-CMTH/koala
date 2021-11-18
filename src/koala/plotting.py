@@ -96,8 +96,9 @@ def plot_lattice(lattice, ax = None,
         original_edge_indices = np.tile(np.arange(lattice.adjacency.shape[0]), 9)
         for i, color, (start, end) in zip(original_edge_indices[vis], edge_colors[vis], replicated_edges[vis, ...]):
             center = 1/2 * (end + start)
-            head_length = 0.04
-            direction = head_length * (end - start) / np.linalg.norm((end - start))
+            length = np.linalg.norm(end - start)
+            head_length = min(0.2 * length, 0.02)
+            direction = head_length * (end - start) / length
             arrow_start = center - direction
             if edge_arrows: 
                 ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
