@@ -144,12 +144,12 @@ def plot_degeneracy_breaking(vertex_i, g, ax = None):
     #color the edges in a clockwise fashion
     ordered_edge_indices = clockwise_edges_about(vertex_i, g)
 
-    highlight_edge_neighbours = np.array(['k' for i in range(g.adjacency.shape[0])])
-    highlight_edge_neighbours[ordered_edge_indices] = ['r', 'g', 'b']
+    highlight_edge_neighbours = np.array([3 for i in range(g.adjacency.shape[0])])
+    highlight_edge_neighbours[ordered_edge_indices] = [0, 1, 2]
  
     ax.hlines(y = vertex[1], xmin = vertex[0], xmax = ax.get_ylim()[1], linestyle = 'dotted', alpha = 0.5, color = 'k')
 
-    plot_lattice(g.vertices, g.adjacency, g.adjacency_crossing, edge_colors = highlight_edge_neighbours, scatter_args = dict(color = vertex_colors), ax = ax)
+    plot_lattice(g, edge_labels = highlight_edge_neighbours, scatter_args = dict(color = vertex_colors), ax = ax)
     
 def plot_vertex_indices(g, ax = None, offset = 0.01):
     """
