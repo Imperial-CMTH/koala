@@ -42,10 +42,10 @@ def edge_neighbours(edge_i, adjacency):
     mask[edge_i] = False #not a neighbour of itself
     return np.where(mask)[0]
 
-def clockwise_edges_about(vertex_i : int, g : Lattice) -> np.ndarray:
+def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
     """
-    Finds the edges that border vertex_i, orders them clockwise starting from the positive x axis
-    and returns those indices in order. Use this to break the degeneracy of graph coloring.
+    Finds the vertices/edges that border vertex_i, order them clockwise starting from the positive x axis
+    and returns those indices in order.
 
     Args:
         vertex_i (int): int the index into g.vertices of the node we want to use. Generally use 0
@@ -62,7 +62,21 @@ def clockwise_edges_about(vertex_i : int, g : Lattice) -> np.ndarray:
     angles = np.where(angles > 0, angles, 2*np.pi + angles) #move from [-pi, pi] to [0, 2*pi]
     ordering = np.argsort(angles)
     ordered_edge_indices = edge_indices[ordering]
-    return ordered_edge_indices
+    ordered_vertex_indices = vertex_indices[ordering]
+    return ordered_vertex_indices, ordered_edge_indices
+
+def clockwise_edges_about(vertex_i : int, g : Lattice) -> np.ndarray:
+    """
+    Finds the edges that border vertex_i, orders them clockwise starting from the positive x axis
+    and returns those indices in order. Use this to break the degeneracy of graph coloring.
+
+    Args:
+        vertex_i (int): int the index into g.vertices of the node we want to use. Generally use 0
+        g (Lattice): a graph object with keys vertices, adjacency, adjacency_crossing
+    Returns:
+        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
+    """
+    return clockwise_about(vertex_i, g)[1]
 
 def get_edge_vectors(vertex_i : int, edge_indices : np.ndarray, l : Lattice) -> np.ndarray:
     """
