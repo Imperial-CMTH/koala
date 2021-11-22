@@ -1,7 +1,9 @@
 numpy
 scipy
 matplotlib
-pytest
 flake8
 python-sat
 kwant
+pytest
+pytest-cov
+pytest-github-actions-annotate-failures
