@@ -4,3 +4,4 @@ matplotlib
 pytest
 flake8
 python-sat
+kwant
