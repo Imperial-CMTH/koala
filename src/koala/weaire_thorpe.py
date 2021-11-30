@@ -71,3 +71,44 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
         adjacency_crossing = new_adjacency_crossing,
         vor = None,
     )
+
+def cut_boundary(g):
+    internal_verts = np.where(~np.any(g.adjacency_crossing != 0, axis = -1))[0]
+    
+    return internal_verts, Lattice(
+    vertices = g.vertices,
+    adjacency = g.adjacency[internal_verts, ...],
+    adjacency_crossing = g.adjacency_crossing[internal_verts, ...],
+    vor = None,
+    )
+    
+
+def make_weire_thorpe_model(g : Lattice, internal_edges: np.ndarray, phi:float = 0, V:float = 1, W:float = 0.66) -> np.ndarray:
+    """Convert a graph of a Weire-Thorpe model to a Hamiltonian.
+
+    Args:
+        g (Lattice): The lattice to be converted to a Weire-Thorpe Hamiltonian.
+        internal_edges (np.ndarray): A boolean array labeling edges making up triangles of the model.
+        phi (float, optional): See hamiltonian definition. Defaults to 0.
+        V (float, optional): See hamiltonian definition. Defaults to 1.
+        W (float, optional): See hamiltonian definition. Defaults to 0.66.
+
+    Returns:
+        eigvals, eigvecs
+    """
+    internal_edges = internal_edges.astype(bool)
+    N = g.vertices.shape[0]
+    H = np.zeros(shape = (N,N), dtype = np.complex128)
+    
+    i, j = g.adjacency[internal_edges].T
+    H[i, j] = V * np.exp(1j * phi)
+    H[j, i] = V * np.exp(-1j * phi)
+    
+    i, j = g.adjacency[~internal_edges].T
+    H[i, j] = W
+    H[j, i] = W
+    
+    assert(np.all(H == H.conjugate().T))
+    
+    eigvals, eigvecs = np.linalg.eigh(H)
+    return eigvals, eigvecs
