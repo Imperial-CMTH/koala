@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from koala.weaire_thorpe import vertices_to_triangles
-from koala.voronization import generate_pbc_voronoi_adjacency
+from koala.voronization import generate_lattice
 from koala.lattice import Lattice
 from koala.graph_utils import clockwise_edges_about
 from koala.pointsets import generate_bluenoise
@@ -16,7 +16,7 @@ def test_smoketest_weaire_thorpe():
     fig, ax = plt.subplots()
 
     points =  generate_bluenoise(k = 100, nx = 5, ny = 5)
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
 
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
     solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
@@ -72,7 +72,7 @@ def test_all():
     points =  generate_bluenoise(k = 100, nx = n, ny = n)
 
     #generate graph
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
 
     #color it
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)

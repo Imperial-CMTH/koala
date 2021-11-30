@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 from koala.pointsets import generate_random
-from koala.voronization import generate_pbc_voronoi_adjacency
+from koala.voronization import generate_lattice
 from koala.graph_color import vertex_color, edge_color
 from koala.graph_utils import edge_neighbours
 
@@ -15,7 +15,7 @@ pytestmark = pytest.mark.filterwarnings("ignore:numpy")
 def test_vertex_coloring():
     for n in range(4, 50, 5):
         points = generate_random(n)
-        g = generate_pbc_voronoi_adjacency(points)    
+        g = generate_lattice(points)    
         solveable, solution = vertex_color(g.edges.indices, n_colors = 3)
         if solveable:
             colors = np.array(['orange', 'b', 'k'])[solution]
@@ -27,7 +27,7 @@ def test_vertex_coloring():
 def test_edge_coloring():
     for n in range(4, 50):
         points = generate_random(n)
-        g = generate_pbc_voronoi_adjacency(points)
+        g = generate_lattice(points)
         solveable, solution = edge_color(g.edges.indices, n_colors = 3)
         
         if solveable:

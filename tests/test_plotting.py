@@ -1,7 +1,7 @@
 import numpy as np
 
 from koala.pointsets import generate_bluenoise
-from koala.voronization import generate_pbc_voronoi_adjacency
+from koala.voronization import generate_lattice
 from koala.graph_color import edge_color
 from koala.plotting import plot_lattice, plot_vertex_indices, plot_degeneracy_breaking
 from koala.voronization import Lattice
@@ -9,7 +9,7 @@ from koala.voronization import Lattice
 def test_plotting():
     n = 20
     points = generate_bluenoise(30,n,n)
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
     solvable, solution = edge_color(g.edges.indices, n_colors = 3)
     point_coloring = np.random.randint(2,size=g.vertices.shape[0])
     plot_lattice(g,edge_labels=solution)

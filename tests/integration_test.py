@@ -1,7 +1,7 @@
 import numpy as np
 from koala.graph_utils import edge_neighbours, clockwise_edges_about
 from koala.graph_color import edge_color
-from koala.voronization import generate_pbc_voronoi_adjacency
+from koala.voronization import generate_lattice
 
 
 def test_small_multigraph():
@@ -11,7 +11,7 @@ def test_small_multigraph():
     # that wind different ways around the torus
     points = np.array([[0.40494994, 0.09533812], [0.31187785, 0.43756783], [0.16634927, 0.49970101], [0.39096236, 0.92426087]])
 
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
     assert(np.all(np.bincount(g.edges.indices.flatten()) == 3))
 
     fixed = list(enumerate(clockwise_edges_about(vertex_i = 0, g=g)))
