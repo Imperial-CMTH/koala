@@ -1,8 +1,12 @@
+import itertools as it
+import numpy as np
+import scipy
+import scipy.interpolate
+
 from .graph_utils import vertex_neighbours, clockwise_about
 from .voronization import Lattice
 from .graph_utils import get_edge_vectors
-import itertools as it
-import numpy as np
+
 
 def normalised(a): return a / np.linalg.norm(a)
 
