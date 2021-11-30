@@ -3,12 +3,14 @@ import numpy.typing as npt
 from dataclasses import dataclass
 from .graph_utils import get_edge_vectors
 
+
 @dataclass
 class Plaquette:
     edges: np.ndarray
     vertices: np.ndarray
     directions: np.ndarray
     centers: np.ndarray
+
 
 @dataclass
 class Edges:
@@ -18,22 +20,28 @@ class Edges:
 
 
 class Lattice(object):
-    def __init__(self, vertices, edge_indices, edge_crossing, plaquettes = None):
+    def __init__(self, vertices, edge_indices, edge_crossing, plaquettes=None):
         self.vertices = vertices
         edge_vectors = self._compute_edge_vectors(vertices, edge_indices, edge_crossing)
-        
-        self.edges = Edges(indices = edge_indices,
-                           crossing = edge_crossing,
-                           vectors = edge_vectors)
-        
+
+        self.edges = Edges(
+            indices=edge_indices, crossing=edge_crossing, vectors=edge_vectors
+        )
+
         self.plaquettes = plaquettes or self._compute_plaquettes()
-        
-    def __repr__(self): return f"Lattice({self.vertices.shape[0]} vertices, {self.edges.indices.shape[0]} edges)"
-    
+
+    def __repr__(self):
+        return f"Lattice({self.vertices.shape[0]} vertices, {self.edges.indices.shape[0]} edges)"
+
     def _compute_plaquettes(self):
         return "plaquettes"
-        
-    def _compute_edge_vectors(self, vertices: npt.NDArray[np.float32], edge_indices: npt.NDArray[np.int32], edge_crossing: npt.NDArray[np.int32]) -> npt.NDArray:
+
+    def _compute_edge_vectors(
+        self,
+        vertices: npt.NDArray[np.floating],
+        edge_indices: npt.NDArray[np.integer],
+        edge_crossing: npt.NDArray[np.integer],
+    ) -> npt.NDArray:
         """Computes displacement vectors corresponding to edges, respecting edge crossings.
 
         :param vertices: Spatial positions of vertices
@@ -45,5 +53,7 @@ class Lattice(object):
         :return: Spatial displacements vectors corresponding to edges
         :rtype: np.ndarray[float]
         """
-        edge_vectors = vertices[edge_indices][:,0] - vertices[edge_indices][:,1] + edge_crossing
+        edge_vectors = (
+            vertices[edge_indices][:, 0] - vertices[edge_indices][:, 1] + edge_crossing
+        )
         return edge_vectors
