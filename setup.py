@@ -11,4 +11,16 @@ setup(
     home_page='',
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    install_requires=[
+        'numpy',
+        'scipy',
+        'matplotlib',
+        'flake8',
+        'python-sat',
+        'kwant',
+        'pytest',
+        'pytest-cov',
+        'pytest-github-actions-annotate-failures',
+        'tinyarray'
+    ]
 )
