@@ -83,7 +83,7 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
 
     #count how many of each ridges points fall in the unit cell
     ridges_vertices_in_unit_cell = np.sum( 
-                np.all( (0 < ridge_vertices)&(ridge_vertices < 1), axis = 2), #select points that are in the unit cell
+                np.all( (0 < ridge_vertices)&(ridge_vertices <= 1), axis = 2), #select points that are in the unit cell
             axis = 1)
     
     #the indices of ridges either fully inside, or half inside the unit cell
