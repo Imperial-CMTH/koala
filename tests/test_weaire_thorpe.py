@@ -1,8 +1,11 @@
 import numpy as np
+import scipy.interpolate
+import pytest
 from matplotlib import pyplot as plt
 
 from koala.weaire_thorpe import vertices_to_triangles
-from koala.voronization import Lattice, generate_pbc_voronoi_adjacency
+from koala.voronization import generate_lattice
+from koala.lattice import Lattice
 from koala.graph_utils import clockwise_edges_about
 from koala.pointsets import generate_bluenoise
 from koala.graph_color import edge_color
@@ -13,19 +16,19 @@ def test_smoketest_weaire_thorpe():
     fig, ax = plt.subplots()
 
     points =  generate_bluenoise(k = 100, nx = 5, ny = 5)
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
 
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.adjacency, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
-    solveable, edge_labels = edge_color(g.adjacency, n_colors = 3, fixed = enumerate(ordered_edge_indices))
-    WT_g = vertices_to_triangles(g, edge_labels);
+    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    WT_g = vertices_to_triangles(g, edge_labels)
 
     #ax.scatter(*g.vertices.T, color = 'k', alpha = 0.9)
     #ax.scatter(*WT_g.vertices.T, color = 'g')
 
-    edge_labels = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], 0, 1)
-    edge_arrows = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], 0, 1)
+    edge_labels = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
+    edge_arrows = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
 
     plot_lattice(WT_g, edge_arrows = edge_arrows, ax = ax, edge_labels = edge_labels)
 
@@ -36,23 +39,23 @@ def test_multi_graphs():
 
     g = Lattice(
         vertices = np.array([[0.5,0.7], [0.5,0.3]]),
-        adjacency = np.array([[0,1],[0,0],[0,1],[1,1]]),
-        adjacency_crossing = np.array([[0,0],[1,0],[1,0],[1,0]]),
-        vor = None,
+        edge_indices = np.array([[0,1],[0,0],[0,1],[1,1]]),
+        edge_crossing = np.array([[0,0],[1,0],[1,0],[1,0]]),
     )
 
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.adjacency, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     WT_g = vertices_to_triangles(g, edge_labels)
 
-    edge_labels = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], 0, 1)
-    internal_edges = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], 0, 1)
+    edge_labels = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
+    internal_edges = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
 
     fig, axes = plt.subplots(ncols = 2)
     plot_lattice(g, edge_arrows = True, ax = axes[0])#, edge_labels = edge_labels)
     plot_lattice(WT_g, edge_arrows = internal_edges, ax = axes[1], edge_labels = edge_labels)
 
+#@pytest.mark.skip(reason="Takes too long")
 def test_all():
     from scipy import linalg as la
     from numpy import pi
@@ -69,19 +72,19 @@ def test_all():
     points =  generate_bluenoise(k = 100, nx = n, ny = n)
 
     #generate graph
-    g = generate_pbc_voronoi_adjacency(points)
+    g = generate_lattice(points)
 
     #color it
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.adjacency, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     #transform it to a Weaire-Thorpe model
-    solveable, edge_labels = edge_color(g.adjacency, n_colors = 3, fixed = enumerate(ordered_edge_indices))
-    WT_g = vertices_to_triangles(g, edge_labels);
+    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    WT_g = vertices_to_triangles(g, edge_labels)
 
     #label the internal and external edges
-    edge_labels = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], 0, 1)
-    internal_edges = np.where(np.arange(WT_g.adjacency.shape[0]) < g.adjacency.shape[0], False, True)
+    edge_labels = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
+    internal_edges = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], False, True)
 
     def compute_observables(WT_g, internal_edges, Es):
 
