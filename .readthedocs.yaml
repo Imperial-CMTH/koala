@@ -22,8 +22,8 @@ sphinx:
 # conda:
     # environment: environment.yml
 
- python:
-    version: "3.8"
-    install:
-      - method: pip
-        path: .
+python:
+  version: "3.8"
+  install:
+    - method: pip
+      path: .
