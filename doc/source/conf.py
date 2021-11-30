@@ -31,10 +31,6 @@ extensions = [
     'sphinx.ext.autodoc'
 ]
 
-apidoc_module_dir = '../../src/koala'
-apidoc_output_dir = '.'
-apidoc_separate_modules = True
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
