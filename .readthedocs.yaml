@@ -23,7 +23,6 @@ sphinx:
     # environment: environment.yml
 
 python:
-  version: "3.8"
   install:
     - method: pip
       path: .
