@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.interpolate
+import pytest
 from matplotlib import pyplot as plt
 
 from koala.weaire_thorpe import vertices_to_triangles
@@ -53,6 +55,7 @@ def test_multi_graphs():
     plot_lattice(g, edge_arrows = True, ax = axes[0])#, edge_labels = edge_labels)
     plot_lattice(WT_g, edge_arrows = internal_edges, ax = axes[1], edge_labels = edge_labels)
 
+@pytest.mark.skip(reason="Takes too long")
 def test_all():
     from scipy import linalg as la
     from numpy import pi

@@ -1,8 +1,11 @@
-from koala.amorphous_lattice import AmorphousLattice
 import numpy as np
-import kwant
+import pytest
 
+@pytest.mark.skip(reason="Not using kwant currently")
 def test_creation():
+    import kwant
+    from koala.amorphous_lattice import AmorphousLattice
+
     #setup
     num_sites = 10; dimension = 2
     position_list = np.random.random(size = [num_sites, dimension])
