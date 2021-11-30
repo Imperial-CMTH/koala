@@ -12,6 +12,7 @@ dependencies:
   - pytest
   - flake8
   - kwant
+  - sphinxcontrib-apidoc # required for doc gen
   - pip:
     # works for regular pip packages
     - python-sat #the frontend to the sat solver
