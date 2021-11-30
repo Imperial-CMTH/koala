@@ -73,7 +73,7 @@ def plot_lattice(lattice, ax = None,
         matplotlib axis: The axis that we have plotted to.
     """
 
-    vertices, adjacency, adjacency_crossing = lattice.vertices, lattice.adjacency, lattice.adjacency_crossing
+    vertices, adjacency, adjacency_crossing = lattice.vertices, lattice.edges.indices, lattice.edges.crossing
 
     if ax is None: ax = plt.gca()
 
@@ -96,9 +96,9 @@ def plot_lattice(lattice, ax = None,
     ax.add_collection(lc)
     
     if np.any(edge_arrows) or np.any(edge_index_labels):
-        original_edge_indices = np.tile(np.arange(lattice.adjacency.shape[0]), 9)
-        if isinstance(edge_arrows, bool): edge_arrows = np.full(fill_value = edge_arrows, shape = lattice.adjacency.shape[0])
-        if isinstance(edge_index_labels, bool): edge_index_labels = np.full(fill_value = edge_index_labels, shape = lattice.adjacency.shape[0])
+        original_edge_indices = np.tile(np.arange(lattice.edges.indices.shape[0]), 9)
+        if isinstance(edge_arrows, bool): edge_arrows = np.full(fill_value = edge_arrows, shape = lattice.edges.indices.shape[0])
+        if isinstance(edge_index_labels, bool): edge_index_labels = np.full(fill_value = edge_index_labels, shape = lattice.edges.indices.shape[0])
         edge_arrows = np.tile(edge_arrows, 9)
         edge_index_labels = np.tile(edge_index_labels, 9)
 
@@ -212,7 +212,7 @@ def plot_edge_indices(g, ax = None, offset = 0.01):
     Plot the indices of the edges on a graph
     """
     if ax is None: ax = plt.gca()
-    for i, e in enumerate(g.adjacency): 
+    for i, e in enumerate(g.edges.indices): 
         midpoint = g.vertices[e].mean(axis = 0)
-        if not np.any(g.adjacency_crossing[i]) != 0:
+        if not np.any(g.edges.crossing[i]) != 0:
             ax.text(*(midpoint+offset), f"{i}", color = 'g')
