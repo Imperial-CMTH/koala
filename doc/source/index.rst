@@ -10,7 +10,7 @@ Welcome to koala's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   koala
 
 Indices and tables
 ==================
