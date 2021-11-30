@@ -1,8 +1,11 @@
 import numpy as np
+import scipy
+import matplotlib
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
+
 from .graph_utils import vertex_neighbours, clockwise_edges_about
-from .voronization import generate_point_array
+from .voronization import generate_point_array, Lattice
 
 def _line_fully_in_unit_cell(lines : np.ndarray) -> np.ndarray:
     """Tells you which of a set of lines is entirely within the unit cell
@@ -129,6 +132,45 @@ def plot_lattice(lattice, ax = None,
     )
 
     return ax
+
+cdict = {'red':   [(0.0,  0.0, 1.0),
+                   (1.0,  0.0, 1.0)],
+
+         'green': [(0.0,  0.0, 1.0),
+                   (1.0,  1.0, 1.0)],
+
+         'blue':  [(0.0,  0.0, 1.0),
+                   (1.0,  0.0, 1.0)]}
+
+white2green = matplotlib.colors.LinearSegmentedColormap('my_colormap2', cdict, 256)
+
+def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 100, method : str = 'cubic', cmap = white2green, vmin : float = None, vmax : float = None):
+    """Plot a scalar field on a 2d amorphous lattice
+
+    Args:
+        g (Lattice): The lattice object to plot over
+        scalar (np.ndarray) shape: (len(g.vertices),)): The scalar field to plot.
+        ax (axis, optional): Optional axis to plot to.
+        resolution (int, optional): Number of points to interpolate to in x and y. Defaults to 100.
+        method (str, optional): method{‘linear’, ‘nearest’, ‘cubic’}, see docs for scipy.interpolate.griddata. Defaults to 'cubic'.
+        cmap (colormap, optional): Color map to use, either string name or object. Defaults to a custom white to green fade.
+        vmin (float, optional): arg to pcolormesh. Defaults to None.
+        vmax (float, optional): arg to pcolormesh. Defaults to None.
+
+    Returns:
+        [type]: [description]
+    """
+    if ax is None: ax = plt.gca()
+    if isinstance(cmap, str): cmap = plt.get_cmap(cmap)
+        
+    x = np.linspace(0, 1, resolution)
+    y = np.linspace(0, 1, resolution)
+
+    xv, yv = np.meshgrid(x, y, sparse=False, indexing='ij')
+
+    def to_points(xv, yv): return np.array([xv, yv]).transpose((1,2,0))
+    s = scipy.interpolate.griddata(g.vertices, scalar, to_points(xv,yv), method = method, rescale = True)
+    ax.pcolormesh(xv, yv, s, cmap = cmap, vmin = 0, vmax = 1)
 
 def plot_degeneracy_breaking(vertex_i, g, ax = None):
     """
