@@ -28,7 +28,6 @@ author = "G. Cassella, T. Hodson, P. d'Ornellas"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinxcontrib.apidoc',
     'sphinx.ext.autodoc'
 ]
 
@@ -56,3 +55,15 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+def run_apidoc(_):
+	from sphinx.ext.apidoc import main
+	import os
+	import sys
+	sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+	cur_dir = os.path.abspath(os.path.dirname(__file__))
+	module = os.path.join(cur_dir,"..","..","src","koala")
+	main(['-e', '-o', cur_dir, module, '--force'])
+
+def setup(app):
+	app.connect('builder-inited', run_apidoc)

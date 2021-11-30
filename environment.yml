@@ -15,4 +15,3 @@ dependencies:
   - pip:
     # works for regular pip packages
     - python-sat #the frontend to the sat solver
-    - sphinxcontrib-apidoc # required for doc gen
