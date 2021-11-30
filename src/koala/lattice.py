@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
-from .graph_utils import get_edge_vectors
 
 
 @dataclass
