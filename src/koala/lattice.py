@@ -1,5 +1,7 @@
 import numpy as np
+import numpy.typing as npt
 from dataclasses import dataclass
+from .graph_utils import get_edge_vectors
 
 @dataclass
 class Plaquette:
@@ -31,5 +33,17 @@ class Lattice(object):
     def _compute_plaquettes(self):
         return "plaquettes"
         
-    def _compute_edge_vectors(self, vertices, edge_indices, edge_crossing):
-        return "edge_vectors"
+    def _compute_edge_vectors(self, vertices: npt.NDArray[np.float32], edge_indices: npt.NDArray[np.int32], edge_crossing: npt.NDArray[np.int32]) -> npt.NDArray:
+        """Computes displacement vectors corresponding to edges, respecting edge crossings.
+
+        :param vertices: Spatial positions of vertices
+        :type vertices: np.ndarray[float] (nvertices, 2)
+        :param edge_indices: Indices corresponding to (start, end) vertices of edges
+        :type edge_indices: np.ndarray[int] (nedges, 2)
+        :param edge_crossing: Sign of system boundary crossings for each edge
+        :type edge_crossing: np.ndarray[(-1,0,1)] (nedges, 2)
+        :return: Spatial displacements vectors corresponding to edges
+        :rtype: np.ndarray[float]
+        """
+        edge_vectors = vertices[edge_indices][:,0] - vertices[edge_indices][:,1] + edge_crossing
+        return edge_vectors
