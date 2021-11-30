@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 import itertools
 import scipy
 
+from .lattice import Lattice
+
 
 def points_near_unit_image(vor, idx):
     """
@@ -43,14 +45,6 @@ square = np.array([[[0,0],[0,1]],
                           [[1,0],[0,0]],
                         ])
 
-from dataclasses import dataclass
-
-@dataclass
-class Lattice:
-    vertices: np.ndarray
-    adjacency: np.ndarray
-    adjacency_crossing: np.ndarray
-    vor: scipy.spatial.Voronoi
         
 def plot_lines(ax, lines, **kwargs):
     lc = LineCollection(lines, **kwargs)
@@ -156,9 +150,9 @@ def generate_pbc_voronoi_adjacency(original_points, debug_plot = False):
 
     return Lattice(
         vertices = new_vertices,
-        adjacency = new_pbc_ridges,
-        adjacency_crossing = adjacency_crossing,
-        vor = vor,
+        edge_indices = new_pbc_ridges,
+        edge_crossing = adjacency_crossing,
+        plaquettes = None,
     )
 
 

@@ -14,8 +14,8 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
     vertices of neighbouring triangles together.
     """
     new_vertices = np.zeros(shape = (g.vertices.shape[0]*3, 2), dtype = float)
-    new_adjacency = np.zeros(shape = (g.adjacency.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
-    new_adjacency_crossing = np.zeros(shape = (g.adjacency.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
+    new_adjacency = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
+    new_adjacency_crossing = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
     
     # loop over each vertex, look at its three neighbours
     # make 3 new vertices in its place shifted towards the nieghbours
@@ -23,7 +23,7 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
         
         # get vertex and edge neighbours of the vertex
         this_vertex = g.vertices[vertex_i]
-        vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.adjacency)
+        vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.edges.indices)
         vertex_indices, edge_indices = clockwise_about(vertex_i, g)
         
         # this function takes into account the fact that edges can cross boundaries
@@ -51,14 +51,14 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
             next_edge_j = edge_indices[(k+1)%3]
             next_edge_label = edge_labels[next_edge_j]
             other_index = 3*vertex_i + next_edge_label #index of the next vertex inside the site
-            new_adjacency[g.adjacency.shape[0] + index] = (index, other_index)
-            #new_adjacency_crossing[g.adjacency.shape[0] + index] = np.floor(new_vertices[other_index]) - np.floor(new_vertices[index])
+            new_adjacency[g.edges.indices.shape[0] + index] = (index, other_index)
+            #new_adjacency_crossing[g.edges.indices.shape[0] + index] = np.floor(new_vertices[other_index]) - np.floor(new_vertices[index])
            
     # now that all the vertices and edges have been assigned
     # go back and set adjacency_crossing for the internal vertices
     # I'm not 100% sure why you need to do the external vertices up there and the
     # internal onces down here, but it seems to work.
-    for edge_j in np.arange(g.adjacency.shape[0], new_adjacency.shape[0]):
+    for edge_j in np.arange(g.edges.indices.shape[0], new_adjacency.shape[0]):
         start, end = new_vertices[new_adjacency[edge_j]]
         new_adjacency_crossing[edge_j] = (np.floor(end) - np.floor(start)).astype(int)
 
@@ -67,19 +67,17 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
             
     return Lattice(
         vertices = new_vertices,
-        adjacency = new_adjacency,
-        adjacency_crossing = new_adjacency_crossing,
-        vor = None,
+        edge_indices = new_adjacency,
+        edge_crossing = new_adjacency_crossing,
     )
 
 def cut_boundary(g):
-    internal_verts = np.where(~np.any(g.adjacency_crossing != 0, axis = -1))[0]
+    internal_verts = np.where(~np.any(g.edges.crossing != 0, axis = -1))[0]
     
     return internal_verts, Lattice(
     vertices = g.vertices,
-    adjacency = g.adjacency[internal_verts, ...],
-    adjacency_crossing = g.adjacency_crossing[internal_verts, ...],
-    vor = None,
+    edge_indices = g.edges.indices[internal_verts, ...],
+    edge_crossing = g.edges.crossing[internal_verts, ...],
     )
     
 
@@ -100,11 +98,11 @@ def make_weire_thorpe_model(g : Lattice, internal_edges: np.ndarray, phi:float =
     N = g.vertices.shape[0]
     H = np.zeros(shape = (N,N), dtype = np.complex128)
     
-    i, j = g.adjacency[internal_edges].T
+    i, j = g.edges.indices[internal_edges].T
     H[i, j] = V * np.exp(1j * phi)
     H[j, i] = V * np.exp(-1j * phi)
     
-    i, j = g.adjacency[~internal_edges].T
+    i, j = g.edges.indices[~internal_edges].T
     H[i, j] = W
     H[j, i] = W
     

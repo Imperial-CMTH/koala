@@ -58,7 +58,7 @@ def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
         ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
     """
     #get the edges and vertices around vertex 0
-    vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.adjacency)
+    vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.edges.indices)
     edge_vectors = get_edge_vectors(vertex_i, edge_indices, g)
 
     #order them clockwise from the positive x axis
@@ -95,11 +95,11 @@ def get_edge_vectors(vertex_i : int, edge_indices : np.ndarray, l : Lattice) -> 
     """
     #this is a bit nontrivial, g.adjacency_crossing tells us if the edge crossed into another unit cell but 
     #it is directional, hence we need to check for each edge if vertex_i was the first of second vertex stored
-    #the next few lines do that so we can add g.adjacency_crossing with the right sign
-    edges = l.adjacency[edge_indices]
+    #the next few lines do that so we can add g.edges.indices_crossing with the right sign
+    edges = l.edges.indices[edge_indices]
     start_or_end = (edges != vertex_i)[:, 1] #this is true if vertex_i starts the edge and false if it ends it
     other_vertex_indices = np.take_along_axis(edges, start_or_end[:, None].astype(int), axis = 1).squeeze() #this gets the index of the other end of each edge
     offset_sign = (2*start_or_end - 1) #now it's +/-1
     
     #get the vectors along the edges
-    return l.vertices[other_vertex_indices] - l.vertices[vertex_i][None, :] + offset_sign[:, None] * l.adjacency_crossing[edge_indices]
+    return l.vertices[other_vertex_indices] - l.vertices[vertex_i][None, :] + offset_sign[:, None] * l.edges.crossing[edge_indices]

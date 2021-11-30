@@ -8,4 +8,4 @@ def test_pbc_generation():
     for n in range(3, 100, 10):
         points = generate_random(n)
         g = generate_pbc_voronoi_adjacency(points)
-        assert(np.all(np.bincount(g.adjacency.flatten()) == 3)) #all vertices have coordination number 3
+        assert(np.all(np.bincount(g.edges.indices.flatten()) == 3)) #all vertices have coordination number 3

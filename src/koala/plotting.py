@@ -187,12 +187,12 @@ def plot_degeneracy_breaking(vertex_i, g, ax = None):
     vertex_colors[vertex_i] = 'r'
     
     #label its neighbours green
-    vertex_colors[vertex_neighbours(vertex_i, g.adjacency)[0]] = 'g'
+    vertex_colors[vertex_neighbours(vertex_i, g.edges.indices)[0]] = 'g'
 
     #color the edges in a clockwise fashion
     ordered_edge_indices = clockwise_edges_about(vertex_i, g)
 
-    highlight_edge_neighbours = np.array([3 for i in range(g.adjacency.shape[0])])
+    highlight_edge_neighbours = np.array([3 for i in range(g.edges.indices.shape[0])])
     highlight_edge_neighbours[ordered_edge_indices] = [0, 1, 2]
  
     ax.hlines(y = vertex[1], xmin = vertex[0], xmax = ax.get_ylim()[1], linestyle = 'dotted', alpha = 0.5, color = 'k')
