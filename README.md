@@ -7,6 +7,10 @@ Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-p
 - Implement a way to find all the colourings of a lattice
 - Add an axes argument to plotting function
 - Changed pbc_voronisation to emit a third array adjacency_crossing with size (n_edges, 2) that tells you which of the 3x3 unit cell grid this edge goes into, alternatively you can think of it as saying if this edge crosses each of the two cuts that unrwrap the torus into the plane.
+- renamed SAT to graph_colour 
+- renamed PBV_Voronoi datastructure to Lattice
+- replaced the first three arguments of plot_lattice with a Lattice object
+
 
 ## Todo
 - Implement enumerating plaquettes (should be easy to start from vor.regions)
@@ -15,11 +19,9 @@ Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-p
 - Return the kdtree of the lattice vertices because it's useful for other stuff
 - make function convert from colorings to lists of color strings and put it in plotting.py
 - Compute a histogram of the nummber of edsges in each plaquette
-- Make adjacency_crossing an optional argument to the plot_lattice function.
 - Implement a way to plot colourings using Peru's Theorem
 
 ## Examples
-
 ```
 n = 10
 
