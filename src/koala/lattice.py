@@ -40,7 +40,7 @@ class Lattice(object):
         vertices: npt.NDArray[np.floating],
         edge_indices: npt.NDArray[np.integer],
         edge_crossing: npt.NDArray[np.integer],
-    ) -> npt.NDArray:
+    ) -> npt.NDArray[np.floating]:
         """Computes displacement vectors corresponding to edges, respecting edge crossings.
 
         :param vertices: Spatial positions of vertices
