@@ -6,20 +6,55 @@ from dataclasses import dataclass
 
 @dataclass
 class Plaquette:
-    edges: np.ndarray
+    """Represents a single plaquette in a lattice
+
+    :param vertices: Indices correspondng to the vertices that border the plaquette. These are always organised to start from the lowest index and then go clockwise around the plaquette
+    :type vertices: np.ndarray[int] (nedges)
+    :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
+    :type edges: np.ndarray[int] (nedges)
+    :param directions: Valued +/- 1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
+    :type directions: np.ndarray[int] (nedges)
+    :param centers: Coordinates of the center of the plaquette
+    :type centers: np.ndarray[float] (2)
+    """
     vertices: np.ndarray
+    edges: np.ndarray
     directions: np.ndarray
     centers: np.ndarray
 
 
 @dataclass
 class Edges:
+    """
+    Represents the list of edges in the lattice
+
+    :param indices: An array of the indices of points connected by this edge. Entries should always starts with the point with the lowest index.
+    :type indices: np.ndarray[int] (nvertices, 2)
+
+    :param vectors: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
+    :type vectors: np.ndarray[float] (nvertices, 2)
+
+    :param crossing: Tells you whether the edge crosses the boundary conditions, and if so, in ehich direction. One value for x-direction and one for y-direction
+    :type crossing: np.ndarray[int] (nvertices, 2)
+    """
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
 
 
 class Lattice(object):
+    """Describes a lattice in 2D. Lattice is made up of vertices, edges and plaquettes.
+
+    :param vertices: Spatial positions of vertices
+    :type vertices: np.ndarray[float] (nvertices, 2)
+
+    :param edges: A dataclass containing the edge indices, vectors corresppoinding to each edge and crossings, telling you if the edge crossed the periodic boundaries
+    :type edges: Edges
+
+    :param plaquettes: A list of Plaquette dataclasses, each containing the plaquette centers, the edges that border it, the vertices around it and the direction of each edge around the plaquette
+    :type plaquettes: list[Plaquette]
+
+    """
     def __init__(self, vertices, edge_indices, edge_crossing, plaquettes=None):
         self.vertices = vertices
 
