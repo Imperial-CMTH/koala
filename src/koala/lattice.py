@@ -28,18 +28,121 @@ class Edges:
     """
     Represents the list of edges in the lattice
 
-    :param indices: An array of the indices of points connected by this edge. Entries should always starts with the point with the lowest index.
+    :param indices: Indices of points connected by each edge. 
     :type indices: np.ndarray[int] (nedges, 2)
-    :param vectors: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
+    :param vectors: Vectors pointing along each edge
     :type vectors: np.ndarray[float] (nedges, 2)
     :param crossing: Tells you whether the edge crosses the boundary conditions, and if so, in ehich direction. One value for x-direction and one for y-direction
     :type crossing: np.ndarray[int] (nedges, 2)
+    :param adjacent_plaquettes: Lists the indices of every plaquette that touches each edge
+    :type adjacent_plaquettes: np.ndarray[int] (nedges, 2)
+
     """
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
+    adjacent_plaquettes: np.ndarray
+
+@dataclass
+class Vertices:
+    """
+    Represents a list of vertices in the lattice
+    
+    :param positions: List of the positions of every vertex
+    :type positions: np.ndarray[float] (nvertices, 2)
+    :param adjacent_edges: Lists the indices of every edge that connects to that vertex. Listed in clockwise order from the lowest index
+    :type adjacent_edges: np.ndarray[int] (nvertices, 3)
+    :param adjacent_plaquettes: Lists the indices of every plaquette that touches the vertex
+    :type adjacent_plaquettes: np.ndarray[int] (nvertices, 3)
+    """
+    positions: np.ndarray
+    adjacent_edges: np.ndarray
+    adjacent_plaquettes: np.ndarray
 
 
+
+class Lattice(object):
+    def __init__(
+        self,
+        vertex_positions: npt.NDArray[np.floating], 
+        edge_indices: npt.NDArray[np.integer],
+        edge_crossing: npt.NDArray[np.integer],
+        plaquettes=None):
+
+        # calculate the vector corresponding to each edge
+        edge_vectors = (vertex_positions[edge_indices][:, 1] - vertex_positions[edge_indices][:, 0] + edge_crossing)
+
+        # calculate the list of edges adjacent to each vertex
+        vertex_adjacent_edges = _sorted_vertex_adjacent_edges(vertex_positions,edge_indices,edge_vectors)
+        
+        self.vertices = Vertices(
+            positions= vertex_positions, 
+            adjacent_edges= vertex_adjacent_edges,
+            adjacent_plaquettes= None # <---------------------------------------- missing
+        )
+
+        self.edges = Edges(
+            indices= edge_indices,
+            vectors = edge_vectors,
+            crossing= edge_crossing,
+            adjacent_plaquettes = None # <---------------------------------------- missing
+        )
+
+        # self.plaquettes  <---------------------------------------- missing
+
+
+def _sorted_vertex_adjacent_edges(
+    vertex_positions,
+    edge_indices,
+    edge_vectors):
+    """Gives you an array where the i'th row contains the indicesof the edges that connect to the i'th vertex. 
+    The edges are always organised in clockwise order, which will be handy later ;)
+
+    :param vertex_positions: List of the positions of every vertex
+    :type vertex_positions: np.ndarray[float] (nvertices, 2)
+    :param edge_indices: Indices of points connected by each edge. 
+    :type edge_indices: np.ndarray[int] (nedges, 2)
+    :param edge_vectors: Vectors pointing along each edge
+    :type edge_vectors: np.ndarray[float] (nedges, 2)
+    :return: Array containing the indices of the three edges that connect to each point, ordered clockwise around the point.
+    :rtype: np.ndarray[int] (nvertices, 3)
+    """
+
+    vertex_adjacent_edges = []
+    for index in range(vertex_positions.shape[0]):
+        v_edges = np.nonzero((edge_indices[:,0] == index )+ (edge_indices[:,1] ==  index))[0]
+
+        # tells you whether the chosen index is first or second in the list
+        v_parities = [0,0,0]
+        for i, edge in enumerate(v_edges):
+            v_parities[i] = 1 if (edge_indices[edge][0] == index) else -1
+        v_parities = np.array(v_parities)
+        
+        # find the angle that each vertex comes out at
+        v_vectors = edge_vectors[v_edges]*v_parities[:,None]
+        v_angles = np.arctan2(v_vectors[:,1],v_vectors[:,0])
+
+        # figure out if the order is cloclwise or anticlockwise
+        order = [sorted(-v_angles).index(x) for x in -v_angles]
+
+        #if parity == 2 - they are clockwise, if parity == 1 they are anticlockwise so we swap a pair
+        parity = (order[2] - order[0])%3
+        
+        if parity == 1:
+            v_edges = [v_edges[0], v_edges[2],v_edges[1]]
+
+        vertex_adjacent_edges.append(v_edges)
+
+    vertex_adjacent_edges = np.array(vertex_adjacent_edges)
+
+    return vertex_adjacent_edges
+
+
+
+
+
+
+'''
 class Lattice(object):
     """Describes a lattice in 2D. Lattice is made up of vertices, edges and plaquettes.
 
@@ -131,7 +234,7 @@ class Lattice(object):
         fixed_crossings = edge_crossing*sorted_mask[:,None]
 
         return sorted_indices, fixed_crossings
-
+'''
 
 def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   """Create a new lattice with the vertex indices rearranged according to ordering,
