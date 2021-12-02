@@ -36,8 +36,8 @@ class Edges:
     :type crossing: np.ndarray[int] (nedges, 2)
     :param adjacent_plaquettes: Lists the indices of every plaquette that touches each edge
     :type adjacent_plaquettes: np.ndarray[int] (nedges, 2)
-
     """
+
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
@@ -55,6 +55,7 @@ class Vertices:
     :param adjacent_plaquettes: Lists the indices of every plaquette that touches the vertex
     :type adjacent_plaquettes: np.ndarray[int] (nvertices, 3)
     """
+    
     positions: np.ndarray
     adjacent_edges: np.ndarray
     adjacent_plaquettes: np.ndarray
@@ -64,19 +65,19 @@ class Vertices:
 class Lattice(object):
     def __init__(
         self,
-        vertex_positions: npt.NDArray[np.floating], 
+        vertices: npt.NDArray[np.floating], 
         edge_indices: npt.NDArray[np.integer],
         edge_crossing: npt.NDArray[np.integer],
         plaquettes=None):
 
         # calculate the vector corresponding to each edge
-        edge_vectors = (vertex_positions[edge_indices][:, 1] - vertex_positions[edge_indices][:, 0] + edge_crossing)
+        edge_vectors = (vertices[edge_indices][:, 1] - vertices[edge_indices][:, 0] + edge_crossing)
 
         # calculate the list of edges adjacent to each vertex
-        vertex_adjacent_edges = _sorted_vertex_adjacent_edges(vertex_positions,edge_indices,edge_vectors)
+        vertex_adjacent_edges = _sorted_vertex_adjacent_edges(vertices,edge_indices,edge_vectors)
         
         self.vertices = Vertices(
-            positions= vertex_positions, 
+            positions= vertices, 
             adjacent_edges= vertex_adjacent_edges,
             adjacent_plaquettes= None # <---------------------------------------- missing
         )
@@ -105,35 +106,36 @@ def _sorted_vertex_adjacent_edges(
     :param edge_vectors: Vectors pointing along each edge
     :type edge_vectors: np.ndarray[float] (nedges, 2)
     :return: Array containing the indices of the three edges that connect to each point, ordered clockwise around the point.
-    :rtype: np.ndarray[int] (nvertices, 3)
+    :rtype: list[int] (nvertices, 3)
     """
 
     vertex_adjacent_edges = []
     for index in range(vertex_positions.shape[0]):
-        v_edges = np.nonzero((edge_indices[:,0] == index )+ (edge_indices[:,1] ==  index))[0]
+        v_edges = list(np.nonzero((edge_indices[:,0] == index )+ (edge_indices[:,1] ==  index))[0])
 
-        # tells you whether the chosen index is first or second in the list
-        v_parities = [0,0,0]
-        for i, edge in enumerate(v_edges):
-            v_parities[i] = 1 if (edge_indices[edge][0] == index) else -1
-        v_parities = np.array(v_parities)
-        
-        # find the angle that each vertex comes out at
-        v_vectors = edge_vectors[v_edges]*v_parities[:,None]
-        v_angles = np.arctan2(v_vectors[:,1],v_vectors[:,0])
 
-        # figure out if the order is cloclwise or anticlockwise
-        order = [sorted(-v_angles).index(x) for x in -v_angles]
+        vertex_adjacent_edges = []
+        for index in range(vertex_positions.shape[0]):
+            v_edges = np.nonzero((edge_indices[:,0] == index )+ (edge_indices[:,1] ==  index))[0]
 
-        #if parity == 2 - they are clockwise, if parity == 1 they are anticlockwise so we swap a pair
-        parity = (order[2] - order[0])%3
-        
-        if parity == 1:
-            v_edges = [v_edges[0], v_edges[2],v_edges[1]]
+            # tells you whether the chosen index is first or second in the list
+            v_parities = []
+            for i, edge in enumerate(v_edges):
+                par = 1 if (edge_indices[edge][0] == index) else -1
+                v_parities.append(par)
+            v_parities = np.array(v_parities)
+            
+            # find the angle that each vertex comes out at
+            v_vectors = edge_vectors[v_edges]*v_parities[:,None]
+            v_angles = np.arctan2(-v_vectors[:,0],v_vectors[:,1]) %(2*np.pi)
 
-        vertex_adjacent_edges.append(v_edges)
+            # reorder the indices
+            order =  np.argsort(-v_angles) #[sorted(-v_angles).index(x) for x in -v_angles]
+            edges_out = v_edges[order]
 
-    vertex_adjacent_edges = np.array(vertex_adjacent_edges)
+            vertex_adjacent_edges.append(edges_out)
+
+    vertex_adjacent_edges = vertex_adjacent_edges
 
     return vertex_adjacent_edges
 
