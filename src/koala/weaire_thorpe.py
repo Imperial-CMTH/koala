@@ -73,6 +73,7 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
         vertices = new_vertices,
         edge_indices = new_adjacency,
         edge_crossing = new_adjacency_crossing,
+        directed = True,
     )
 
 def cut_boundary(g):
@@ -82,6 +83,7 @@ def cut_boundary(g):
     vertices = g.vertices,
     edge_indices = g.edges.indices[internal_verts, ...],
     edge_crossing = g.edges.crossing[internal_verts, ...],
+    directed = True,
     )
     
 
