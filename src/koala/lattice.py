@@ -9,11 +9,11 @@ class Plaquette:
     """Represents a single plaquette in a lattice
 
     :param vertices: Indices correspondng to the vertices that border the plaquette. These are always organised to start from the lowest index and then go clockwise around the plaquette
-    :type vertices: np.ndarray[int] (nedges)
+    :type vertices: np.ndarray[int] (plaquettesize)
     :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
-    :type edges: np.ndarray[int] (nedges)
+    :type edges: np.ndarray[int] (plaquettesize)
     :param directions: Valued +/- 1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
-    :type directions: np.ndarray[int] (nedges)
+    :type directions: np.ndarray[int] (plaquettesize)
     :param centers: Coordinates of the center of the plaquette
     :type centers: np.ndarray[float] (2)
     """
@@ -29,13 +29,11 @@ class Edges:
     Represents the list of edges in the lattice
 
     :param indices: An array of the indices of points connected by this edge. Entries should always starts with the point with the lowest index.
-    :type indices: np.ndarray[int] (nvertices, 2)
-
+    :type indices: np.ndarray[int] (nedges, 2)
     :param vectors: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
-    :type vectors: np.ndarray[float] (nvertices, 2)
-
+    :type vectors: np.ndarray[float] (nedges, 2)
     :param crossing: Tells you whether the edge crosses the boundary conditions, and if so, in ehich direction. One value for x-direction and one for y-direction
-    :type crossing: np.ndarray[int] (nvertices, 2)
+    :type crossing: np.ndarray[int] (nedges, 2)
     """
     indices: np.ndarray
     vectors: np.ndarray
@@ -56,6 +54,17 @@ class Lattice(object):
 
     """
     def __init__(self, vertices, edge_indices, edge_crossing, plaquettes=None):
+        """Creates an instance of the lattice class. If plaquettes are not provided then they are calculated
+
+        :param vertices: Spatial positions of vertices
+        :type vertices: np.ndarray[float] (nvertices, 2)
+        :param edge_indices: An array of the indices of points connected by this edge. Entries should always starts with the point with the lowest index.
+        :type edge_indices: np.ndarray[int] (nedges, 2)
+        :param edge_crossing: Tells you whether the edge crosses the boundary conditions, and if so, in ehich direction. One value for x-direction and one for y-direction
+        :type edge_crossing: np.ndarray[int] (nedges, 2)
+        :param plaquettes: A list of plaquette objects, describing each plaquette in the system, if None then it is calculated
+        :type plaquettes: list[Plaquette], optional
+        """
         self.vertices = vertices
 
         # fix the order of the edge indices to ensure that they always go from low index to high index
@@ -111,8 +120,8 @@ class Lattice(object):
         :type edge_indices: np.ndarray[int] (nedges, 2)
         :param edge_crossing: Sign of system boundary crossings for each edge
         :type edge_crossing: np.ndarray[(-1,0,1)] (nedges, 2)
-        :return: A tuple containing reordered edge indices and fixed edge crossings
-        :rtype: tuple[npt.NDArray[np.integer], npt.NDArray[np.np.integer]]
+        :return: Reordered edge indices and fixed edge crossings
+        :rtype: np.ndarray[int] (nedges, 2), np.ndarray[int] (nedges, 2)
         
         """
         sorted_indices = np.sort (edge_indices)
