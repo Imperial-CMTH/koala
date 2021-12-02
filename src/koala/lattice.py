@@ -53,7 +53,7 @@ class Lattice(object):
     :type plaquettes: list[Plaquette]
 
     """
-    def __init__(self, vertices, edge_indices, edge_crossing, plaquettes=None):
+    def __init__(self, vertices, edge_indices, edge_crossing, plaquettes=None, directed=False):
         """Creates an instance of the lattice class. If plaquettes are not provided then they are calculated
 
         :param vertices: Spatial positions of vertices
@@ -64,11 +64,13 @@ class Lattice(object):
         :type edge_crossing: np.ndarray[int] (nedges, 2)
         :param plaquettes: A list of plaquette objects, describing each plaquette in the system, if None then it is calculated
         :type plaquettes: list[Plaquette], optional
+        :param directed: If false, the graph edges are treated as undirected and kept in sorted order, otherwise the ordering is preserved.
+        :type directed: bool, optional
         """
         self.vertices = vertices
 
         # fix the order of the edge indices to ensure that they always go from low index to high index
-        edge_indices, edge_crossing = self._reorder_edge_indices(edge_indices, edge_crossing)
+        if not directed: edge_indices, edge_crossing = self._reorder_edge_indices(edge_indices, edge_crossing)
 
         edge_vectors = self._compute_edge_vectors(vertices, edge_indices, edge_crossing)
 

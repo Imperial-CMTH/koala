@@ -55,7 +55,7 @@ def test_multi_graphs():
     plot_lattice(g, edge_arrows = True, ax = axes[0])#, edge_labels = edge_labels)
     plot_lattice(WT_g, edge_arrows = internal_edges, ax = axes[1], edge_labels = edge_labels)
 
-#@pytest.mark.skip(reason="Takes too long")
+@pytest.mark.skip(reason="Takes too long")
 def test_all():
     from scipy import linalg as la
     from numpy import pi
@@ -145,7 +145,7 @@ def test_all():
     axes[3].set(xlim = (-s,1+s), ylim = (-s,1+s))
 
     axes[0].set(ylabel = "DOS", xlabel = "E / (V + W)")
-    axes[3].set(title = "$|\psi|^2$")
+    axes[3].set(title = r"$|\psi|^2$")
 
     for i in [0,2]:
         axes[0].axvline(x = E_closest / (V + W), linestyle = 'dotted')
