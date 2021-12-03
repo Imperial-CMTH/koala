@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+import scipy.interpolate
 import matplotlib
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
@@ -84,7 +85,7 @@ def plot_lattice(lattice, ax = None,
     else:
         edge_colors = np.full(fill_value = 'k', shape = adjacency.shape[0]*9)
     
-    edge_vertices = vertices[adjacency] 
+    edge_vertices = vertices.positions[adjacency] 
     edge_vertices[:, 0, :] -= adjacency_crossing
     
     unit_cell_vectors = generate_point_array(np.array([0,0]), padding = 1)[:, None, None, :] #shape (9, 2) -> (9, 1, 1, 2)
@@ -125,8 +126,8 @@ def plot_lattice(lattice, ax = None,
         scatter_args = dict(c = vertex_colors)
 
     if (scatter_args is not None) or (vertex_labels is not None): ax.scatter(
-        vertices[:,0],
-        vertices[:,1],
+        vertices.positions[:,0],
+        vertices.positions[:,1],
         zorder = 3,
         **scatter_args,
     )
@@ -149,7 +150,7 @@ def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 10
 
     Args:
         g (Lattice): The lattice object to plot over
-        scalar (np.ndarray) shape: (len(g.vertices),)): The scalar field to plot.
+        scalar (np.ndarray) shape: (len(g.vertices.positions),)): The scalar field to plot.
         ax (axis, optional): Optional axis to plot to.
         resolution (int, optional): Number of points to interpolate to in x and y. Defaults to 100.
         method (str, optional): method{‘linear’, ‘nearest’, ‘cubic’}, see docs for scipy.interpolate.griddata. Defaults to 'cubic'.
@@ -169,7 +170,7 @@ def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 10
     xv, yv = np.meshgrid(x, y, sparse=False, indexing='ij')
 
     def to_points(xv, yv): return np.array([xv, yv]).transpose((1,2,0))
-    s = scipy.interpolate.griddata(g.vertices, scalar, to_points(xv,yv), method = method, rescale = True)
+    s = scipy.interpolate.griddata(g.vertices.positions, scalar, to_points(xv,yv), method = method, rescale = True)
     ax.pcolormesh(xv, yv, s, cmap = cmap, vmin = 0, vmax = 1)
 
 def plot_degeneracy_breaking(vertex_i, g, ax = None):
@@ -179,9 +180,9 @@ def plot_degeneracy_breaking(vertex_i, g, ax = None):
     """
     if ax is None: ax = plt.gca()
     #we choose the 0th vertex
-    vertex = g.vertices[vertex_i]
+    vertex = g.vertices.positions[vertex_i]
     
-    vertex_colors = np.array(['k' for _ in g.vertices])
+    vertex_colors = np.array(['k' for _ in g.vertices.positions])
     
     #label the main vertex red
     vertex_colors[vertex_i] = 'r'
@@ -204,7 +205,7 @@ def plot_vertex_indices(g, ax = None, offset = 0.01):
     Plot the indices of the vertices on a graph
     """
     if ax is None: ax = plt.gca()
-    for i, v in enumerate(g.vertices): ax.text(*(v+offset), f"{i}")
+    for i, v in enumerate(g.vertices.positions): ax.text(*(v+offset), f"{i}")
     
 #TODO: Make this work with edges that cross the boundaries
 def plot_edge_indices(g, ax = None, offset = 0.01):
@@ -213,6 +214,6 @@ def plot_edge_indices(g, ax = None, offset = 0.01):
     """
     if ax is None: ax = plt.gca()
     for i, e in enumerate(g.edges.indices): 
-        midpoint = g.vertices[e].mean(axis = 0)
+        midpoint = g.vertices.positions[e].mean(axis = 0)
         if not np.any(g.edges.crossing[i]) != 0:
             ax.text(*(midpoint+offset), f"{i}", color = 'g')

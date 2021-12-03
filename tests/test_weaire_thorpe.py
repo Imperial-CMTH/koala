@@ -24,8 +24,8 @@ def test_smoketest_weaire_thorpe():
     solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
     WT_g = vertices_to_triangles(g, edge_labels)
 
-    #ax.scatter(*g.vertices.T, color = 'k', alpha = 0.9)
-    #ax.scatter(*WT_g.vertices.T, color = 'g')
+    #ax.scatter(*g.vertices.positions.T, color = 'k', alpha = 0.9)
+    #ax.scatter(*WT_g.vertices.positions.T, color = 'g')
 
     edge_labels = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
     edge_arrows = np.where(np.arange(WT_g.edges.indices.shape[0]) < g.edges.indices.shape[0], 0, 1)
@@ -91,7 +91,7 @@ def test_all():
         #solve the hamiltonian
         eigvals, eigvecs = make_weire_thorpe_model(WT_g, internal_edges = internal_edges, phi = 1.3, V = 1, W = 0.66)
         density = np.abs(eigvecs)
-        IPR = 1 / np.sum(np.abs(eigvecs)**4, axis = 0) / len(WT_g.vertices)
+        IPR = 1 / np.sum(np.abs(eigvecs)**4, axis = 0) / len(WT_g.vertices.positions)
         
         #bin the energies
         DOS, _ = np.histogram(eigvals, Es)
