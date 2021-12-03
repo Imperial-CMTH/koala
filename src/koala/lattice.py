@@ -73,7 +73,7 @@ class Lattice(object):
     :type edges: Edges
     :param plaquettes: All of the polygons (aka plaquettes) comprising the lattice, specifying their constituent vertices, edges,
         winding directions, and centers.
-    :type list[Plaquette]
+    :type plaquettes: list[Plaquette]
     """    
     def __init__(
             self,
