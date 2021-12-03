@@ -11,7 +11,7 @@ def test_plotting():
     points = generate_bluenoise(30,n,n)
     g = generate_lattice(points)
     solvable, solution = edge_color(g.edges.indices, n_colors = 3)
-    point_coloring = np.random.randint(2,size=g.vertices.shape[0])
+    point_coloring = np.random.randint(2,size=g.vertices.positions.shape[0])
     plot_lattice(g,edge_labels=solution)
     plot_lattice(g,edge_labels=solution,edge_color_scheme=['k','lightgrey','blue'])
     plot_lattice(g, vertex_labels=point_coloring)

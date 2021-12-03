@@ -17,16 +17,16 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
     Where the mapping with those three is determined by the edge coloring which allows us to connect the right
     vertices of neighbouring triangles together.
     """
-    new_vertices = np.zeros(shape = (g.vertices.shape[0]*3, 2), dtype = float)
-    new_adjacency = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
-    new_adjacency_crossing = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.shape[0]*3, 2), dtype = int)
+    new_vertices = np.zeros(shape = (g.vertices.positions.shape[0]*3, 2), dtype = float)
+    new_adjacency = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.positions.shape[0]*3, 2), dtype = int)
+    new_adjacency_crossing = np.zeros(shape = (g.edges.indices.shape[0] + g.vertices.positions.shape[0]*3, 2), dtype = int)
     
     # loop over each vertex, look at its three neighbours
     # make 3 new vertices in its place shifted towards the nieghbours
-    for vertex_i in range(g.vertices.shape[0]):
+    for vertex_i in range(g.vertices.positions.shape[0]):
         
         # get vertex and edge neighbours of the vertex
-        this_vertex = g.vertices[vertex_i]
+        this_vertex = g.vertices.positions[vertex_i]
         vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.edges.indices)
         vertex_indices, edge_indices = clockwise_about(vertex_i, g)
         
@@ -72,18 +72,16 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
     return Lattice(
         vertices = new_vertices,
         edge_indices = new_adjacency,
-        edge_crossing = new_adjacency_crossing,
-        directed = True,
+        edge_crossing = new_adjacency_crossing
     )
 
 def cut_boundary(g):
     internal_verts = np.where(~np.any(g.edges.crossing != 0, axis = -1))[0]
     
     return internal_verts, Lattice(
-    vertices = g.vertices,
+    vertices = g.vertices.positions,
     edge_indices = g.edges.indices[internal_verts, ...],
-    edge_crossing = g.edges.crossing[internal_verts, ...],
-    directed = True,
+    edge_crossing = g.edges.crossing[internal_verts, ...]
     )
     
 
@@ -101,7 +99,7 @@ def make_weire_thorpe_model(g : Lattice, internal_edges: np.ndarray, phi:float =
         eigvals, eigvecs
     """
     internal_edges = internal_edges.astype(bool)
-    N = g.vertices.shape[0]
+    N = g.vertices.positions.shape[0]
     H = np.zeros(shape = (N,N), dtype = np.complex128)
     
     i, j = g.edges.indices[internal_edges].T
