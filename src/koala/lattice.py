@@ -68,11 +68,11 @@ class Lattice(object):
     :param vertices: Data structure containing vertex positions, and the edges/plaquettes touching each vertex
     :type vertices: Vertices
     :param edges: Data structure containing indices of vertices comprising each edge, the spatial displacement vectors
-    corresponding to those edges, flags for edges which cross the system boundary in periodic Lattices, and the plaquettes
-    touching each edge.
+        corresponding to those edges, flags for edges which cross the system boundary in periodic Lattices, and the plaquettes
+        touching each edge.
     :type edges: Edges
     :param plaquettes: All of the polygons (aka plaquettes) comprising the lattice, specifying their constituent vertices, edges,
-    winding directions, and centers.
+        winding directions, and centers.
     :type list[Plaquette]
     """    
     def __init__(
