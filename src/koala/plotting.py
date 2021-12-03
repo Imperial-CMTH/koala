@@ -111,7 +111,7 @@ def plot_lattice(lattice, ax = None,
             center = 1/2 * (end + start)
             length = np.linalg.norm(end - start)
             head_length = min(0.2 * length, 0.02)
-            direction = head_length * (end - start) / length
+            direction = head_length * (start - end) / length
             arrow_start = center - direction
             if edge_arrows[i]: 
                 ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
