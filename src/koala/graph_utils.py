@@ -52,7 +52,7 @@ def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
     and returns those indices in order.
 
     Args:
-        vertex_i (int): int the index into g.vertices of the node we want to use. Generally use 0
+        vertex_i (int): int the index into g.vertices.positions of the node we want to use. Generally use 0
         g (Lattice): a graph object with keys vertices, adjacency, adjacency_crossing
     Returns:
         ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
@@ -75,7 +75,7 @@ def clockwise_edges_about(vertex_i : int, g : Lattice) -> np.ndarray:
     and returns those indices in order. Use this to break the degeneracy of graph coloring.
 
     Args:
-        vertex_i (int): int the index into g.vertices of the node we want to use. Generally use 0
+        vertex_i (int): int the index into g.vertices.positions of the node we want to use. Generally use 0
         g (Lattice): a graph object with keys vertices, adjacency, adjacency_crossing
     Returns:
         ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
@@ -102,4 +102,4 @@ def get_edge_vectors(vertex_i : int, edge_indices : np.ndarray, l : Lattice) -> 
     offset_sign = (2*start_or_end - 1) #now it's +/-1
     
     #get the vectors along the edges
-    return l.vertices[other_vertex_indices] - l.vertices[vertex_i][None, :] + offset_sign[:, None] * l.edges.crossing[edge_indices]
+    return l.vertices.positions[other_vertex_indices] - l.vertices.positions[vertex_i][None, :] + offset_sign[:, None] * l.edges.crossing[edge_indices]
