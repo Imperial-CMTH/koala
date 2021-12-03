@@ -17,7 +17,6 @@ setup(
         'matplotlib',
         'flake8',
         'python-sat',
-        'kwant',
         'pytest',
         'pytest-cov',
         'pytest-github-actions-annotate-failures',

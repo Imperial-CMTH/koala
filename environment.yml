@@ -11,7 +11,6 @@ dependencies:
   - pip
   - pytest
   - flake8
-  - kwant
   - pip:
     # works for regular pip packages
     - python-sat #the frontend to the sat solver
