@@ -83,7 +83,7 @@ def plot_lattice(lattice, ax = None,
     if edge_labels is not None:
         edge_colors = np.tile(edge_color_scheme[edge_labels], 9)
     else:
-        edge_colors = np.full(fill_value = 'k', shape = adjacency.shape[0]*9)
+        edge_colors = np.full(fill_value = edge_color_scheme[-1], shape = adjacency.shape[0]*9)
     
     edge_vertices = vertices.positions[adjacency] 
     edge_vertices[:, 0, :] -= adjacency_crossing
