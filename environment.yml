@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - conda
-  - python=3.8
+  - python=3.9
   - ipykernel #this makes the env show up in the list of jupyter environments
   - numpy
   - scipy
