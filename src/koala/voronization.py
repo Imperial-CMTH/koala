@@ -149,8 +149,7 @@ def generate_lattice(original_points: npt.NDArray[np.floating], debug_plot: bool
     return Lattice(
         vertices = new_vertices,
         edge_indices = new_pbc_ridges,
-        edge_crossing = adjacency_crossing,
-        plaquettes = None,
+        edge_crossing = adjacency_crossing
     )
 
 
