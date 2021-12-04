@@ -20,7 +20,7 @@ class Plaquette:
     vertices: np.ndarray
     edges: np.ndarray
     directions: np.ndarray
-    centers: np.ndarray
+    center: np.ndarray
 
 
 @dataclass
@@ -114,7 +114,6 @@ class Lattice(object):
         )
 
         self.plaquettes = _find_all_plaquettes(self)
-        # TODO: find plaquette centers
 
 
         # some proeprties that count edges and vertices etc....
@@ -167,8 +166,6 @@ def _sorted_vertex_adjacent_edges(
 
         vertex_adjacent_edges.append(edges_out)
 
-    vertex_adjacent_edges = vertex_adjacent_edges
-
     return vertex_adjacent_edges
 
 
@@ -188,7 +185,6 @@ def _find_plaquette(
     :return: A plaquette object representing the found plaquette
     :rtype: Plaquette
     """
-    # TODO - fix it so we also find the plaquette centers - left this out because PBC is a pain
     # TODO - Decide when you have an open boundaries exterior plaquette!
     edge_indices = l.edges.indices
     vertex_adjacent_edges = l.vertices.adjacent_edges
@@ -223,8 +219,14 @@ def _find_plaquette(
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
 
+    plaquette_vectors = l.edges.vectors[plaquette_edges] * (1-2*plaquette_directions[:,None])
+    plaquette_sums = np.cumsum(plaquette_vectors, 0)
+    points = l.vertices.positions[plaquette_vertices[0]]+plaquette_sums
+    plaquette_center = np.sum(points, 0) / (points.shape[0])%1
+
+
     found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges, directions=plaquette_directions, centers=None)
+                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center)
 
     return found_plaquette
 
