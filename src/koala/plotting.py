@@ -1,8 +1,9 @@
 import numpy as np
 import scipy
 import scipy.interpolate
+import itertools
 import matplotlib
-from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection, PolyCollection
 from matplotlib import pyplot as plt
 
 from .graph_utils import vertex_neighbours, clockwise_edges_about
@@ -22,18 +23,22 @@ def _line_fully_in_unit_cell(lines : np.ndarray) -> np.ndarray:
 
 def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
     """Tells you which of a set of lines crosses the boundaries of the unit cell
-    
+
     Works by writing a point on each line as: point = start*t + (1-t)*end
     It then solves for t = (l - end) / (start - end) for l = (0,0), (1,1) which gives:
     t = ((tx0, ty0), (tx1, ty1))
     if 0 < t_x0 < 1 it means point_x = 0 at t = t_x0
-    so then we check that 0 < point_y(t_x0) < 1 and if so then it works 
-
+    so then we check that 0 < point_y(t_x0) < 1 and if so then then we know the line segment crosses the x = 0 boundary
     Args:
         lines (np.ndarray): lines[i, j, :] is the jth point of the ith line
 
     Returns:
         np.ndarray: out[i] == 1 if line[i] is fully inside the unit cell
+
+    :param lines: : Represents lines by pairs of points
+    :type lines: np.ndarray shape (n_lines, 2, 2)
+    :return: cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell
+    :rtype: np.ndarray shape (n_lines,)
     """
     start, end = lines[:, 0, None, :], lines[:, 1, None, :] #start.shape = (n_lines, 1, 2)
     l = np.array([[0,0],[1,1]])[None, :, :] #shape (1, 2, 2)
@@ -49,8 +54,7 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
     #t.shape (n_lines, 0/1, x/y) start[..., ::-1].shape (n_lines, 1, y,x)
     other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
     cross = (0 < t) & (t <= 1) & (0 < other_coord_value_at_t) & (other_coord_value_at_t <= 1)
-    cross = np.any(cross, axis = (1,2))
-    return cross
+    return np.any(cross, axis = (1,2))
 
 def plot_lattice(lattice, ax = None, 
                  edge_labels = None, edge_color_scheme = ['r','g','b','k'],
@@ -217,3 +221,68 @@ def plot_edge_indices(g, ax = None, offset = 0.01):
         midpoint = g.vertices.positions[e].mean(axis = 0)
         if not np.any(g.edges.crossing[i]) != 0:
             ax.text(*(midpoint+offset), f"{i}", color = 'g')
+
+def _lines_cross_any_cell_boundary(lines : np.ndarray) -> np.ndarray:
+    """Similar to the above, but tells you if the line cross y=0,1 and x=0,1 at any point rather than just the unit cell.
+
+    :param lines: : Represents lines by pairs of points
+    :type lines: np.ndarray shape (n_lines, 2, 2)
+    :param which: If True output information about which lines were crossed, defaults to False
+    :type which: bool, optional
+    :return: If which is false, cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell,
+    if which is true, cross[i] = ((x=0, y=0), (x=1, y=1)) where each entry if true if line[i] crossed the corresponding boundary.
+    :rtype: np.ndarray shape (n_lines,) or (n_lines, 2, 2) if which is True
+    """
+    start, end = lines[:, 0, None, :], lines[:, 1, None, :] #start.shape = (n_lines, 1, 2)
+    l = np.array([[0,0],[1,1]])[None, :, :] #shape (1, 2, 2)
+    
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t = (l - end) / (start - end) #shape (n_lines, 2, 2)
+
+    t[~np.isfinite(t)] = 0.5*(l == end)[~np.isfinite(t)] 
+
+    other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
+    cross = (0 < t) & (t <= 1) 
+    return cross
+
+def _replicate_polygon(polygon, padx, pady):
+    dxdy = np.array(list(itertools.product(padx, pady)))
+    return polygon[None, ...] + dxdy[:, None, :]
+
+                
+def plot_plaquettes(l: Lattice, labels,
+        color_scheme = ['r','b','k'],  
+        polygon_args = dict(), ax = None):
+    
+    if ax is None: ax = plt.gca()
+
+    polygons = []
+    colors = []
+    for i, p in enumerate(l.plaquettes):
+        
+        #get the edge vectors going anticlockwise around the plaquette
+        vectors = l.edges.vectors[p.edges] * (1 - 2*p.directions[:, None])
+
+        #use those to construct the points around the plaquette ignoring PBC
+        points = l.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis = 0)
+
+        #represent the line segments of p with (start_point, end_point) tuples
+        lines = np.array(list(zip(points, np.roll(points, -1, axis = 0))))
+
+        #find out if the polygon crosses the x=0,1 or y=0,1 lines
+        partially_inside = np.any(_lines_cross_any_cell_boundary(lines), axis = 0)
+        
+        #figure out how this polygon needs to be replicated
+        #crossx[0] == True means one of the line segments of the polygon crossed x = 0 for example
+        crossx, crossy = partially_inside.T
+        padx_bool = np.array([crossx[1], 1, crossx[0]], dtype = bool)
+        padx = np.array([-1, 0, 1])[padx_bool]
+
+        pady_bool = np.array([crossy[1], 1, crossy[0]], dtype = bool)
+        pady = np.array([-1, 0, 1])[pady_bool]
+            
+        replicated_polygons = _replicate_polygon(points, padx, pady)
+        color = color_scheme[labels[i]]
+        
+        #one could add all these up into one huge polycollection but it doesn't seem to be any faster
+        ax.add_collection(PolyCollection(replicated_polygons, color = color, **polygon_args))
