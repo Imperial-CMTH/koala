@@ -6,4 +6,5 @@ python-sat
 pytest
 pytest-cov
 pytest-github-actions-annotate-failures
+nbmake
 tinyarray
