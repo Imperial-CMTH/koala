@@ -21,6 +21,5 @@ setup(
         'pytest-cov',
         'nbmake',
         'pytest-github-actions-annotate-failures',
-        'tinyarray'
     ]
 )
