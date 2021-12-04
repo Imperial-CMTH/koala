@@ -123,8 +123,8 @@ class Lattice(object):
         self.n_plaquettes = len(self.plaquettes)
 
 
-        def __repr__(self):
-            return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+    def __repr__(self):
+        return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
