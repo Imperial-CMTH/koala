@@ -117,6 +117,15 @@ class Lattice(object):
         # TODO: find plaquette centers
 
 
+        # some proeprties that count edges and vertices etc....
+        self.n_vertices = self.vertices.positions.shape[0]
+        self.n_edges = self.edges.indices.shape[0]
+        self.n_plaquettes = len(self.plaquettes)
+
+
+        def __repr__(self):
+            return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
         edge_indices,
