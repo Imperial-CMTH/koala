@@ -5,6 +5,7 @@ flake8
 python-sat
 pytest
 pytest-cov
+pytest-xdist
 pytest-github-actions-annotate-failures
 nbmake
 
