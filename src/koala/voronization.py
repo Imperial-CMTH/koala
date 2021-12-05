@@ -53,7 +53,11 @@ def plot_lines(ax, lines, **kwargs):
 
 #TODO:
 # - Factor out debugging plot code
-def generate_lattice(original_points: npt.NDArray[np.floating], debug_plot: bool = False) -> Lattice:
+def generate_lattice(
+    original_points: npt.NDArray[np.floating],
+    debug_plot: bool = False, 
+    shift_vertices = False
+    ) -> Lattice:
     """Generate a `Lattice` object with periodic boundary conditions from an initial set of points
         ``original_points`` whose voronoi diagram constitute the vertices and edges of the lattice.
 
@@ -61,6 +65,8 @@ def generate_lattice(original_points: npt.NDArray[np.floating], debug_plot: bool
     :type original_points: npt.NDArray[np.floating]
     :param debug_plot: Output intermediate debugging plots to check PBC logic, defaults to False
     :type debug_plot: bool, optional
+    :param shift_vertices: If True, shift all the vertices to the center of the delaunay triangle they sit in - stops any vertices getting too close together and makes things a bit neater
+    :type shift_vertices: bool, optional
     :return: Lattice object containing information about vertices, edges, and
     :rtype: Lattice object
     """    
@@ -72,6 +78,26 @@ def generate_lattice(original_points: npt.NDArray[np.floating], debug_plot: bool
     vor = Voronoi(points)
     ridge_indices = np.array(vor.ridge_vertices)
     ridge_vertices = vor.vertices[ridge_indices]
+
+    # shift the positions of the vertices to the center of the delaunay triangle they are in
+    if shift_vertices == True:
+        ridge_points = np.array(vor.ridge_points)
+
+        # find the edges that touch each vertex
+        vertex_adjacent_edges = []
+        for vertex_number in range(vor.vertices.shape[0]):
+            v_edges = np.nonzero( (ridge_indices[:, 0] == vertex_number) + (ridge_indices[:, 1] == vertex_number))[0]
+            vertex_adjacent_edges.append(v_edges)
+
+        # find the indices of the points that live in the three regions around the vertex
+        delaunay_edges = ridge_points[vertex_adjacent_edges]
+        points_flat = ridge_points[vertex_adjacent_edges].reshape(delaunay_edges.shape[0], 6)
+        delaunay_point_indices = np.apply_along_axis(np.unique,1,points_flat)
+        delaunay_points = vor.points[delaunay_point_indices]
+
+        # average these to get the delaunay centers
+        delaunay_center = np.sum(delaunay_points,1)/3
+        vor.vertices = delaunay_center        
 
     #count how many of each ridges points fall in the unit cell
     ridges_vertices_in_unit_cell = np.sum( 
