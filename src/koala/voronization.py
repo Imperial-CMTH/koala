@@ -77,7 +77,6 @@ def generate_lattice(
     # Generate Voronoi diagram w/ SciPy
     vor = Voronoi(points)
     ridge_indices = np.array(vor.ridge_vertices)
-    ridge_vertices = vor.vertices[ridge_indices]
 
     # shift the positions of the vertices to the center of the delaunay triangle they are in
     if shift_vertices == True:
@@ -98,6 +97,8 @@ def generate_lattice(
         # average these to get the delaunay centers
         delaunay_center = np.sum(delaunay_points,1)/3
         vor.vertices = delaunay_center        
+
+    ridge_vertices = vor.vertices[ridge_indices]
 
     #count how many of each ridges points fall in the unit cell
     ridges_vertices_in_unit_cell = np.sum( 
