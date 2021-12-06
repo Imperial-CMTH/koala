@@ -19,7 +19,7 @@ setup(
         'python-sat',
         'pytest',
         'pytest-cov',
+        'nbmake',
         'pytest-github-actions-annotate-failures',
-        'tinyarray'
     ]
 )

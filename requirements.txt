@@ -1,9 +1,11 @@
-numpy
+numpy>=1.2
 scipy
 matplotlib
 flake8
 python-sat
 pytest
 pytest-cov
+pytest-xdist
 pytest-github-actions-annotate-failures
-tinyarray
+nbmake
+

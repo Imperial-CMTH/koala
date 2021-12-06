@@ -10,6 +10,7 @@ dependencies:
   - matplotlib
   - pip
   - pytest
+  - nbmake
   - flake8
   - pip:
     # works for regular pip packages
