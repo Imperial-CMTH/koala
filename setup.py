@@ -12,13 +12,14 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires=[
-        'numpy',
+        'numpy>=1.2',
         'scipy',
         'matplotlib',
         'flake8',
         'python-sat',
         'pytest',
         'pytest-cov',
+        'pytest-xdist',
         'nbmake',
         'pytest-github-actions-annotate-failures',
     ]
