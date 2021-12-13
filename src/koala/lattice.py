@@ -277,7 +277,7 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   """
   original_verts = l.vertices
   original_edges = l.edges
-  nverts = original_verts.shape[0]
+  nverts = original_verts.positions.shape[0]
 
   inverse_ordering = np.zeros((nverts,)).astype(int)
   inverse_ordering[ordering] = np.arange(nverts).astype(int) # inverse_ordering[i] = i'

@@ -19,7 +19,7 @@ def bisect_lattice(l: Lattice, solution: npt.NDArray[np.integer], along: int = 0
   # given by solution. By default, the first entry in solution will define the flavor of bond along
   # which the lattice is 'dimerized' to form the sublattices.
 
-  nverts = l.vertices.shape[0]
+  nverts = l.vertices.positions.shape[0]
   # Pick all edges of color `along`
   dimer_mask = (solution == along)
   dimer_vertices = l.edges.indices[dimer_mask]
@@ -47,7 +47,7 @@ def generate_majorana_hamiltonian(l: Lattice, J: float = 1.0, method: str = 'ran
   :return: Quadratic Majorana Hamiltonian matrix representation in Majorana basis
   :rtype: npt.NDArray
   """  
-  nverts = l.vertices.shape[0]
+  nverts = l.vertices.positions.shape[0]
   nedges = l.edges.indices.shape[0]
   ham = np.zeros((nverts, nverts))
   

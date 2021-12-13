@@ -14,7 +14,7 @@ def test_sublattice_labelling():
   solvable, solution = edge_color(g.edges.indices, n_colors = 3)
   # bisect lattice, dimerizing along 0 bonds
   l = bisect_lattice(g, solution, 0)
-  nverts = l.vertices.shape[0]
+  nverts = l.vertices.positions.shape[0]
   # loop over points in the lattice
   for v_idx in range(l.vertices.shape[0]):
     # find the edge containing v with color 0
