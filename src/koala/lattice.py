@@ -285,9 +285,10 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   new_edges = Edges(
     indices = inverse_ordering[original_edges.indices],
     vectors = original_edges.vectors,
-    crossing = original_edges.crossing
+    crossing = original_edges.crossing,
+    adjacent_plaquettes = None,
   )
-  new_verts = original_verts[ordering]
+  new_verts = original_verts.positions[ordering]
   return Lattice(
     vertices=new_verts,
     edge_indices=new_edges.indices,

@@ -16,7 +16,7 @@ def test_sublattice_labelling():
   l = bisect_lattice(g, solution, 0)
   nverts = l.vertices.positions.shape[0]
   # loop over points in the lattice
-  for v_idx in range(l.vertices.shape[0]):
+  for v_idx in range(l.vertices.positions.shape[0]):
     # find the edge containing v with color 0
     e_idx = np.any(v_idx == l.edges.indices,axis=-1) & (solution == 0)
     e_verts = l.edges.indices[e_idx][0]
