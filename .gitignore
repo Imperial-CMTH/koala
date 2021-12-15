@@ -132,3 +132,6 @@ dmypy.json
 python_notebooks/
 
 .DS_Store
+
+# VScode settins
+.vscode/

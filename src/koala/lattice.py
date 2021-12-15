@@ -262,3 +262,35 @@ def _find_all_plaquettes(l: Lattice):
             plaquettes.append(plaq_obj)
 
     return plaquettes
+
+
+def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
+  """Create a new lattice with the vertex indices rearranged according to ordering,
+  such that new_l.vertices[i] = l.vertices[ordering[i]].
+
+  :param l: Original lattice to have vertices reordered
+  :type l: Lattice
+  :param ordering: Permutation of vertex ordering, i = ordering[i']
+  :type ordering: npt.NDArray[np.integer]
+  :return: New lattice object with permuted vertex indices
+  :rtype: Lattice
+  """
+  original_verts = l.vertices
+  original_edges = l.edges
+  nverts = original_verts.positions.shape[0]
+
+  inverse_ordering = np.zeros((nverts,)).astype(int)
+  inverse_ordering[ordering] = np.arange(nverts).astype(int) # inverse_ordering[i] = i'
+
+  new_edges = Edges(
+    indices = inverse_ordering[original_edges.indices],
+    vectors = original_edges.vectors,
+    crossing = original_edges.crossing,
+    adjacent_plaquettes = None,
+  )
+  new_verts = original_verts.positions[ordering]
+  return Lattice(
+    vertices=new_verts,
+    edge_indices=new_edges.indices,
+    edge_crossing=new_edges.crossing
+  )
