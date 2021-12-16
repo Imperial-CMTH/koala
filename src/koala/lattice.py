@@ -16,7 +16,7 @@ class Plaquette:
     :type vertices: np.ndarray[int] (plaquettesize)
     :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
     :type edges: np.ndarray[int] (plaquettesize)
-    :param directions: Valued +/- 1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
+    :param directions: Valued 0,1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
     :type directions: np.ndarray[int] (plaquettesize)
     :param centers: Coordinates of the center of the plaquette
     :type centers: np.ndarray[float] (2)
