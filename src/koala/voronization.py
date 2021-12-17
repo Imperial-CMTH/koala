@@ -56,7 +56,7 @@ def plot_lines(ax, lines, **kwargs):
 def generate_lattice(
     original_points: npt.NDArray[np.floating],
     debug_plot: bool = False, 
-    shift_vertices = False
+    shift_vertices = True
     ) -> Lattice:
     """Generate a `Lattice` object with periodic boundary conditions from an initial set of points
         ``original_points`` whose voronoi diagram constitute the vertices and edges of the lattice.
