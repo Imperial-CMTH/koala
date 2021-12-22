@@ -324,3 +324,29 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     edge_indices=new_edges.indices,
     edge_crossing=new_edges.crossing
   )
+
+def cut_boundaries(l: Lattice, boundary_to_cut: list):
+    vertices = l.vertices.positions
+    edges = l.edges.indices
+    crossing = l.edges.crossing
+
+    x_external = crossing[:,0] != 0
+    y_external = crossing[:,1] != 0
+
+    condx = 1-x_external*boundary_to_cut[0]
+    condy = 1-y_external*boundary_to_cut[1]
+
+    cond = condx* condy
+
+    internal_edge_ind = np.nonzero(cond)[0]
+    new_edges = edges[internal_edge_ind]
+    new_crossing = crossing[internal_edge_ind]
+
+    lattice_out = Lattice(
+        vertices,
+        new_edges,
+        new_crossing
+    )
+
+    return lattice_out
+    
