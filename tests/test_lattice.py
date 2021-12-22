@@ -1,15 +1,23 @@
 import numpy as np
-from koala import lattice
-from koala.lattice import Lattice
-from koala.voronization import generate_lattice
-from koala.pointsets import generate_random
+from koala import pointsets
+from matplotlib import pyplot as plt
+from koala import voronization
+from koala import plotting
+from koala.lattice import cut_boundaries
 from koala.example_graphs import *
 
-
 def test_lattice_class():
-    lattice1 = tutte_graph()
-    lattice2 = tri_square_pent()
-    points = generate_random(30)
-    lattice3 = generate_lattice(points)
 
-    assert (len(lattice3.plaquettes) == 30)
+    # generate a ton of weird graphs
+    
+    tri_square_pent()
+    two_tri()
+    tutte_graph()
+    n_ladder(6,True)
+    points1 = pointsets.generate_random(50)
+    voronization.generate_lattice(points1)
+    points2 = pointsets.generate_bluenoise(30,3,3)
+    voronization.generate_lattice(points2)
+    cut_boundaries(voronization.generate_lattice(points2), [False,True])
+    cut_boundaries(voronization.generate_lattice(points2), [True,True])
+
