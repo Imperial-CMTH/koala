@@ -185,9 +185,10 @@ def _find_plaquette(
     :return: A plaquette object representing the found plaquette
     :rtype: Plaquette
     """
-    # TODO - Decide when you have an open boundaries exterior plaquette!
+
     edge_indices = l.edges.indices
     vertex_adjacent_edges = l.vertices.adjacent_edges
+
     start_vertex = edge_indices[starting_edge, starting_direction]
     current_edge = starting_edge
     current_vertex = start_vertex
@@ -199,7 +200,7 @@ def _find_plaquette(
     plaquette_directions = [starting_direction]
 
     while True:
-        # one anticlockwise step around the plaquette
+        # one anticlockwise step around the plaquette - always done with a left turn
         current_vertex = edge_indices[current_edge][np.where(
             np.roll(edge_indices[current_edge], 1) == current_vertex)[0][0]]
         current_edge_choices = vertex_adjacent_edges[current_vertex]
@@ -218,6 +219,15 @@ def _find_plaquette(
     plaquette_edges = np.array(plaquette_edges)
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
+    valid_plaquette = True
+
+    # this bit checks if the loop crosses an edge once only - if so then it is one of the two edges of a system crossing strip plaquette
+    # which means that the system is in strip geometry. We discard the plaquette.
+    plaquette_crossings = (1-2*plaquette_directions[:,None]) *l.edges.crossing[plaquette_edges]
+    overall_crossings = np.sum(plaquette_crossings, axis= 0)
+    if np.sum(overall_crossings != [0,0]):
+        # then this plaquette is invalid
+        valid_plaquette = False
 
     plaquette_vectors = l.edges.vectors[plaquette_edges] * (1-2*plaquette_directions[:,None])
     plaquette_sums = np.cumsum(plaquette_vectors, 0)
@@ -225,10 +235,17 @@ def _find_plaquette(
     plaquette_center = np.sum(points, 0) / (points.shape[0])%1
 
 
+    # now we check if the plaquette is acually the boundary of the lattice - this happens when we are in open boundaries, do this by checking the winding number!
+    angles = np.arctan2(plaquette_vectors[:,1], plaquette_vectors[:,0])/(2*np.pi)
+    relative_angles = (np.roll(angles,1) - angles +0.5)%1 -0.5
+    w_number = round(np.sum(relative_angles))
+    if w_number == 1:
+        valid_plaquette = False
+
     found_plaquette = Plaquette(vertices=plaquette_vertices,
                                 edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center)
 
-    return found_plaquette
+    return found_plaquette, valid_plaquette
 
 
 def _find_all_plaquettes(l: Lattice):
@@ -241,7 +258,7 @@ def _find_all_plaquettes(l: Lattice):
     """
 
     edge_indices = l.edges.indices
-    vertex_adjacent_edges = l.vertices.adjacent_edges
+
     # have we already found a plaquette on that edge going in that direction
     edges_fwd_backwd_remaining = np.ones_like(edge_indices)
 
@@ -250,16 +267,18 @@ def _find_all_plaquettes(l: Lattice):
 
         # every edge touches at most two new plaquettes one going forward and one going backwards
         if edges_fwd_backwd_remaining[i, 0] == 1:
-            plaq_obj = _find_plaquette(
+            plaq_obj, valid = _find_plaquette(
                 i, 0, l)
             edges_fwd_backwd_remaining[plaq_obj.edges, plaq_obj.directions] = 0
-            plaquettes.append(plaq_obj)
+            if valid:
+                plaquettes.append(plaq_obj)
 
         if edges_fwd_backwd_remaining[i, 1] == 1:
-            plaq_obj = _find_plaquette(
-                i, 1, l)
+            plaq_obj, valid = _find_plaquette(
+                i, 1, l)                
             edges_fwd_backwd_remaining[plaq_obj.edges, plaq_obj.directions] = 0
-            plaquettes.append(plaq_obj)
+            if valid:
+                plaquettes.append(plaq_obj)
 
     return plaquettes
 
