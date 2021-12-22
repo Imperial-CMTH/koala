@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.numeric import cross
 from numpy.lib.index_tricks import nd_grid
 import numpy.typing as npt
 from dataclasses import dataclass
@@ -199,7 +200,13 @@ def _find_plaquette(
     plaquette_vertices = [start_vertex]
     plaquette_directions = [starting_direction]
 
+    valid_plaquette = True
+
+    loopcount = 0
     while True:
+        loopcount +=1
+        if loopcount > 1000:
+            raise Exception('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
         # one anticlockwise step around the plaquette - always done with a left turn
         current_vertex = edge_indices[current_edge][np.where(
             np.roll(edge_indices[current_edge], 1) == current_vertex)[0][0]]
@@ -210,7 +217,7 @@ def _find_plaquette(
             edge_indices[current_edge] == current_vertex)[0][0] == 0 else 1
 
         # stop when you get back to where you started
-        if current_edge == starting_edge:
+        if current_edge == starting_edge and current_direction == starting_direction:
             break
         plaquette_edges.append(current_edge)
         plaquette_vertices.append(current_vertex)
@@ -219,7 +226,11 @@ def _find_plaquette(
     plaquette_edges = np.array(plaquette_edges)
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
-    valid_plaquette = True
+    
+    # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
+    # this means the plaquette is not legit!
+    if len(np.unique(plaquette_edges)) != len(plaquette_edges):
+        valid_plaquette = False
 
     # this bit checks if the loop crosses an edge once only - if so then it is one of the two edges of a system crossing strip plaquette
     # which means that the system is in strip geometry. We discard the plaquette.
