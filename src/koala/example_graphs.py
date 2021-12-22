@@ -187,3 +187,40 @@ def tutte_graph():
     edge_crossing = np.zeros_like(adjacency)
     lattice = Lattice(vertices,adjacency,edge_crossing)
     return lattice
+
+def n_ladder(n_sites: int, wobble = False):
+    """Produces a strip-ladder type graph - good for testing if things work in strip geometry
+
+    :param n_sites: number of sites in the x-direction
+    :type n_sites: int
+    :param wobble: adds a sin wobble to the ladder shape - for testing if plaquettes come out that shouldnt be there, defaults to False
+    :type wobble: bool, optional
+    :return: a lattice for the ladder system
+    :rtype: Lattice
+    """
+    
+    x_positions = np.linspace(0.05,0.95,n_sites)
+    y_1_positions = 0.3*np.ones(n_sites)
+    y_2_positions = 0.7*np.ones(n_sites)
+
+    if wobble == True:
+        y_1_positions += 0.1*np.sin(x_positions*2*np.pi)
+        y_2_positions += 0.1*np.sin(x_positions*2*np.pi)
+
+    vertices = np.concatenate((np.array([x_positions,y_1_positions]).T,np.array([x_positions,y_2_positions]).T))
+    
+    edges_bottom = np.array([np.arange(n_sites),(np.arange(n_sites)+1)%n_sites]).T
+    crossing_hor = np.zeros_like(edges_bottom)
+    crossing_hor[-1,:] = [1,0] 
+    edges_top = edges_bottom + n_sites
+    edges_across = np.array([np.arange(n_sites),np.arange(n_sites)+n_sites]).T
+    crossing_across = np.zeros_like(edges_bottom)
+
+    edges = np.concatenate([edges_bottom,edges_top,edges_across])
+    crossing = np.concatenate([crossing_hor,crossing_hor,crossing_across])
+
+
+    out = Lattice(vertices,edges,crossing)
+    return out
+
+
