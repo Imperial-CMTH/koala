@@ -8,7 +8,7 @@ import functools
 class LatticeException(Exception):
     pass
 
-@dataclass
+@dataclass(frozen=True)
 class Plaquette:
     """Represents a single plaquette in a lattice. Not a list since plaquettes can have varying size.
 
@@ -27,7 +27,7 @@ class Plaquette:
     center: np.ndarray
 
 
-@dataclass
+@dataclass(frozen=True)
 class Edges:
     """
     Represents the list of edges in the lattice
@@ -48,7 +48,7 @@ class Edges:
     adjacent_plaquettes: np.ndarray
 
 
-@dataclass
+@dataclass(frozen=True)
 class Vertices:
     """
     Represents a list of vertices in the lattice
