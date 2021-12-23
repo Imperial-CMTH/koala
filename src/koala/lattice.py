@@ -202,9 +202,7 @@ def _find_plaquette(
 
     valid_plaquette = True
 
-    loopcount = 0
-    while True:
-        loopcount +=1
+    for loopcount in range(2000):
         if loopcount > 1000:
             raise Exception('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
         # one anticlockwise step around the plaquette - always done with a left turn
