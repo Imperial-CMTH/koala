@@ -3,6 +3,7 @@ from numpy.core.numeric import cross
 from numpy.lib.index_tricks import nd_grid
 import numpy.typing as npt
 from dataclasses import dataclass
+import functools
 
 
 @dataclass
@@ -114,17 +115,23 @@ class Lattice(object):
             adjacent_plaquettes=None  # TODO: construct adjacent plaquette finder
         )
 
-        self.plaquettes = _find_all_plaquettes(self)
-
-
         # some proeprties that count edges and vertices etc....
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
-        self.n_plaquettes = len(self.plaquettes)
 
 
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+    
+    # this decorator means that you lattice.plaquettes will 
+    # get computed when it is first accessed and then saved in the object
+    @functools.cached_property
+    def plaquettes(self):
+        return _find_all_plaquettes(self)
+
+    @functools.cached_property
+    def n_plaquettes(self): return len(self.plaquettes)
+
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
