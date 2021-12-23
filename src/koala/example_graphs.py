@@ -224,3 +224,14 @@ def n_ladder(n_sites: int, wobble = False):
     return out
 
 
+def multi_graph() -> Lattice:
+    """Returns a graph with multiple edges between the same two sites
+
+    :return: A multiple-y connected graph
+    :rtype: Lattice
+    """
+    return Lattice(
+        vertices = np.array([[0.5,0.7], [0.5,0.3]]),
+        edge_indices = np.array([[0,1],[0,0],[0,1],[1,1]]),
+        edge_crossing = np.array([[0,0],[1,0],[1,0],[1,0]]),
+    )
