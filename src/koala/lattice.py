@@ -5,6 +5,8 @@ import numpy.typing as npt
 from dataclasses import dataclass
 import functools
 
+class LatticeException(Exception):
+    pass
 
 @dataclass
 class Plaquette:
@@ -209,9 +211,13 @@ def _find_plaquette(
 
     valid_plaquette = True
 
+    #check that no vertex has an edge to itself
+    if np.any(l.edges.indices[:, 0] == l.edges.indices[:, 1]):
+        raise LatticeException("This graph has an edge that connects to itself, plaquettes cannot be computed.")
+
     for loopcount in range(2000):
         if loopcount > 1000:
-            raise Exception('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
+            raise LatticeException('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
         # one anticlockwise step around the plaquette - always done with a left turn
         current_vertex = edge_indices[current_edge][np.where(
             np.roll(edge_indices[current_edge], 1) == current_vertex)[0][0]]
