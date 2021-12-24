@@ -3,12 +3,9 @@ from numpy.core.numeric import cross
 from numpy.lib.index_tricks import nd_grid
 import numpy.typing as npt
 from dataclasses import dataclass
-import functools
 
-class LatticeException(Exception):
-    pass
 
-@dataclass(frozen=True)
+@dataclass
 class Plaquette:
     """Represents a single plaquette in a lattice. Not a list since plaquettes can have varying size.
 
@@ -27,7 +24,7 @@ class Plaquette:
     center: np.ndarray
 
 
-@dataclass(frozen=True)
+@dataclass
 class Edges:
     """
     Represents the list of edges in the lattice
@@ -48,7 +45,7 @@ class Edges:
     adjacent_plaquettes: np.ndarray
 
 
-@dataclass(frozen=True)
+@dataclass
 class Vertices:
     """
     Represents a list of vertices in the lattice
@@ -117,23 +114,17 @@ class Lattice(object):
             adjacent_plaquettes=None  # TODO: construct adjacent plaquette finder
         )
 
+        self.plaquettes = _find_all_plaquettes(self)
+
+
         # some proeprties that count edges and vertices etc....
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
+        self.n_plaquettes = len(self.plaquettes)
 
 
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
-    
-    # this decorator means that you lattice.plaquettes will 
-    # get computed when it is first accessed and then saved in the object
-    @functools.cached_property
-    def plaquettes(self):
-        return _find_all_plaquettes(self)
-
-    @functools.cached_property
-    def n_plaquettes(self): return len(self.plaquettes)
-
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
@@ -211,13 +202,11 @@ def _find_plaquette(
 
     valid_plaquette = True
 
-    #check that no vertex has an edge to itself
-    if np.any(l.edges.indices[:, 0] == l.edges.indices[:, 1]):
-        raise LatticeException("This graph has an edge that connects to itself, plaquettes cannot be computed.")
-
-    for loopcount in range(2000):
+    loopcount = 0
+    while True:
+        loopcount +=1
         if loopcount > 1000:
-            raise LatticeException('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
+            raise Exception('something is wrong here - the plaquette finder is not managing to get to the end of this loop!!!!')
         # one anticlockwise step around the plaquette - always done with a left turn
         current_vertex = edge_indices[current_edge][np.where(
             np.roll(edge_indices[current_edge], 1) == current_vertex)[0][0]]
