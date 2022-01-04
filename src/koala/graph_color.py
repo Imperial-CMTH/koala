@@ -14,6 +14,7 @@ from pysat.solvers import Solver
 from pysat.card import *
 import itertools as it
 from .graph_utils import edge_neighbours
+from .lattice import Lattice
 
 """"
 Both routines in this file encode their problems in Conjunctive Normal Form (CNF) and then pass them to
@@ -177,26 +178,16 @@ def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n
         elif not solveable:
             return solveable, s.get_core()
 
-#examples!
-# n = 40
-# from koala.pointsets import generate_random
-# points = generate_random(n)
+def color_lattice(lattice: Lattice):
+    """Return an asignment of one of 3 labels to each lattice edge such that mp edges with the same label meet at a vertex.
+    If such a coloring cannot be found raises a ValueError.
 
-# from koala.voronization import generate_pbc_voronoi_adjacency
-# vertices, adjacency = generate_pbc_voronoi_adjacency(points)
-    
-# from koala.plotting import plot_lattice
-# plot_lattice(vertices, adjacency)
-
-
-# from koala.SAT import vertex_color
-# solution = vertex_color(adjacency, n_colors = 3)
-# colors = np.array(['orange', 'b', 'k'])[solution]
-
-# plot_lattice(vertices, adjacency, scatter_args = dict(color = colors))
-
-# from koala.SAT import edge_color
-# solution = edge_color(adjacency, n_colors = 3)
-# colors = np.array(['orange', 'b', 'k'])[solution]
-
-# plot_lattice(vertices, adjacency, edge_colors = colors)
+    :param Lattice: The lattice to color.
+    :type Lattice: lattice
+    """    
+    #fix the coloring to be clockwise about vertex 0
+    fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=lattice))
+    solveable, solution = edge_color(lattice.edges.indices, n_colors = 3, fixed = fixed)
+    if not solveable:
+        raise ValueError("No coloring exists for this lattice.")
+    return solution

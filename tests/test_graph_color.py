@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 from koala.pointsets import generate_random
 from koala.voronization import generate_lattice
-from koala.graph_color import vertex_color, edge_color
-from koala.graph_utils import edge_neighbours
+from koala.graph_color import vertex_color, edge_color, color_lattice
+from koala.graph_utils import edge_neighbours, clockwise_edges_about
 
 pytestmark = pytest.mark.filterwarnings("ignore:numpy")
 
@@ -37,5 +37,17 @@ def test_edge_coloring():
                 neighbouring_edges = edge_neighbours(i, g.edges.indices)
                 assert(colors[i] not in colors[neighbouring_edges])
 
+            
+
 def test_unsolveable():
     pass
+
+def test_color_lattice():
+    from koala.example_graphs import two_tri, tri_square_pent, tutte_graph
+    graphs = [two_tri(), tri_square_pent(), tutte_graph()]
+    for g in graphs:
+        fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=g))
+        solveable, solution = edge_color(g.edges.indices, n_colors = 3, fixed = fixed)
+        if solveable:
+            solution2 = color_lattice(g)
+            assert(np.all(solution == solution2))
