@@ -1,9 +1,9 @@
 import numpy as np
-from numpy.core.numeric import cross
-from numpy.lib.index_tricks import nd_grid
 import numpy.typing as npt
 from dataclasses import dataclass
 
+class LatticeException(Exception):
+    pass
 
 @dataclass
 class Plaquette:
@@ -238,7 +238,7 @@ def _find_plaquette(
         edge_dir_bundle = [[e,d] for e,d in zip (plaquette_edges, plaquette_directions)]
         cond = [current_edge, current_direction ]in edge_dir_bundle[1:]
         if cond:
-            raise Exception('plaquette finder is getting stuck. This usually happens if the lattice has self edges or other unexpected properties')
+            raise LatticeException('plaquette finder is getting stuck. This usually happens if the lattice has self edges or other unexpected properties')
 
         plaquette_edges.append(current_edge)
         plaquette_vertices.append(current_vertex)
