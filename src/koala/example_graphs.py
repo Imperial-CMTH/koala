@@ -1,6 +1,6 @@
 from koala.lattice import Lattice
 import numpy as np
-
+from koala.voronization import generate_lattice
 
 
 def two_tri():
@@ -269,4 +269,35 @@ def generate_regular_honeycomb(N : int = 10) -> Lattice:
     if not np.all(np.bincount(lat.edges.indices.flatten()) == 3): #all vertices have coordination number 3
         raise ValueError(f"For some reason N = {N} broke the connectivity, use a different N")
     
+    return lat
+
+def bridge_graph():
+    """gives a simple example of a graph with a bridge - somethiing that could mess up the plaquette finder (but shouldnt any more!)
+
+    :return: A simple lattice with a bridge
+    :rtype: Lattice
+    """
+    vertices = np.array([
+        [0.1,0.2],
+        [0.1,0.8],
+        [0.4,0.5],
+        [0.6,0.5],
+        [0.9,0.8],
+        [0.9,0.2]
+    ])
+
+    edges = np.array([
+        [0,1],
+        [1,2],
+        [0,2],
+        [2,3],
+        [3,4],
+        [4,5],
+        [5,3]
+    ])
+
+    edge_crossing = np.array([[0,0]]*edges.shape[0])
+
+    lat = Lattice(vertices,edges,edge_crossing)
+
     return lat
