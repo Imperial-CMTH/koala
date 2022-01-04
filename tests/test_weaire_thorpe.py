@@ -32,7 +32,6 @@ def test_smoketest_weaire_thorpe():
 
     plot_lattice(WT_g, edge_arrows = edge_arrows, ax = ax, edge_labels = edge_labels)
 
-@pytest.mark.skip(reason="Breaks plaquette code")
 def test_multi_graphs():
     """The following graph has vertices with edges that link the same vertex together,
      this checks that clockwise edges about handles them correctly as part of the Weaire-Thorpe process"""
