@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
+from functools import cached_property
 
 class LatticeException(Exception):
     pass
@@ -43,7 +44,13 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
-    adjacent_plaquettes: np.ndarray
+    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+
+    @cached_property
+    def adjacent_plaquettes(self) -> np.ndarray:
+        self._parent.plaquettes #access lattice.plaquettes to make them generate
+        return self._parent.__edges_adjacent_plaquettes
+
 
 
 @dataclass
@@ -61,7 +68,12 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
-    adjacent_plaquettes: np.ndarray
+    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+
+    @cached_property
+    def adjacent_plaquettes(self) -> np.ndarray:
+        self._parent.plaquettes #access lattice.plaquettes to make them generate
+        return self._parent.__vertices_adjacent_plaquettes
 
 
 class Lattice(object):
@@ -105,23 +117,26 @@ class Lattice(object):
         self.vertices = Vertices(
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
-            adjacent_plaquettes=None  
+            _parent = self,
         )
 
         self.edges = Edges(
             indices=edge_indices,
             vectors=edge_vectors,
             crossing=edge_crossing,
-            adjacent_plaquettes=None
+            _parent = self,
         )
-
-        self.plaquettes = _find_all_plaquettes(self)
 
         # some properties that count edges and vertices etc...
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
-        self.n_plaquettes = len(self.plaquettes)
-
+        
+    def __repr__(self):
+        return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+    
+    @cached_property
+    def plaquettes(self):
+        _plaquettes = _find_all_plaquettes(self)
 
         # now add edge adjacency and point adjacency for plaquettes
         def set_first_none(row, value):
@@ -130,19 +145,23 @@ class Lattice(object):
 
         edges_plaquettes = np.full((self.n_edges, 2), None)
         vertices_plaquettes = np.full((self.n_vertices, 3), None)
-        for n,plaquette in enumerate(self.plaquettes):
+        for n,plaquette in enumerate(_plaquettes):
             edges_plaquettes[plaquette.edges, plaquette.directions] = n
 
             x = vertices_plaquettes[plaquette.vertices]
             np.apply_along_axis(set_first_none,1,x,n)
             vertices_plaquettes[plaquette.vertices] = x
 
-        self.vertices.adjacent_plaquettes = vertices_plaquettes
-        self.edges.adjacent_plaquettes = edges_plaquettes
-        
+        # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
+        # are accessed, they are copied from __vertices_adjacent_plaquettes and __edges_adjacent_plaquettes
+        self.__vertices_adjacent_plaquettes = vertices_plaquettes
+        self.__edges_adjacent_plaquettes = edges_plaquettes
+        return _plaquettes
 
-    def __repr__(self):
-        return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+    @cached_property
+    def n_plaquettes(self):
+        return len(self.plaquettes)
+
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
@@ -339,7 +358,7 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     indices = inverse_ordering[original_edges.indices],
     vectors = original_edges.vectors,
     crossing = original_edges.crossing,
-    adjacent_plaquettes = None,
+    _parent = None
   )
   new_verts = original_verts.positions[ordering]
   return Lattice(
