@@ -49,7 +49,7 @@ class Edges:
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
         self._parent.plaquettes #access lattice.plaquettes to make them generate
-        return self._parent.__edges_adjacent_plaquettes
+        return self._parent._edges_adjacent_plaquettes
 
 
 
@@ -73,7 +73,7 @@ class Vertices:
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
         self._parent.plaquettes #access lattice.plaquettes to make them generate
-        return self._parent.__vertices_adjacent_plaquettes
+        return self._parent._vertices_adjacent_plaquettes
 
 
 class Lattice(object):
@@ -154,8 +154,8 @@ class Lattice(object):
 
         # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
         # are accessed, they are copied from __vertices_adjacent_plaquettes and __edges_adjacent_plaquettes
-        self.__vertices_adjacent_plaquettes = vertices_plaquettes
-        self.__edges_adjacent_plaquettes = edges_plaquettes
+        self._vertices_adjacent_plaquettes = vertices_plaquettes
+        self._edges_adjacent_plaquettes = edges_plaquettes
         return _plaquettes
 
     @cached_property
