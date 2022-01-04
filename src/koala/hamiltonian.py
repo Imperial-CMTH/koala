@@ -32,8 +32,7 @@ def bisect_lattice(l: Lattice, solution: npt.NDArray[np.integer], along: int = 0
   bisected_lattice = permute_vertices(l, vertex_reordering)
   return bisected_lattice
 
-# TODO: generalize this to anisotropic couplings
-def generate_majorana_hamiltonian(l: Lattice, J: float = 1.0, method: str = 'random') -> npt.NDArray[np.complexfloating]:
+def generate_majorana_hamiltonian(l: Lattice, J: npt.NDArray[np.floating] = (1.0,1.0,1.0), method: str = 'random', edge_labels = None) -> npt.NDArray[np.complexfloating]:
   """Assign couplings ($A_{jk} \in \pm 2J$) to each bond in lattice `l` and construct the matrix. Indices refer
   to the vertex indices in the Lattice object. This is the quadratic Majorana Hamiltonian of eqn (13)
   in Kitaev's paper.
@@ -47,14 +46,13 @@ def generate_majorana_hamiltonian(l: Lattice, J: float = 1.0, method: str = 'ran
   :return: Quadratic Majorana Hamiltonian matrix representation in Majorana basis
   :rtype: npt.NDArray
   """  
-  nverts = l.vertices.positions.shape[0]
-  nedges = l.edges.indices.shape[0]
-  ham = np.zeros((nverts, nverts))
-  
+  ham = np.zeros((l.n_vertices, l.n_vertices))
+  Js = J[edge_labels] if edge_labels is not None else J[0]
+
   if method == 'random':
-    hoppings = 2*J*np.random.choice([1,-1], size=(nedges,))
+    hoppings = 2*Js*np.random.choice([1,-1], size=(l.n_edges,))
   elif method == 'uniform':
-    hoppings = 2*J*np.ones((nedges,))
+    hoppings = 2*Js*np.ones((l.n_edges,))
   
   ham[l.edges.indices[:,0], l.edges.indices[:,1]] = hoppings
   ham[l.edges.indices[:,1], l.edges.indices[:,0]] = -1*hoppings
