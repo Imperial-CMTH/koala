@@ -25,6 +25,8 @@ def test_lattice_class():
     # run the plaquette code by accessing the plaquette property
     for graph in weird_graphs:
         graph.plaquettes
+        graph.edges.adjacent_plaquettes
+        graph.vertices.adjacent_plaquettes
 
     # test the cut boundaries functions
     for graph in weird_graphs:
@@ -36,3 +38,11 @@ def test_multigraphs():
     with pytest.raises(LatticeException):
         m = multi_graph()
         m.plaquettes
+
+def test_cache_order():
+    "check that it still works if graph.edges.neighbouring_plaquettes is accessed before graph.plaquettes"
+    g = tri_square_pent()
+    g.edges.adjacent_plaquettes
+    
+    g = tri_square_pent()
+    g.vertices.adjacent_plaquettes
