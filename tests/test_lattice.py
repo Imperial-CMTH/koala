@@ -10,12 +10,16 @@ from koala.example_graphs import *
 
 def test_lattice_class():
     # generate a ton of weird graphs
-    weird_graphs = [tri_square_pent(),
-                    two_tri(),
-                    tutte_graph(),
-                    n_ladder(6,True),
-                    voronization.generate_lattice(pointsets.generate_random(50)),
-                    voronization.generate_lattice(pointsets.generate_bluenoise(30,3,3)),
+    points2 = pointsets.generate_bluenoise(30,3,3)
+    weird_graphs = [
+                tri_square_pent(),
+                two_tri(),
+                tutte_graph(),
+                n_ladder(6,True),
+                bridge_graph(),
+                voronization.generate_lattice(points2),
+                cut_boundaries(voronization.generate_lattice(points2), [False,True]),
+                cut_boundaries(voronization.generate_lattice(points2), [True,True])
     ]
 
     # run the plaquette code by accessing the plaquette property
