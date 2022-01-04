@@ -22,6 +22,7 @@ class Plaquette:
     edges: np.ndarray
     directions: np.ndarray
     center: np.ndarray
+    n_sides: int
 
 
 @dataclass
@@ -273,8 +274,10 @@ def _find_plaquette(
     if w_number == 1:
         valid_plaquette = False
 
+    n_sides = plaquette_edges.shape[0]
+
     found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center)
+                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides)
 
     return found_plaquette, valid_plaquette
 
