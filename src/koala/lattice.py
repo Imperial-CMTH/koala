@@ -1,8 +1,10 @@
 import numpy as np
-from numpy.lib.index_tricks import nd_grid
 import numpy.typing as npt
 from dataclasses import dataclass
+from functools import cached_property
 
+class LatticeException(Exception):
+    pass
 
 @dataclass
 class Plaquette:
@@ -12,7 +14,7 @@ class Plaquette:
     :type vertices: np.ndarray[int] (plaquettesize)
     :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
     :type edges: np.ndarray[int] (plaquettesize)
-    :param directions: Valued +/- 1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
+    :param directions: Valued 0,1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
     :type directions: np.ndarray[int] (plaquettesize)
     :param centers: Coordinates of the center of the plaquette
     :type centers: np.ndarray[float] (2)
@@ -21,6 +23,7 @@ class Plaquette:
     edges: np.ndarray
     directions: np.ndarray
     center: np.ndarray
+    n_sides: int
 
 
 @dataclass
@@ -28,7 +31,7 @@ class Edges:
     """
     Represents the list of edges in the lattice
 
-    :param indices: Indices of points connected by each edge. 
+    :param indices: Indices of points connected by each edge.
     :type indices: np.ndarray[int] (nedges, 2)
     :param vectors: Vectors pointing along each edge
     :type vectors: np.ndarray[float] (nedges, 2)
@@ -41,7 +44,13 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
-    adjacent_plaquettes: np.ndarray
+    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+
+    @cached_property
+    def adjacent_plaquettes(self) -> np.ndarray:
+        self._parent.plaquettes #access lattice.plaquettes to make them generate
+        return self._parent._edges_adjacent_plaquettes
+
 
 
 @dataclass
@@ -59,7 +68,12 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
-    adjacent_plaquettes: np.ndarray
+    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+
+    @cached_property
+    def adjacent_plaquettes(self) -> np.ndarray:
+        self._parent.plaquettes #access lattice.plaquettes to make them generate
+        return self._parent._vertices_adjacent_plaquettes
 
 
 class Lattice(object):
@@ -103,27 +117,51 @@ class Lattice(object):
         self.vertices = Vertices(
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
-            adjacent_plaquettes=None  # TODO: construct adjacent plaquette finder
+            _parent = self,
         )
 
         self.edges = Edges(
             indices=edge_indices,
             vectors=edge_vectors,
             crossing=edge_crossing,
-            adjacent_plaquettes=None  # TODO: construct adjacent plaquette finder
+            _parent = self,
         )
 
-        self.plaquettes = _find_all_plaquettes(self)
-
-
-        # some proeprties that count edges and vertices etc....
+        # some properties that count edges and vertices etc...
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
-        self.n_plaquettes = len(self.plaquettes)
-
-
+        
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+    
+    @cached_property
+    def plaquettes(self):
+        _plaquettes = _find_all_plaquettes(self)
+
+        # now add edge adjacency and point adjacency for plaquettes
+        def set_first_none(row, value):
+            index = np.where(row == None)[0][0]
+            row[index] = value
+
+        edges_plaquettes = np.full((self.n_edges, 2), None)
+        vertices_plaquettes = np.full((self.n_vertices, 3), None)
+        for n,plaquette in enumerate(_plaquettes):
+            edges_plaquettes[plaquette.edges, plaquette.directions] = n
+
+            x = vertices_plaquettes[plaquette.vertices]
+            np.apply_along_axis(set_first_none,1,x,n)
+            vertices_plaquettes[plaquette.vertices] = x
+
+        # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
+        # are accessed, they are copied from __vertices_adjacent_plaquettes and __edges_adjacent_plaquettes
+        self._vertices_adjacent_plaquettes = vertices_plaquettes
+        self._edges_adjacent_plaquettes = edges_plaquettes
+        return _plaquettes
+
+    @cached_property
+    def n_plaquettes(self):
+        return len(self.plaquettes)
+
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
@@ -173,7 +211,7 @@ def _find_plaquette(
         starting_edge: int,
         starting_direction: int,
         l: Lattice):
-    """Given a single edge, and a direction, this code finds theplaquette corresponding to starting in that 
+    """Given a single edge, and a direction, this code finds the plaquette corresponding to starting in that 
     direction and only taking left turns. This means plaquettes are ordered anticlockwise - which amounts to going round each vertex clockwise.
 
     :param starting_edge: Index of the edge where you start
@@ -185,9 +223,10 @@ def _find_plaquette(
     :return: A plaquette object representing the found plaquette
     :rtype: Plaquette
     """
-    # TODO - Decide when you have an open boundaries exterior plaquette!
+
     edge_indices = l.edges.indices
     vertex_adjacent_edges = l.vertices.adjacent_edges
+
     start_vertex = edge_indices[starting_edge, starting_direction]
     current_edge = starting_edge
     current_vertex = start_vertex
@@ -198,8 +237,10 @@ def _find_plaquette(
     plaquette_vertices = [start_vertex]
     plaquette_directions = [starting_direction]
 
+    valid_plaquette = True
+
     while True:
-        # one anticlockwise step around the plaquette
+
         current_vertex = edge_indices[current_edge][np.where(
             np.roll(edge_indices[current_edge], 1) == current_vertex)[0][0]]
         current_edge_choices = vertex_adjacent_edges[current_vertex]
@@ -209,8 +250,15 @@ def _find_plaquette(
             edge_indices[current_edge] == current_vertex)[0][0] == 0 else 1
 
         # stop when you get back to where you started
-        if current_edge == starting_edge:
+        if current_edge == starting_edge and current_direction == starting_direction:
             break
+
+        # if you get trapped in a loop that doesn't include the start point - stop and return an exception
+        edge_dir_bundle = [[e,d] for e,d in zip (plaquette_edges, plaquette_directions)]
+        cond = [current_edge, current_direction ]in edge_dir_bundle[1:]
+        if cond:
+            raise LatticeException('plaquette finder is getting stuck. This usually happens if the lattice has self edges or other unexpected properties')
+
         plaquette_edges.append(current_edge)
         plaquette_vertices.append(current_vertex)
         plaquette_directions.append(current_direction)
@@ -218,6 +266,19 @@ def _find_plaquette(
     plaquette_edges = np.array(plaquette_edges)
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
+    
+    # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
+    # this means the plaquette is not legit!
+    if len(np.unique(plaquette_edges)) != len(plaquette_edges):
+        valid_plaquette = False
+
+    # this bit checks if the loop crosses a PBC boundary once only - if so then it is one of the two edges of a system crossing strip plaquette
+    # which means that the system is in strip geometry. We discard the plaquette.
+    plaquette_crossings = (1-2*plaquette_directions[:,None]) *l.edges.crossing[plaquette_edges]
+    overall_crossings = np.sum(plaquette_crossings, axis= 0)
+    if np.sum(overall_crossings != [0,0]):
+        # then this plaquette is invalid
+        valid_plaquette = False
 
     plaquette_vectors = l.edges.vectors[plaquette_edges] * (1-2*plaquette_directions[:,None])
     plaquette_sums = np.cumsum(plaquette_vectors, 0)
@@ -225,10 +286,19 @@ def _find_plaquette(
     plaquette_center = np.sum(points, 0) / (points.shape[0])%1
 
 
-    found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center)
+    # now we check if the plaquette is acually the boundary of the lattice - this happens when we are in open boundaries, do this by checking the winding number!
+    angles = np.arctan2(plaquette_vectors[:,1], plaquette_vectors[:,0])/(2*np.pi)
+    relative_angles = (np.roll(angles,1) - angles +0.5)%1 -0.5
+    w_number = round(np.sum(relative_angles))
+    if w_number == 1:
+        valid_plaquette = False
 
-    return found_plaquette
+    n_sides = plaquette_edges.shape[0]
+
+    found_plaquette = Plaquette(vertices=plaquette_vertices,
+                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides)
+
+    return found_plaquette, valid_plaquette
 
 
 def _find_all_plaquettes(l: Lattice):
@@ -241,7 +311,7 @@ def _find_all_plaquettes(l: Lattice):
     """
 
     edge_indices = l.edges.indices
-    vertex_adjacent_edges = l.vertices.adjacent_edges
+
     # have we already found a plaquette on that edge going in that direction
     edges_fwd_backwd_remaining = np.ones_like(edge_indices)
 
@@ -250,16 +320,18 @@ def _find_all_plaquettes(l: Lattice):
 
         # every edge touches at most two new plaquettes one going forward and one going backwards
         if edges_fwd_backwd_remaining[i, 0] == 1:
-            plaq_obj = _find_plaquette(
+            plaq_obj, valid = _find_plaquette(
                 i, 0, l)
             edges_fwd_backwd_remaining[plaq_obj.edges, plaq_obj.directions] = 0
-            plaquettes.append(plaq_obj)
+            if valid:
+                plaquettes.append(plaq_obj)
 
         if edges_fwd_backwd_remaining[i, 1] == 1:
-            plaq_obj = _find_plaquette(
-                i, 1, l)
+            plaq_obj, valid = _find_plaquette(
+                i, 1, l)                
             edges_fwd_backwd_remaining[plaq_obj.edges, plaq_obj.directions] = 0
-            plaquettes.append(plaq_obj)
+            if valid:
+                plaquettes.append(plaq_obj)
 
     return plaquettes
 
@@ -286,7 +358,7 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     indices = inverse_ordering[original_edges.indices],
     vectors = original_edges.vectors,
     crossing = original_edges.crossing,
-    adjacent_plaquettes = None,
+    _parent = None
   )
   new_verts = original_verts.positions[ordering]
   return Lattice(
@@ -294,3 +366,28 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     edge_indices=new_edges.indices,
     edge_crossing=new_edges.crossing
   )
+
+def cut_boundaries(l: Lattice, boundary_to_cut: list):
+    vertices = l.vertices.positions
+    edges = l.edges.indices
+    crossing = l.edges.crossing
+
+    x_external = crossing[:,0] != 0
+    y_external = crossing[:,1] != 0
+
+    condx = 1-x_external*boundary_to_cut[0]
+    condy = 1-y_external*boundary_to_cut[1]
+
+    cond = condx* condy
+
+    internal_edge_ind = np.nonzero(cond)[0]
+    new_edges = edges[internal_edge_ind]
+    new_crossing = crossing[internal_edge_ind]
+
+    lattice_out = Lattice(
+        vertices,
+        new_edges,
+        new_crossing
+    )
+
+    return lattice_out
