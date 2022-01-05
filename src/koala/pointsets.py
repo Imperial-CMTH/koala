@@ -5,7 +5,9 @@
 import numpy as np
 
 
-def generate_bluenoise(k, nx, ny):
+def generate_bluenoise(k, nx, ny, rng = None):
+    if rng is None: rng = np.random.default_rng()
+
     r = 1
     a = 1 / np.sqrt(2)
     coords = [(x, y) for x in range(nx) for y in range(ny)]
@@ -16,17 +18,17 @@ def generate_bluenoise(k, nx, ny):
 
     def disk_uniform(r1, r2):
         # Generate a random point inside 2-disc [r1, r2]
-        rho, theta = np.random.uniform(r1, r2), np.random.uniform(0, 2*np.pi)
+        rho, theta = rng.uniform(r1, r2), rng.uniform(0, 2*np.pi)
         return np.array([rho*np.cos(theta), rho*np.sin(theta)])
 
-    x0 = np.random.uniform(size=(2,)) * np.array([nx, ny])
+    x0 = rng.uniform(size=(2,)) * np.array([nx, ny])
     samples = [x0]
     cells[point_to_coord(x0)] = 0
     active_cells = [0]
 
     nsamples = 1
     while active_cells:
-        idx = np.random.choice(active_cells)
+        idx = rng.choice(active_cells)
         x0 = samples[idx]
         # Generate new point within r and 2r of x0
         for i in range(k):
@@ -50,7 +52,8 @@ def generate_bluenoise(k, nx, ny):
     return np.array(samples) / np.array([nx, ny])
 
 
-def generate_hyperuniform(nx, ny, kickstrength=1e-3):
+def generate_hyperuniform(nx, ny, kickstrength=1e-3, rng = None):
+    if rng is None: rng = np.random.default_rng()
     x = np.linspace(0, 1, nx)
     y = np.linspace(0, 1, ny)
     X, Y = np.meshgrid(x, y)
@@ -64,14 +67,15 @@ def generate_hyperuniform(nx, ny, kickstrength=1e-3):
     initial_points = cell_origins+cell_offsets
     # Generate power law kicks from Pareto distribution, a=0.45
     # as mentioned in supp info
-    mags = np.random.pareto(a=0.45, size=(nx*ny, 2))
-    dirs = np.random.uniform(size=(nx*ny,))*2*np.pi
+    mags = rng.pareto(a=0.45, size=(nx*ny, 2))
+    dirs = rng.uniform(size=(nx*ny,))*2*np.pi
     kicks = kickstrength * \
         np.array([mags[:, 0]*np.cos(dirs), mags[:, 1]*np.sin(dirs)]).T
     final_points = initial_points+kicks
     # Crop to interval [0, 1]
     return final_points[np.where(np.all(final_points > 0, axis=-1) & np.all(final_points < 1, axis=-1))]
 
-def generate_random(n):
-    points = np.random.uniform(size=(n,2))
+def generate_random(n, rng = None):
+    if rng is None: rng = np.random.default_rng()
+    points = rng.uniform(size=(n,2))
     return points
