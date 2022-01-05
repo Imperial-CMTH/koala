@@ -371,7 +371,16 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     edge_crossing=new_edges.crossing
   )
 
-def cut_boundaries(l: Lattice, boundary_to_cut: list):
+def cut_boundaries(l: Lattice, boundary_to_cut: list = [True,True]) -> Lattice:
+    """Removes the x and/or y boundary edges of the lattice.
+
+    :param l: The lattice to cut.
+    :type l: Lattice
+    :param boundary_to_cut: whether to cut the x or y boundaries, defaults to [True,True]
+    :type boundary_to_cut: list[Bool], optional
+    :return: A new lattice with boundaries cut.
+    :rtype: Lattice
+    """    
     vertices = l.vertices.positions
     edges = l.edges.indices
     crossing = l.edges.crossing
