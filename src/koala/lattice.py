@@ -3,6 +3,8 @@ import numpy.typing as npt
 from dataclasses import dataclass, field
 from functools import cached_property
 
+INVALID = np.iinfo(int).max
+
 class LatticeException(Exception):
     pass
 
@@ -143,17 +145,17 @@ class Lattice(object):
         _plaquettes = _find_all_plaquettes(self)
 
         # now add edge adjacency and point adjacency for plaquettes
-        def set_first_none(row, value):
-            index = np.where(row == None)[0][0]
+        def set_first_invalid(row, value):
+            index = np.where(row == INVALID)[0][0]
             row[index] = value
 
-        edges_plaquettes = np.full((self.n_edges, 2), None)
-        vertices_plaquettes = np.full((self.n_vertices, 3), None)
+        edges_plaquettes = np.full((self.n_edges, 2), INVALID)
+        vertices_plaquettes = np.full((self.n_vertices, 3), INVALID)
         for n,plaquette in enumerate(_plaquettes):
             edges_plaquettes[plaquette.edges, plaquette.directions] = n
 
             x = vertices_plaquettes[plaquette.vertices]
-            np.apply_along_axis(set_first_none,1,x,n)
+            np.apply_along_axis(set_first_invalid,1,x,n)
             vertices_plaquettes[plaquette.vertices] = x
 
         # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
