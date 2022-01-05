@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.typing as npt
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 
 class LatticeException(Exception):
@@ -44,7 +44,9 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
-    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+
+    #a reference to the parent lattice, has no type because Lattice isn't defined yet
+    _parent: ... = field(default=None, repr=False) 
 
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
@@ -68,7 +70,9 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
-    _parent: ... #the parent lattice, no typedef because Lattice isn't defined yet
+    
+    #a reference to the parent lattice, has no type because the Lattice class isn't defined yet
+    _parent: ... = field(default=None, repr=False) 
 
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
