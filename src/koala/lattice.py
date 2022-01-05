@@ -26,7 +26,7 @@ class Plaquette:
     n_sides: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class Edges:
     """
     Represents the list of edges in the lattice
@@ -53,7 +53,7 @@ class Edges:
 
 
 
-@dataclass
+@dataclass(frozen=True)
 class Vertices:
     """
     Represents a list of vertices in the lattice
