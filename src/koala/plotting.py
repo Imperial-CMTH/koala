@@ -6,8 +6,23 @@ import matplotlib
 from matplotlib.collections import LineCollection, PolyCollection
 from matplotlib import pyplot as plt
 
+from koala.lattice import LatticeException
+
 from .graph_utils import vertex_neighbours, clockwise_edges_about
 from .voronization import generate_point_array, Lattice
+
+
+def peru_friendly_colour_scheme(n_colours: int):
+    if n_colours == 2:
+        scheme = ['r', 'b']
+    elif n_colours == 3:
+        scheme = ['b', 'y', 'lightgrey' ]
+    elif n_colours == 4:
+        scheme = ['r','b', 'y', 'lightgrey']
+    else:
+        raise LatticeException('Honestly you cannot possibly expect someone as colourblind as me to be able to find FIVE colours I can tell apart, thats ridiculous')
+
+    return scheme
 
 def _line_fully_in_unit_cell(lines : np.ndarray) -> np.ndarray:
     """Tells you which of a set of lines is entirely within the unit cell
@@ -157,7 +172,7 @@ def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 10
         scalar (np.ndarray) shape: (len(g.vertices.positions),)): The scalar field to plot.
         ax (axis, optional): Optional axis to plot to.
         resolution (int, optional): Number of points to interpolate to in x and y. Defaults to 100.
-        method (str, optional): method{‘linear’, ‘nearest’, ‘cubic’}, see docs for scipy.interpolate.griddata. Defaults to 'cubic'.
+        method (str, optional): method{'linear', 'nearest', 'cubic'}, see docs for scipy.interpolate.griddata. Defaults to 'cubic'.
         cmap (colormap, optional): Color map to use, either string name or object. Defaults to a custom white to green fade.
         vmin (float, optional): arg to pcolormesh. Defaults to None.
         vmax (float, optional): arg to pcolormesh. Defaults to None.
