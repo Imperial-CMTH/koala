@@ -236,40 +236,6 @@ def multi_graph() -> Lattice:
         edge_crossing = np.array([[0,0],[1,0],[1,0],[1,0]]),
     )
 
-#TODO: replace this with code that directly generates the lattice rather than using voronisation
-# this method is slow and breaks at random values of N
-def generate_regular_honeycomb(N : int = 10) -> Lattice:
-    """Generate an approx NxN regular honeycomb lattice.
-
-    :param N: Generate a honeycomb with approx NxN cells, defaults to 10
-    :type N: int, optional
-    :raises ValueError: Some values of N break this function, until it's fixed just use another value.
-    :return: A regular honeycomb lattice
-    :rtype: Lattice
-    """
-    s2 = np.sqrt(2) 
-    a_x = 1 / (N*s2) #the x spacing of the voronoi centers
-    M = 1/a_x * 1/(0.5 + 1/s2) # The number cells there would be in the y direction if we used regular hexagons
-    M = np.ceil(M) #instead we squash the hexagons a bit to make ceil(M) of them fit
-    a_y = 1 / M #the spacing to use in the y direction so that an integer number fit
-
-    #make a nice little grid of integer coordinates
-    n, m = np.meshgrid(np.arange(N), np.arange(M), sparse=False, copy = True, indexing='ij')
-
-    #convert them to points in the unit cell
-    x = a_x*n*s2 + a_x*(m%2)/s2 + 0.5 * a_x
-    y = a_y*m + 0.5*a_y
-    
-    #reshape the points to be have shape (N, 2)
-    points = np.array([x,y]).transpose(1,2,0).reshape(-1, 2).copy()
-    
-    #convert them to a lattice
-    lat = generate_lattice(points)
-    
-    if not np.all(np.bincount(lat.edges.indices.flatten()) == 3): #all vertices have coordination number 3
-        raise ValueError(f"For some reason N = {N} broke the connectivity, use a different N")
-    
-    return lat
 
 def bridge_graph():
     """gives a simple example of a graph with a bridge - somethiing that could mess up the plaquette finder (but shouldnt any more!)
@@ -300,4 +266,132 @@ def bridge_graph():
 
     lat = Lattice(vertices,edges,edge_crossing)
 
+    return lat
+
+
+def generate_honeycomb(n_horizontal_cells: int, return_colouring = False)-> Lattice:
+    """Generates a regular honeycomb lattice with n_horizonta_cells number of cells in the x-direction, and a similar amount in the y direction
+    but slightly fudged to fir a square system
+
+    :param n_horizontal_cells: number of cells wide you want the lattice
+    :type n_horizontal_cells: int
+    :param return_colouring: if True also returns a regular kitaev-style colouring for all the edges, defaults to False
+    :type return_colouring: bool, optional
+    :return: a lattice or a lattice and a colouring
+    :rtype: Lattice, np.ndarray (optional)
+    """
+    
+    # define a basic unit cell with four sites
+    unit_cell_dimensions = np.array(
+        [1, np.sqrt(3)]
+    )
+
+    site_coordinates = np.array([
+        [0.25, np.sqrt(3)/12],
+        [0.25, 5*np.sqrt(3)/12],
+        [0.75, 7*np.sqrt(3)/12],
+        [0.75, 11*np.sqrt(3)/12],
+    ])
+
+    # find how many unit cells you can fit in the square
+    n_vertical = int(np.round(n_horizontal_cells/unit_cell_dimensions[1]))
+    h_steps = np.arange(n_horizontal_cells)
+    v_steps = np.arange(n_vertical)
+
+
+    dims_h, dims_y = np.meshgrid(h_steps, v_steps)
+    dims_h = dims_h.flatten()
+    dims_v = dims_y.flatten()
+
+    # note there is a bit of squishing going on here - hexagons dont tile to a square geometry so we come as close as we can
+    # and then squish the y-axis to make up the difference. For n_horizontal_cells > 4 this is barely noticeable.
+    full_scale = np.array([
+        unit_cell_dimensions[0]*n_horizontal_cells,
+        unit_cell_dimensions[1]*n_vertical
+    ])
+    all_sites = np.concatenate([site_coordinates + np.array([h*unit_cell_dimensions[0] , 0.01+ v*unit_cell_dimensions[1]]) for h,v in zip(dims_h, dims_v)])/full_scale
+
+
+    # now we add the edges
+    internal_ed = np.array([
+        [0,1],
+        [2,1],
+        [2,3]
+    ])
+    int_edges = np.concatenate([internal_ed + 4*n for n in np.arange(n_vertical*n_horizontal_cells)])
+
+    def next_direction(n_horizontal, n_vertical, n, shift):
+        row =  n // n_horizontal
+        new_row = (row+shift[1])%n_vertical
+        new_column = (n+shift[0])%n_horizontal
+        position = new_row*n_horizontal + new_column
+        return(position)
+
+    ext_hor = np.array([ [2+4*n , 1+4*next_direction(n_horizontal_cells, n_vertical, n,[1,0])] for n in np.arange(n_horizontal_cells*n_vertical) ])
+    ext_ver = np.array([ [ 4*next_direction(n_horizontal_cells, n_vertical, n,[0,1]), 3+4*n] for n in np.arange(n_horizontal_cells*n_vertical) ])
+    ext_diag = np.array([ [ 4*next_direction(n_horizontal_cells, n_vertical, n,[1,1]), 3+4*n] for n in np.arange(n_horizontal_cells*n_vertical) ])
+
+
+    # add the edge_crossings
+    crossing_int = np.zeros_like(int_edges)
+    crossing_hor = np.zeros_like(ext_hor)
+    crossing_hor[np.arange(n_vertical)*n_horizontal_cells +(n_horizontal_cells-1),0] = 1
+    crossing_ver = np.zeros_like(ext_ver)
+    crossing_ver[np.arange(n_horizontal_cells*(n_vertical-1),n_horizontal_cells*n_vertical) , 1] = -1
+    crossing_diag = np.zeros_like(ext_diag)
+    crossing_diag[np.arange(n_vertical)*n_horizontal_cells +(n_horizontal_cells-1),0] = -1
+    crossing_diag[np.arange(n_horizontal_cells*(n_vertical-1),n_horizontal_cells*n_vertical) , 1] = -1
+
+
+    edges = np.concatenate([int_edges, ext_hor, ext_ver, ext_diag])
+    crossing = np.concatenate([crossing_int, crossing_hor, crossing_ver, crossing_diag])
+
+    colouring = np.array( [2,0,2]*n_vertical*n_horizontal_cells +[1,1] * n_vertical*n_horizontal_cells + [0]* n_vertical*n_horizontal_cells )
+
+    if return_colouring:
+        return Lattice(all_sites, edges, crossing), colouring
+    else:
+        return Lattice(all_sites, edges, crossing) 
+
+
+###################################################################################################
+######################################  Deprecated  ##############################################
+###################################################################################################
+
+#TODO: remove deprecated functions from all tests etc
+
+
+def generate_regular_honeycomb(N : int = 10) -> Lattice:
+    """Generate an approx NxN regular honeycomb lattice.
+
+    :param N: Generate a honeycomb with approx NxN cells, defaults to 10
+    :type N: int, optional
+    :raises ValueError: Some values of N break this function, until it's fixed just use another value.
+    :return: A regular honeycomb lattice
+    :rtype: Lattice
+    """
+
+    print('THIS FUNCTION IS DEPRECATED - USE generate_honeycomb INSTEAD!!!!')
+    s2 = np.sqrt(2) 
+    a_x = 1 / (N*s2) #the x spacing of the voronoi centers
+    M = 1/a_x * 1/(0.5 + 1/s2) # The number cells there would be in the y direction if we used regular hexagons
+    M = np.ceil(M) #instead we squash the hexagons a bit to make ceil(M) of them fit
+    a_y = 1 / M #the spacing to use in the y direction so that an integer number fit
+
+    #make a nice little grid of integer coordinates
+    n, m = np.meshgrid(np.arange(N), np.arange(M), sparse=False, copy = True, indexing='ij')
+
+    #convert them to points in the unit cell
+    x = a_x*n*s2 + a_x*(m%2)/s2 + 0.5 * a_x
+    y = a_y*m + 0.5*a_y
+    
+    #reshape the points to be have shape (N, 2)
+    points = np.array([x,y]).transpose(1,2,0).reshape(-1, 2).copy()
+    
+    #convert them to a lattice
+    lat = generate_lattice(points)
+    
+    if not np.all(np.bincount(lat.edges.indices.flatten()) == 3): #all vertices have coordination number 3
+        raise ValueError(f"For some reason N = {N} broke the connectivity, use a different N")
+    
     return lat

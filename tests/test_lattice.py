@@ -19,7 +19,8 @@ def test_lattice_class():
                 bridge_graph(),
                 voronization.generate_lattice(points2),
                 cut_boundaries(voronization.generate_lattice(points2), [False,True]),
-                cut_boundaries(voronization.generate_lattice(points2), [True,True])
+                cut_boundaries(voronization.generate_lattice(points2), [True,True]),
+                generate_honeycomb(12)
     ]
 
     # run the plaquette code by accessing the plaquette property
