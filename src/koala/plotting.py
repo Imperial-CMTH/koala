@@ -74,7 +74,7 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
 def plot_lattice(lattice, ax = None, 
                  edge_labels = None, edge_color_scheme = ['r','g','b','k'],
                  vertex_labels = None, vertex_color_scheme = ['r','b','k'],
-                 edge_arrows = False, edge_index_labels = False,
+                 edge_arrows = False, edge_index_labels = False, bond_signs = None,
                  scatter_args = None):
     """Plots a 2d graph. Optionally with coloured edges or vertices.
 
@@ -116,13 +116,17 @@ def plot_lattice(lattice, ax = None,
     ax.add_collection(lc)
     
     if np.any(edge_arrows) or np.any(edge_index_labels):
-        original_edge_indices = np.tile(np.arange(lattice.edges.indices.shape[0]), 9)
-        if isinstance(edge_arrows, bool): edge_arrows = np.full(fill_value = edge_arrows, shape = lattice.edges.indices.shape[0])
-        if isinstance(edge_index_labels, bool): edge_index_labels = np.full(fill_value = edge_index_labels, shape = lattice.edges.indices.shape[0])
+        original_edge_indices = np.tile(np.arange(lattice.n_edges), 9)
+        if isinstance(edge_arrows, bool): edge_arrows = np.full(fill_value = edge_arrows, shape = lattice.n_edges)
+        if isinstance(edge_index_labels, bool): edge_index_labels = np.full(fill_value = edge_index_labels, shape = lattice.n_edges)
+        if bond_signs is None: bond_signs = np.ones(lattice.n_edges, dtype = int)
+
         edge_arrows = np.tile(edge_arrows, 9)
         edge_index_labels = np.tile(edge_index_labels, 9)
+        bond_signs = np.tile(bond_signs, 9)
 
-        for i, color, (start, end) in zip(original_edge_indices[vis], edge_colors[vis], replicated_edges[vis, ...]):
+        for i, color, (start, end), bond_sign in zip(original_edge_indices[vis], edge_colors[vis], replicated_edges[vis, ...], bond_signs[vis]):
+            start, end = [start, end][::bond_sign]
             center = 1/2 * (end + start)
             length = np.linalg.norm(end - start)
             head_length = min(0.2 * length, 0.02)
