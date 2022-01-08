@@ -346,8 +346,8 @@ def generate_honeycomb(n_horizontal_cells: int, return_colouring = False)-> Latt
     edges = np.concatenate([int_edges, ext_hor, ext_ver, ext_diag])
     crossing = np.concatenate([crossing_int, crossing_hor, crossing_ver, crossing_diag])
 
-    colouring = np.array( [2,0,2]*n_vertical*n_horizontal_cells +[1,1] * n_vertical*n_horizontal_cells + [0]* n_vertical*n_horizontal_cells )
-
+    colouring = np.array( [0,2,0]*n_vertical*n_horizontal_cells +[1,1] * n_vertical*n_horizontal_cells + [2]* n_vertical*n_horizontal_cells )
+    
     if return_colouring:
         return Lattice(all_sites, edges, crossing), colouring
     else:
