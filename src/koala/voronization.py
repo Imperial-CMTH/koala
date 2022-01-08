@@ -178,38 +178,3 @@ def generate_lattice(
         edge_indices = new_pbc_ridges,
         edge_crossing = adjacency_crossing
     )
-
-#TODO: replace this with code that directly generates the lattice rather than using voronisation
-# this method is slow and breaks at random values of N
-def generate_regular_honeycomb(N : int = 10) -> Lattice:
-    """Generate an approx NxN regular honeycomb lattice.
-
-    :param N: Generate a honeycomb with approx NxN cells, defaults to 10
-    :type N: int, optional
-    :raises ValueError: Some values of N break this function, until it's fixed just use another value.
-    :return: A regular honeycomb lattice
-    :rtype: Lattice
-    """
-    s2 = np.sqrt(2) 
-    a_x = 1 / (N*s2) #the x spacing of the voronoi centers
-    M = 1/a_x * 1/(0.5 + 1/s2) # The number cells there would be in the y direction if we used regular hexagons
-    M = np.ceil(M) #instead we squash the hexagons a bit to make ceil(M) of them fit
-    a_y = 1 / M #the spacing to use in the y direction so that an integer number fit
-
-    #make a nice little grid of integer coordinates
-    n, m = np.meshgrid(np.arange(N), np.arange(M), sparse=False, copy = True, indexing='ij')
-
-    #convert them to points in the unit cell
-    x = a_x*n*s2 + a_x*(m%2)/s2 + 0.5 * a_x
-    y = a_y*m + 0.5*a_y
-    
-    #reshape the points to be have shape (N, 2)
-    points = np.array([x,y]).transpose(1,2,0).reshape(-1, 2).copy()
-    
-    #convert them to a lattice
-    lat = generate_lattice(points)
-    
-    if not np.all(np.bincount(lat.edges.indices.flatten()) == 3): #all vertices have coordination number 3
-        raise ValueError(f"For some reason N = {N} broke the connectivity, use a different N")
-    
-    return lat
