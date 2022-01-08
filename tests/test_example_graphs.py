@@ -32,4 +32,11 @@ def test_honeycomb():
     # check the colors make sense by checking the angles
     assert np.all(coloring == color_honeycomb_lattice(honeycomb))
 
+    # check that two sublattices are a bi-partition of the lattice
+    honeycomb_sublattice_labels = np.arange(honeycomb.n_vertices) % 2
+    red_edges = honeycomb.edges.indices[coloring == 0]
+    sublattice_edges = honeycomb_sublattice_labels[red_edges]
+    assert(not np.any(sublattice_edges[:, 0] == sublattice_edges[:, 1]))
+
+
 
