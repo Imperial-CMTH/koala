@@ -352,3 +352,71 @@ def generate_honeycomb(n_horizontal_cells: int, return_colouring = False)-> Latt
         return Lattice(all_sites, edges, crossing), colouring
     else:
         return Lattice(all_sites, edges, crossing) 
+
+
+def generate_hex_square_oct(n_cells: int)-> Lattice:
+    """Generates a lattice containing squares, hexagons and octagons
+
+    :param n_cells: Number of unit cells in the x or y directions
+    :type n_cells: int
+    :return: the lattice object for this system
+    :rtype: Lattice
+    """
+
+
+    site_coordinates  = np.array([
+        [0.5,0.17],
+        [0.2,0.35],
+        [0.2,0.65],
+        [0.5,0.82],
+        [0.8,0.65],
+        [0.8,0.35]
+    ])
+
+    h_steps = np.arange(n_cells)
+    v_steps = np.arange(n_cells)
+
+    dims_h, dims_y = np.meshgrid(h_steps, v_steps)
+    dims_h = dims_h.flatten()
+    dims_v = dims_y.flatten()
+
+    all_sites = np.concatenate([site_coordinates + np.array([h , v]) for h,v in zip(dims_h, dims_v)]) /n_cells
+
+    internal_ed = np.array([
+        [0,1],
+        [1,2],
+        [2,3],
+        [3,4],
+        [4,5],
+        [5,0]
+    ])
+
+    int_edges = np.concatenate([internal_ed + 6*n for n in np.arange(n_cells**2)])
+    int_crossing = np.zeros_like(int_edges)
+
+    def next_direction(cells, n, shift):
+        row =  n // cells
+        new_row = (row+shift[1])%cells
+        new_column = (n+shift[0])%cells
+        position = new_row*cells + new_column
+        return(position)
+
+    ext_hor_1 = np.array([ [4+6*n , 2+6*next_direction(n_cells, n,[1,0])] for n in np.arange(n_cells**2) ])
+    crossing_hor_1 = np.zeros_like(ext_hor_1)
+    crossing_hor_1[np.arange(n_cells)*n_cells +(n_cells-1),0] = 1
+    
+    ext_hor_2 = np.array([ [ 1+6*next_direction(n_cells, n,[1,0]), 5+6*n] for n in np.arange(n_cells**2) ])
+    crossing_hor_2 = np.zeros_like(ext_hor_2)
+    crossing_hor_2[np.arange(n_cells)*n_cells +(n_cells-1),0] = -1
+    # ext_ver = np.array([ [ 5+6*next_direction( cells, n,[1,0]), 1+6*n] for n in np.arange(cells**2) ])
+
+    ext_ver = np.array([ [ 6*next_direction(n_cells, n,[0,1]), 3+6*n] for n in np.arange(n_cells**2) ])
+    crossing_ver = np.zeros_like(ext_ver)
+    crossing_ver[np.arange(n_cells*(n_cells-1),n_cells**2) , 1] = -1
+
+
+    edges = np.concatenate([int_edges, ext_hor_1,ext_hor_2,ext_ver])
+    crossing = np.concatenate([int_crossing, crossing_hor_1,crossing_hor_2, crossing_ver])
+
+
+    return Lattice(all_sites, edges, crossing)
