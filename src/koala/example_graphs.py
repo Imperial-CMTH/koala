@@ -420,3 +420,104 @@ def generate_hex_square_oct(n_cells: int)-> Lattice:
 
 
     return Lattice(all_sites, edges, crossing)
+
+
+# helper function for tile_unit_cell 
+def _next_cell_number(n_horizontal, n_vertical, n, shift):
+    """gives you the index of the next unit cell in the list of all unit cells
+
+    :param n_horizontal: number unit cells in x direction
+    :type n_horizontal: int
+    :param n_vertical: number of unit cells in y direction
+    :type n_vertical: int
+    :param n: what index you are currently at
+    :type n: int
+    :param shift: whoch way you want to shift to
+    :type shift: list
+    """
+    y =  n // n_horizontal
+    new_y = (y+shift[1])%n_vertical
+    new_x = (n+shift[0])%n_horizontal
+    position = new_y*n_horizontal + new_x
+    return(position)
+
+
+# helper function for tile_unit_cell 
+def _crossing(n_x, n_y, n, shift):
+    """tells you if the shift crosses PBC in the x or why direction
+
+    :param n_x: system size in x
+    :type n_x: int
+    :param n_y: system_size in y
+    :type n_y: int
+    :param n: what index you are currently at
+    :type n: int
+    :param shift: whoch way you want to shift to
+    :type shift: list
+    """
+
+    x = n%n_x
+    y =  n // n_x
+    
+    x_new = x + shift[0]
+    x_looped = x//n_x != x_new //n_x
+
+    y_new = y + shift[1]
+    y_looped = y//n_y != y_new //n_y
+
+    return([shift[0]*x_looped, shift[1]*y_looped])
+
+
+def tile_unit_cell(unit_points: np.ndarray, unit_edges: np.ndarray, unit_crossing: np.ndarray, unit_cell_dimensions:np.ndarray, n_xy) -> Lattice:
+    """given a description of a unit cell, this tiles it to make a full lattice
+
+    :param unit_points: coordinates of points in the unit cell
+    :type unit_points: np.ndarray
+    :param unit_edges: indices of edges in unit cell
+    :type unit_edges: np.ndarray
+    :param unit_crossing: whether the edges cross to the next unit cell in x and y direction
+    :type unit_crossing: np.ndarray
+    :param unit_cell_dimensions: size of unit cell
+    :type unit_cell_dimensions: np.ndarray
+    :param n_xy: number of tilings you want. if this is iterable then assume it has the form [nx, ny]. If an int then we assume we want [n,n]
+    :type n_xy: int or list
+    :return: the final lattice  
+    :rtype: Lattice
+    """
+
+    try:
+        iterator = iter(n_xy)
+    except TypeError:
+        nx = n_xy
+        ny = n_xy
+    else:
+        nx = n_xy[0]
+        ny = n_xy[1]
+    
+    x_steps = np.arange(nx)
+    y_steps = np.arange(ny)
+    x_shifts,y_shifts = np.meshgrid(x_steps, y_steps)
+    x_shifts = x_shifts.flatten()
+    y_shifts = y_shifts.flatten()
+
+    n_cells = nx*ny
+
+    all_sites = np.concatenate([unit_points + np.array([h , v]) for h,v in zip(x_shifts, y_shifts)])
+
+    all_sites[:,0] = all_sites[:,0]/nx
+    all_sites[:,1] = all_sites[:,1]/ny
+
+    n_internal_edges = unit_edges.shape[0]
+    n_internal_sites = unit_points.shape[0]
+    all_edges = np.zeros((n_cells* n_internal_edges,2), dtype = 'int')
+    all_crossings = np.zeros((n_cells* n_internal_edges ,2),dtype = 'int')
+
+    for n_position, xy_pos in enumerate(zip(x_shifts, y_shifts)):
+        for n_edge, ec in enumerate(zip(unit_edges, unit_crossing)):
+            edge, crossing = ec
+            n_index = n_position*n_internal_edges + n_edge
+
+            all_edges[n_index] = [edge[0] + n_position*n_internal_sites, edge[1] + n_internal_sites* _next_cell_number(nx,ny,n_position, crossing)]
+            all_crossings[n_index] = _crossing(nx,ny,n_position, crossing)
+
+    return Lattice(all_sites, all_edges, all_crossings)
