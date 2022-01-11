@@ -18,7 +18,6 @@ Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-p
 
 Flux_finder
     - currently code uses 0/1 for edge directions and +/- 1 U_ij values, do we like this?
-    - Switch to representing all plaquette fluxes by +/-1 for everything and just saying that odd plaquettes have an implicit factor of i (this also means we can switch to a int datatype)
     - do docstrings in flux_finder (except _functions)
     - Move _functions in flux_finder to bottom or top depending on what works
     - Possibly move pathfinding to a folder or something

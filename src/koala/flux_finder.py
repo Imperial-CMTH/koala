@@ -3,18 +3,35 @@ import numpy as np
 from .lattice import INVALID, Lattice
 from .pathfinding import straight_line_length, periodic_straight_line_length, path_between_plaquettes
 
-def fluxes_from_bonds(l, bonds):
+def fluxes_from_bonds(l, bonds) -> np.ndarray:
     """
-    Given a lattice l and a set of Uij +/-1 defined on the edges of the lattice, calculate the fluxes.
-    The fluxes are defined on each plaquette as the the product of each edge Uij in the direction,
-    with the sign flipeed otherwise.
+    Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
+    The fluxes are defined on each plaquette as the the product of each bond in the direction,
+    with the sign fliped otherwise.
+
+    :param l: The lattice.
+    :type l: Lattice
+    :param bonds: The bond variables +1 or -1
+    :type bonds: np.ndarray
+    :return: fluxes
+    :rtype: np.ndarray
     """
-    fluxes = np.zeros(len(l.plaquettes), dtype = complex)
+    fluxes = np.zeros(len(l.plaquettes), dtype = int)
     for i, p in enumerate(l.plaquettes):
         bond_signs = bonds[p.edges] #the signs of the bonds around this plaquette
         bond_directions = 1 - 2*p.directions #the direction of each edge expressed as +/- 1
-        fluxes[i] = - np.product(1.0j * bond_signs * bond_directions)
+        fluxes[i] = - np.product(bond_signs * bond_directions)
     return fluxes
+
+def fluxes_to_labels(fluxes: np.ndarray) -> np.ndarray:
+    """Remaps fluxes from the set {1,-1} to labels in the form {0,1} for plotting.
+
+    :param fluxes: Fluxes in the format +1 or -1
+    :type fluxes: np.ndarray
+    :return: labels in [0,1]
+    :rtype: np.ndarray
+    """    
+    return ((1 - fluxes)//2).astype(int)
 
 def _random_bonds(l : Lattice) -> np.ndarray:
     return 1 - 2*np.random.choice(2, size = l.n_edges)
@@ -32,21 +49,6 @@ def _greedy_plaquette_pairing(plaquettes, distance_func):
         to_pair.remove(closest)
         
     return np.array(pairs)
-
-def _remapper(input_array, mapper, output_type):
-    "A fast way to remap the values of a numpy array using a dict"
-    output_array = np.zeros(shape = input_array.shape, dtype = output_type)
-    for in_val, out_val in mapper.items(): output_array[input_array==in_val] = out_val
-    return output_array
-
-def fluxes_to_labels(fluxes):
-    m = {1. : 0, 1.0j : 1,  -1.0 : 2, -1.0j : 3}
-    return _remapper(input_array = fluxes, mapper = m, output_type = int)
-    
-def _ignore_even_odd_distinction(flux_sector) -> np.ndarray:
-    "Ignore the even/odd plaquette distinction by remapping +1/+i to +1 and -1/-i to -1"
-    m = {1. : 1, 1.0j : 1,  -1.0 : -1, -1.0j : -1}
-    return _remapper(input_array = flux_sector, mapper = m, output_type = int)
     
 def _flip_adjacent_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
     """
@@ -108,23 +110,13 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     """
     
     if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = int)
-    if not strict: target_flux_sector = _ignore_even_odd_distinction(target_flux_sector)
     if initial_bond_guess is None: initial_bond_guess = _random_bonds(l)
     
     initial_flux_sector = fluxes_from_bonds(l, initial_bond_guess)
-    if not strict: initial_flux_sector = _ignore_even_odd_distinction(initial_flux_sector)
     
     # figure out which fluxes need to be flipped
-    fluxes_to_flip = target_flux_sector / initial_flux_sector
-    
-    if strict and np.any(np.imag(fluxes_to_flip)): 
-        raise ValueError("Fluxes don't seem to match the even/odd plaquettes.")
-    fluxes_to_flip = np.real(fluxes_to_flip).astype(int)
-    
-    # n_differences = np.count_nonzero(fluxes_to_flip == -1) 
-    # if n_differences % 2 == 1: 
-        # raise ValueError(f"There is an odd number ({n_differences}) of differences between the initial and target flux configurations.")
-    
+    fluxes_to_flip = target_flux_sector // initial_flux_sector
+
     # step 2) flip edges that join adjacent -1 fluxes
     bonds, fluxes_to_flip = _flip_adjacent_fluxes(l, initial_bond_guess, fluxes_to_flip)
     
@@ -135,7 +127,6 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
         raise ValueError("find_flux_sector failed to get rid of all the -1 fluxes, this is a bug.")
     
     found_fluxes = fluxes_from_bonds(l, bonds) 
-    if not strict: found_fluxes = _ignore_even_odd_distinction(found_fluxes)
     
     if np.count_nonzero(found_fluxes - target_flux_sector) > 1:
         raise ValueError("find_flux_sector thought that it worked but somehow still didn't, a bug.")
