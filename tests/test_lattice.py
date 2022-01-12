@@ -41,12 +41,15 @@ def test_lattice_class():
         for n, plaquette in enumerate(lattice.plaquettes):
             edges = plaquette.edges
             edge_plaquettes = lattice.edges.adjacent_plaquettes[edges]
-            np.unique(edge_plaquettes)
-            mask = np.where((np.unique(edge_plaquettes) == INVALID) + (np.unique(edge_plaquettes) == n))[0]
-            other_plaquettes = np.delete(np.unique(edge_plaquettes), mask)
+            roll_vals = np.where(edge_plaquettes != n)[1]
+            other_plaquettes =  edge_plaquettes[np.arange(len(roll_vals)), roll_vals]
+
+            print(other_plaquettes, lattice.plaquettes[n].adjacent_plaquettes)
 
             for a,b in zip(other_plaquettes, lattice.plaquettes[n].adjacent_plaquettes):
-                assert( a == b)
+                    assert( a == b)
+
+                    
     for graph in weird_graphs:
         check_neighbouring_plaquettes(graph)
 

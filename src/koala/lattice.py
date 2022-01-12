@@ -13,13 +13,18 @@ class Plaquette:
     """Represents a single plaquette in a lattice. Not a list since plaquettes can have varying size.
 
     :param vertices: Indices correspondng to the vertices that border the plaquette. These are always organised to start from the lowest index and then go clockwise around the plaquette
-    :type vertices: np.ndarray[int] (plaquettesize)
+    :type vertices: np.ndarray[int] (n_sides)
     :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
-    :type edges: np.ndarray[int] (plaquettesize)
+    :type edges: np.ndarray[int] (n_sides)
     :param directions: Valued 0,1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
-    :type directions: np.ndarray[int] (plaquettesize)
+    :type directions: np.ndarray[int] (n_sides)
     :param centers: Coordinates of the center of the plaquette
     :type centers: np.ndarray[float] (2)
+    :param n_sides: Number of sides to the plaquette
+    :type n_sides: int
+    :param adjacent_plaquettes: Indices of all the plaquettes that share an edge with this one, ordered in the same order as the plaquette edges
+    :type adjacent_plaquettes: np.ndarray[int] (n_sides)
+
     """
     vertices: np.ndarray
     edges: np.ndarray
@@ -170,12 +175,11 @@ class Lattice(object):
         self._vertices_adjacent_plaquettes = vertices_plaquettes
         self._edges_adjacent_plaquettes = edges_plaquettes
 
-        # set the neighbouring plaquettes for every plaquette
+        # set the neighbouring plaquettes for every plaquette - stored in same order as plaquette edges
         for n, plaquette in enumerate(_plaquettes):
             edge_plaquettes = edges_plaquettes[plaquette.edges]
-            np.unique(edge_plaquettes)
-            mask = np.where((np.unique(edge_plaquettes) == INVALID) + (np.unique(edge_plaquettes) == n))[0]
-            other_plaquettes = np.delete(np.unique(edge_plaquettes), mask)
+            roll_vals = np.where(edge_plaquettes != n)[1]
+            other_plaquettes =  edge_plaquettes[np.arange(len(roll_vals)), roll_vals]
             _plaquettes[n].adjacent_plaquettes = other_plaquettes
 
         return _plaquettes
