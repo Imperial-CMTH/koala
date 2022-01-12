@@ -91,7 +91,6 @@ def _flip_isolated_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
     
 def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None, 
                      initial_bond_guess : np.ndarray = None,
-                     strict = False,
                     ):
     """
     Find a bond configuration that produces the given flux sector for the lattice l.
@@ -106,7 +105,6 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     Where:
     A bond configuration is an assignment of +/-1 to each bond.
     A flux sector is an asignment of +/-1 to even plaquette and +/-i to odd plaquettes.
-    When strict = False the code treats +1 and +i as the same and vice versa.
     """
     
     if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = int)
