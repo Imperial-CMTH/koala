@@ -26,6 +26,7 @@ class Plaquette:
     directions: np.ndarray
     center: np.ndarray
     n_sides: int
+    adjacent_plaquettes: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
+    # adjacent_edges: np.ndarray    TODO - add this feature
 
     #a reference to the parent lattice, has no type because Lattice isn't defined yet
     _parent: ... = field(default=None, repr=False) 
@@ -72,8 +74,9 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
+    # adjacent_vertices: np.ndarray    TODO - add this feature
     
-    #a reference to the parent lattice, has no type because the Lattice class isn't defined yet
+    # a reference to the parent lattice, has no type because the Lattice class isn't defined yet
     _parent: ... = field(default=None, repr=False) 
 
     @cached_property
@@ -140,6 +143,7 @@ class Lattice(object):
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
     
+    # find all the plaquettes
     @cached_property
     def plaquettes(self):
         _plaquettes = _find_all_plaquettes(self)
@@ -149,19 +153,31 @@ class Lattice(object):
             index = np.where(row == INVALID)[0][0]
             row[index] = value
 
+        # arrays that hold neighbouring plaquettes for edges and vertices
         edges_plaquettes = np.full((self.n_edges, 2), INVALID)
         vertices_plaquettes = np.full((self.n_vertices, 3), INVALID)
+
+        # set the values
         for n,plaquette in enumerate(_plaquettes):
             edges_plaquettes[plaquette.edges, plaquette.directions] = n
 
             x = vertices_plaquettes[plaquette.vertices]
             np.apply_along_axis(set_first_invalid,1,x,n)
             vertices_plaquettes[plaquette.vertices] = x
-
+        
         # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
         # are accessed, they are copied from __vertices_adjacent_plaquettes and __edges_adjacent_plaquettes
         self._vertices_adjacent_plaquettes = vertices_plaquettes
         self._edges_adjacent_plaquettes = edges_plaquettes
+
+        # set the neighbouring plaquettes for every plaquette
+        for n, plaquette in enumerate(_plaquettes):
+            edge_plaquettes = edges_plaquettes[plaquette.edges]
+            np.unique(edge_plaquettes)
+            mask = np.where((np.unique(edge_plaquettes) == INVALID) + (np.unique(edge_plaquettes) == n))[0]
+            other_plaquettes = np.delete(np.unique(edge_plaquettes), mask)
+            _plaquettes[n].adjacent_plaquettes = other_plaquettes
+
         return _plaquettes
 
     @cached_property
@@ -302,7 +318,7 @@ def _find_plaquette(
     n_sides = plaquette_edges.shape[0]
 
     found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides)
+                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides, adjacent_plaquettes=None)
 
     return found_plaquette, valid_plaquette
 
