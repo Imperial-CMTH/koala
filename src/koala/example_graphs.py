@@ -421,6 +421,41 @@ def generate_hex_square_oct(n_cells: int)-> Lattice:
 
     return Lattice(all_sites, edges, crossing)
 
+def generate_tri_non(n_cells: int, return_colouring = False) -> Lattice:
+
+    unit_points = np.array([
+        [0.4,0.1],
+        [0.1,0.4],
+        [0.4,0.4],
+        [0.6,0.6]
+    ])
+
+    unit_edges = np.array([
+        [0,1],
+        [1,2],
+        [2,0],
+        [3,2],
+        [3,0],
+        [1,3]
+    ])
+
+
+    unit_crossing = np.array([
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,1],
+        [-1,0]
+    ])
+    lattice = tile_unit_cell(unit_points, unit_edges, unit_crossing,[1.3,1], n_cells)
+
+    colouring = np.array([1,2,0,1,2,0] * n_cells**2)
+
+    if return_colouring:
+        return lattice, colouring
+    else:
+        return lattice
 
 # helper function for tile_unit_cell 
 def _next_cell_number(n_horizontal, n_vertical, n, shift):
