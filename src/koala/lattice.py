@@ -13,19 +13,25 @@ class Plaquette:
     """Represents a single plaquette in a lattice. Not a list since plaquettes can have varying size.
 
     :param vertices: Indices correspondng to the vertices that border the plaquette. These are always organised to start from the lowest index and then go clockwise around the plaquette
-    :type vertices: np.ndarray[int] (plaquettesize)
+    :type vertices: np.ndarray[int] (n_sides)
     :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
-    :type edges: np.ndarray[int] (plaquettesize)
+    :type edges: np.ndarray[int] (n_sides)
     :param directions: Valued 0,1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
-    :type directions: np.ndarray[int] (plaquettesize)
+    :type directions: np.ndarray[int] (n_sides)
     :param centers: Coordinates of the center of the plaquette
     :type centers: np.ndarray[float] (2)
+    :param n_sides: Number of sides to the plaquette
+    :type n_sides: int
+    :param adjacent_plaquettes: Indices of all the plaquettes that share an edge with this one, ordered in the same order as the plaquette edges
+    :type adjacent_plaquettes: np.ndarray[int] (n_sides)
+
     """
     vertices: np.ndarray
     edges: np.ndarray
     directions: np.ndarray
     center: np.ndarray
     n_sides: int
+    adjacent_plaquettes: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -46,6 +52,7 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
+    # adjacent_edges: np.ndarray    TODO - add this feature
 
     #a reference to the parent lattice, has no type because Lattice isn't defined yet
     _parent: ... = field(default=None, repr=False) 
@@ -72,8 +79,9 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
+    # adjacent_vertices: np.ndarray    TODO - add this feature
     
-    #a reference to the parent lattice, has no type because the Lattice class isn't defined yet
+    # a reference to the parent lattice, has no type because the Lattice class isn't defined yet
     _parent: ... = field(default=None, repr=False) 
 
     @cached_property
@@ -140,6 +148,7 @@ class Lattice(object):
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
     
+    # find all the plaquettes
     @cached_property
     def plaquettes(self):
         _plaquettes = _find_all_plaquettes(self)
@@ -149,19 +158,30 @@ class Lattice(object):
             index = np.where(row == INVALID)[0][0]
             row[index] = value
 
+        # arrays that hold neighbouring plaquettes for edges and vertices
         edges_plaquettes = np.full((self.n_edges, 2), INVALID)
         vertices_plaquettes = np.full((self.n_vertices, 3), INVALID)
+
+        # set the values
         for n,plaquette in enumerate(_plaquettes):
             edges_plaquettes[plaquette.edges, plaquette.directions] = n
 
             x = vertices_plaquettes[plaquette.vertices]
             np.apply_along_axis(set_first_invalid,1,x,n)
             vertices_plaquettes[plaquette.vertices] = x
-
+        
         # Later when lattice.edges.adjacent_plaquettes or lattice.vertices.adjacent_plaquettes
         # are accessed, they are copied from __vertices_adjacent_plaquettes and __edges_adjacent_plaquettes
         self._vertices_adjacent_plaquettes = vertices_plaquettes
         self._edges_adjacent_plaquettes = edges_plaquettes
+
+        # set the neighbouring plaquettes for every plaquette - stored in same order as plaquette edges
+        for n, plaquette in enumerate(_plaquettes):
+            edge_plaquettes = edges_plaquettes[plaquette.edges]
+            roll_vals = np.where(edge_plaquettes != n)[1]
+            other_plaquettes =  edge_plaquettes[np.arange(len(roll_vals)), roll_vals]
+            _plaquettes[n].adjacent_plaquettes = other_plaquettes
+
         return _plaquettes
 
     @cached_property
@@ -302,7 +322,7 @@ def _find_plaquette(
     n_sides = plaquette_edges.shape[0]
 
     found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides)
+                                edges=plaquette_edges, directions=plaquette_directions, center=plaquette_center, n_sides= n_sides, adjacent_plaquettes=None)
 
     return found_plaquette, valid_plaquette
 

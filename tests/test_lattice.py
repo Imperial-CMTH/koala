@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 from koala import pointsets
 from koala import voronization
-from koala.lattice import cut_boundaries, LatticeException
+from koala.lattice import cut_boundaries, LatticeException, INVALID
 from koala.example_graphs import *
 
 
@@ -37,6 +37,24 @@ def test_lattice_class():
     for graph in weird_graphs:
         cut_boundaries(graph, [False,True])
         cut_boundaries(graph, [True,True])
+    
+    def check_neighbouring_plaquettes(lattice: Lattice):
+        for n, plaquette in enumerate(lattice.plaquettes):
+            edges = plaquette.edges
+            edge_plaquettes = lattice.edges.adjacent_plaquettes[edges]
+            roll_vals = np.where(edge_plaquettes != n)[1]
+            other_plaquettes =  edge_plaquettes[np.arange(len(roll_vals)), roll_vals]
+
+            print(other_plaquettes, lattice.plaquettes[n].adjacent_plaquettes)
+
+            for a,b in zip(other_plaquettes, lattice.plaquettes[n].adjacent_plaquettes):
+                    assert( a == b)
+
+                    
+    for graph in weird_graphs:
+        check_neighbouring_plaquettes(graph)
+
+
 
 def test_multigraphs():
     "check that the plaquette code fails gracefully on multigraphs"

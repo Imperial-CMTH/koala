@@ -6,6 +6,78 @@ import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
 
+def plaquette_spaning_tree(lattice: Lattice, shortest_edges_only = True):
+    """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
+    The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used 
+    (which is kind of a fudgey way of stopping the algorithm from picking edges that connect over the periodic boundaries). If you're hungry for 
+    speed you might want to turn it off. The algorith is basically prim's algorithm - so it should run in linear time.
+
+    :param lattice: the lattice you want the tree on
+    :type lattice: Lattice
+    :param shortest_edges_only: do you want a minimum spanning tree - distance wise, defaults to True
+    :type shortest_edges_only: bool, optional
+    :return: a list of the edges that form the tree
+    :rtype: np.ndarray
+    """
+    plaquettes_in = np.full(lattice.n_plaquettes, -1)
+    edges_in = np.full(lattice.n_plaquettes-1, -1)
+
+    plaquettes_in[0] = 0
+    
+    boundary_edges = np.copy(lattice.plaquettes[0].edges)
+
+    for n in range(lattice.n_plaquettes-1):
+        
+        # if we want to keep the edges short - sort the available boundaries
+        if shortest_edges_only:
+
+            def find_plaq_distance(edge):
+                p1,p2 = lattice.edges.adjacent_plaquettes[edge]
+                c1 = 10 if p1 == INVALID else lattice.plaquettes[p1].center
+                c2 = 10 if p2 == INVALID else lattice.plaquettes[p2].center
+                distance = np.sum((c1 - c2)**2)
+                return distance
+                
+            distances = np.vectorize(find_plaq_distance)( boundary_edges )
+            order = np.argsort(distances)
+        else:
+            order = np.arange(len(boundary_edges))
+
+
+        for edge_index in boundary_edges[order]:
+            
+            edge_plaq = lattice.edges.adjacent_plaquettes[edge_index]
+
+            if INVALID in edge_plaq:
+                continue
+            
+            lattice.plaquettes[edge_plaq[0]].center
+
+            outisde_plaquette_present = [x not in plaquettes_in for x in  edge_plaq]
+            inside_plaquette_present = [x in plaquettes_in for x in  edge_plaq]
+            
+
+            # if this edge links an inside and outside plaquette
+            if np.any(outisde_plaquette_present) and np.any(inside_plaquette_present):
+
+                # add the new plaquette to the list of inside ones
+                position = np.where(outisde_plaquette_present)[0][0]
+                new_plaquette = edge_plaq[position]
+                plaquettes_in[n+1] = new_plaquette
+                edges_in[n] = edge_index
+
+                # add the new edges to the boundary edges
+                boundary_edges = np.append(boundary_edges, lattice.plaquettes[new_plaquette].edges)
+
+                # remove any doubled edges - these will be internal
+                a, c = np.unique(boundary_edges, return_counts=True)
+                boundary_edges = a[c == 1]
+            
+
+                break
+            
+    return edges_in 
+
 def vertex_neighbours(vertex_i, adjacency):
     """
     Return the neighbouring nodes of a point
