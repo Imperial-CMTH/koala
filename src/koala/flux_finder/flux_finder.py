@@ -1,6 +1,6 @@
 import numpy as np
 
-from .lattice import INVALID, Lattice
+from ..lattice import INVALID, Lattice
 from .pathfinding import straight_line_length, periodic_straight_line_length, path_between_plaquettes
 
 def fluxes_from_bonds(l, bonds) -> np.ndarray:

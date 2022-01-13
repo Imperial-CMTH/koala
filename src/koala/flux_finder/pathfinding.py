@@ -56,8 +56,8 @@ def a_star_search_backward_pass(came_from, start, goal):
 # specialised to plaquettes   #
 ###############################
 
-from .lattice import Lattice
-from .graph_utils import adjacent_plaquettes
+from ..lattice import Lattice
+from ..graph_utils import adjacent_plaquettes
 
 def straight_line_length(a, b) -> float:
     "Return the shortest path between two points on the unit square."
