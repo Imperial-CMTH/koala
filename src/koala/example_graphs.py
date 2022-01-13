@@ -421,7 +421,16 @@ def generate_hex_square_oct(n_cells: int)-> Lattice:
 
     return Lattice(all_sites, edges, crossing)
 
-def generate_tri_non(n_cells: int, return_colouring = False) -> Lattice:
+def generate_tri_non(n_cells, return_colouring = False):
+    """generate a lattice of nonagons and triangles
+
+    :param n_cells: system dimensions. If an int is passed then the system is n_cells x n_cells. If an iterable is passed the system is n_cells[0] x n_cells[1]
+    :type n_cells: int or iter[int]
+    :param return_colouring: optional arg to return a colouring of the edges, defaults to False
+    :type return_colouring: bool, optional
+    :return: the lattice and optionally a colouring 
+    :rtype: Lattice or Lattice, np.ndarray
+    """
 
     unit_points = np.array([
         [0.4,0.1],
@@ -450,7 +459,16 @@ def generate_tri_non(n_cells: int, return_colouring = False) -> Lattice:
     ])
     lattice = tile_unit_cell(unit_points, unit_edges, unit_crossing,[1.3,1], n_cells)
 
-    colouring = np.array([1,2,0,1,2,0] * n_cells**2)
+    try:
+        iterator = iter(n_cells)
+    except TypeError:
+        nx = n_cells
+        ny = n_cells
+    else:
+        nx = n_cells[0]
+        ny = n_cells[1]
+
+    colouring = np.array([1,2,0,1,2,0] * nx*ny)
 
     if return_colouring:
         return lattice, colouring
