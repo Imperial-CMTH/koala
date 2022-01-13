@@ -3,7 +3,7 @@ import numpy as np
 from ..lattice import INVALID, Lattice
 from .pathfinding import straight_line_length, periodic_straight_line_length, path_between_plaquettes
 
-def fluxes_from_bonds(l, bonds) -> np.ndarray:
+def fluxes_from_bonds(l, bonds, real = True) -> np.ndarray:
     """
     Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
     The fluxes are defined on each plaquette as the the product of each bond in the direction,
@@ -16,11 +16,22 @@ def fluxes_from_bonds(l, bonds) -> np.ndarray:
     :return: fluxes
     :rtype: np.ndarray
     """
-    fluxes = np.zeros(len(l.plaquettes), dtype = int)
+    fluxes = np.zeros(len(l.plaquettes), dtype = 'int') if real else np.zeros(len(l.plaquettes), dtype = 'complex')
+
+
     for i, p in enumerate(l.plaquettes):
         bond_signs = bonds[p.edges] #the signs of the bonds around this plaquette
         bond_directions = 1 - 2*p.directions #the direction of each edge expressed as +/- 1
-        fluxes[i] = - np.product(bond_signs * bond_directions)
+
+        sign_real = np.array([1,-1,-1,1])
+        sign = sign_real[p.n_sides%4]
+
+        if not real and p.n_sides%2 == 1: 
+            sign = sign*1j
+
+        fluxes[i] = sign*np.product(bond_signs * bond_directions)
+
+
     return fluxes
 
 def fluxes_to_labels(fluxes: np.ndarray) -> np.ndarray:
