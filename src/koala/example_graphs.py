@@ -1,7 +1,7 @@
 from koala.lattice import Lattice
 import numpy as np
 from koala.voronization import generate_lattice
-
+from koala.graph_utils import rotate
 
 def two_tri():
     vertices = np.array([
@@ -574,3 +574,32 @@ def tile_unit_cell(unit_points: np.ndarray, unit_edges: np.ndarray, unit_crossin
             all_crossings[n_index] = _crossing(nx,ny,n_position, crossing)
 
     return Lattice(all_sites, all_edges, all_crossings)
+
+
+def single_plaquette(n_sides: int) -> Lattice:
+    """Makes a graph consisting of a single plaquette with n_sides sides
+
+    :param n_sides: how many sides the polygon should have
+    :type n_sides: int
+    :raises Exception: n_sides must be >2
+    :return: a lattice containing a single polygon
+    :rtype: Lattice
+    """
+
+    if(n_sides < 3):
+        raise Exception('single_plaquette needs at least three sides')
+
+    angles = np.linspace(0,2*np.pi, n_sides, endpoint=False)
+    point_0 = np.array([0.,0.4])
+
+    vertices = np.zeros((n_sides,2))
+    for n in range(n_sides):
+
+        vertices[n] = rotate(point_0, angles[n])
+
+    vertices = vertices+0.5
+
+    edges = np.concatenate([np.arange(n_sides)[:,np.newaxis],np.roll(np.arange(n_sides),1)[:,np.newaxis]], axis= 1)
+    crossing = np.zeros_like(edges)
+
+    return Lattice(vertices, edges, crossing)

@@ -202,3 +202,10 @@ def adjacent_plaquettes(l : Lattice, p_index : int) -> Tuple[np.ndarray, np.ndar
     neighbouring_plaquettes = np.take_along_axis(neighbouring_plaquettes, other_index, axis = 1).squeeze()
     
     return neighbouring_plaquettes, edges
+
+def rotate(vector, angle):
+    rm = np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle), np.cos(angle)]
+    ])
+    return rm @ vector
