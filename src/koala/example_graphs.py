@@ -599,7 +599,7 @@ def single_plaquette(n_sides: int) -> Lattice:
 
     vertices = vertices+0.5
 
-    edges = np.concatenate([np.arange(n_sides)[:,np.newaxis],np.roll(np.arange(n_sides),1)[:,np.newaxis]], axis= 1)
+    edges = np.concatenate([np.arange(n_sides)[:,np.newaxis],np.roll(np.arange(n_sides),-1)[:,np.newaxis]], axis= 1)
     crossing = np.zeros_like(edges)
 
     return Lattice(vertices, edges, crossing)
