@@ -359,7 +359,7 @@ def _find_all_plaquettes(l: Lattice):
             if valid:
                 plaquettes.append(plaq_obj)
 
-    return plaquettes
+    return np.array(plaquettes, dtype = object)
 
 
 def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:

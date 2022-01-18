@@ -28,9 +28,10 @@ def test_lattice_class():
         graph.plaquettes
         graph.edges.adjacent_plaquettes
         graph.vertices.adjacent_plaquettes
-
-        p = graph.plaquettes[0]
-        assert(p.edges.shape[0] == p.n_sides)
+        
+        if len(graph.plaquettes) > 0:
+            p = graph.plaquettes[0]
+            assert(p.edges.shape[0] == p.n_sides)
 
     # test the cut boundaries functions
     for graph in weird_graphs:

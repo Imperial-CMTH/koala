@@ -3,7 +3,8 @@
 #                                                                          #
 ############################################################################
 import numpy as np
-from koala.lattice import Lattice, INVALID
+from .lattice import Lattice, INVALID
+from typing import Tuple
 
 def plaquette_spaning_tree(lattice: Lattice, shortest_edges_only = True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
@@ -175,3 +176,36 @@ def get_edge_vectors(vertex_i : int, edge_indices : np.ndarray, l : Lattice) -> 
     
     #get the vectors along the edges
     return l.vertices.positions[other_vertex_indices] - l.vertices.positions[vertex_i][None, :] + offset_sign[:, None] * l.edges.crossing[edge_indices]
+
+def adjacent_plaquettes(l : Lattice, p_index : int) -> Tuple[np.ndarray, np.ndarray]:
+    """For a given lattice, compute the plaquettes that share an edge with lattice.plaquettes[p_index] and the shared edge.
+    Returns a list of plaquettes indices and a matching list of edge indices.
+
+    :param l: The lattice.
+    :type l: Lattice
+    :param p_index: The index of the plaquette to find the neighbours of.
+    :type p_index: int
+    :return: (plaque_indices, edge_indices)
+    :rtype: Tuple[np.ndarray, np.ndarray]
+    """    
+    p = l.plaquettes[p_index]
+    edges = p.edges
+    neighbouring_plaquettes = l.edges.adjacent_plaquettes[edges]
+    
+    #remove edges that are only part of this plaquette
+    valid = ~np.any(neighbouring_plaquettes == INVALID, axis = -1)
+    edges, neighbouring_plaquettes = edges[valid], neighbouring_plaquettes[valid, :]
+    
+    # get just the other plaquette of each set
+    p_index_location = neighbouring_plaquettes[:, 1] == p_index
+    other_index = 1 - p_index_location.astype(int)[:, None] 
+    neighbouring_plaquettes = np.take_along_axis(neighbouring_plaquettes, other_index, axis = 1).squeeze()
+    
+    return neighbouring_plaquettes, edges
+
+def rotate(vector, angle):
+    rm = np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle), np.cos(angle)]
+    ])
+    return rm @ vector

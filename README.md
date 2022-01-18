@@ -13,13 +13,20 @@ Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-p
 
 
 ## Todo
-- Implement enumerating plaquettes (should be easy to start from vor.regions)
-- Make a way to do a regular honeycomb lattice
 - For an n-gon with fixed colored edges how many valid colourings are there? Is this the origin of the degeneracy of colorings?
-- Return the kdtree of the lattice vertices because it's useful for other stuff
-- make function convert from colorings to lists of color strings and put it in plotting.py
-- Compute a histogram of the nummber of edsges in each plaquette
-- Implement a way to plot colourings using Peru's Theorem
+
+
+Flux_finder
+    - currently code uses 0/1 for edge directions and +/- 1 U_ij values, do we like this?
+    - do docstrings in flux_finder (except _functions)
+    - Move _functions in flux_finder to bottom or top depending on what works
+    - Possibly move pathfinding to a folder or something
+
+Long Term:
+    Refactor plotting
+        - make functions like plot_edges, plot_vertices, plot_plaquettes...
+
+    Add a little explanation to the beginning of each file explaining what it's for
 
 ## Examples
 ```

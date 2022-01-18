@@ -1,7 +1,7 @@
 import numpy as np
 
 from koala.plotting import plot_vertex_indices, plot_degeneracy_breaking, plot_lattice
-from koala.graph_utils import vertex_neighbours, clockwise_edges_about
+from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes
 from koala.voronization import Lattice
 
 g = Lattice(
@@ -21,3 +21,12 @@ def test_vertex_neighbours():
 
 def test_clockwise_edges_about():
     assert(np.all(clockwise_edges_about(vertex_i = 0, g = g) == np.array([1,0,2])))
+
+def test_adjacent_plaquettes_function():
+    from koala.example_graphs import tri_square_pent
+    l = tri_square_pent()
+    
+    p, e = adjacent_plaquettes(l, 1)
+
+    assert(np.all(p == [0,2]))
+    assert(np.all(e == [2,5]))
