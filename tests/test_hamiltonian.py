@@ -35,9 +35,11 @@ def test_hamiltonians():
   # bisect lattice, dimerizing along 0 bonds
   l = bisect_lattice(g, solution, 0)
 
-  ham = generate_majorana_hamiltonian(g)
+  ujk = np.full(g.n_edges, 1)
+  ham = generate_majorana_hamiltonian(g, solution, ujk, np.array([1, 1, 1]))
   np.testing.assert_allclose(ham, np.conj(ham.T))
-  ham_bisected = generate_majorana_hamiltonian(l)
+  ujk = np.full(l.n_edges, 1)
+  ham_bisected = generate_majorana_hamiltonian(l, solution, ujk, np.array([1, 1, 1]))
   ham_fermionic = majorana_to_fermion_ham(ham_bisected)
   np.testing.assert_allclose(ham_fermionic, np.conj(ham_fermionic.T))
   
