@@ -33,6 +33,8 @@ def plot_vertices(lattice : Lattice,
     :type color_scheme: np.ndarray, optional
     :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
     :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
     """ 
     labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_vertices)          
 
@@ -42,8 +44,49 @@ def plot_vertices(lattice : Lattice,
         c = colors,
         zorder = 3
     )
-    args.update(**kwargs)
+    args.update(**kwargs) #doing this means the user can override zorder
     ax.scatter(**args)
+    return ax
+
+def plot_edges(lattice : Lattice,
+                    labels : np.ndarray = 0,
+                    color_scheme : np.ndarray = ['k','r','b'],
+                    subset : np.ndarray = slice(None, None, None), 
+                    ax = None,
+                    **kwargs):
+    """
+    Plot the edges of a lattice. 
+    This uses matplotlib.collections.LineColection under the hood and you may 
+    pass in any keyword to be passed along to it. 
+    Note that arrays for alpha or linestyle don't currently work since they would have to be tiled correctly, and are not currently.
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
+    :type labels: np.ndarray, optional
+    :param color_scheme: List or array of colors, defaults to ['black', ]
+    :type color_scheme: np.ndarray, optional
+    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
+    :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
+    """ 
+
+    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_edges)           
+
+    edge_colors = np.tile(colors, 9)
+    edge_vertices = lattice.vertices.positions[lattice.edges.indices[subset]]
+    edge_vertices[:, 0, :] -= lattice.edges.crossing[subset]
+    
+    unit_cell_vectors = generate_point_array(np.array([0,0]), padding = 1)[:, None, None, :] #shape (9, 2) -> (9, 1, 1, 2)
+    replicated_edges = edge_vertices[None,...] + unit_cell_vectors #shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
+    replicated_edges =  replicated_edges.reshape((-1,2,2)) #shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
+    
+    vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(replicated_edges)
+    # print(edge_colors.shape, replicated_edges.shape, vis.shape)
+    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], **kwargs)
+    ax.add_collection(lc)
+
     return ax
 
 def plot_plaquettes(lattice : Lattice,
@@ -52,6 +95,24 @@ def plot_plaquettes(lattice : Lattice,
                     subset : np.ndarray = slice(None, None, None), 
                     ax = None,
                     **kwargs):
+    """
+    Plot the plaquettes of a lattice. 
+    This uses matplotlib.collections.PolyColection under the hood and you may 
+    pass in any keyword to be passed along to it. 
+    Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
+
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
+    :type labels: np.ndarray, optional
+    :param color_scheme: List or array of colors, defaults to ['black', ]
+    :type color_scheme: np.ndarray, optional
+    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
+    :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
+    """ 
 
     labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes)           
 
@@ -85,6 +146,7 @@ def plot_plaquettes(lattice : Lattice,
         
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
         ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
+    return ax
 
 def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
     """
@@ -101,6 +163,7 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
     # make sure the color_scheme is a numpy array.
     color_scheme = np.array(color_scheme)
     labels = np.array(labels)
+    subset = np.arange(N)[subset]
 
     #check if the labels run over all the vertices or just the subset we're plotting
     subset_size = np.sum(np.ones(N)[subset]) 

@@ -87,5 +87,8 @@ def plotting_test(plotting_function, lattice, N):
 def test_plot_vertices():
     plotting_test(plotting.plot_vertices, voronoi_lattice, voronoi_lattice.n_vertices)
 
+def test_plot_edges():
+    plotting_test(plotting.plot_edges, voronoi_lattice, voronoi_lattice.n_edges)
+
 def test_plot_plaquettes():
     plotting_test(plotting.plot_plaquettes, voronoi_lattice, voronoi_lattice.n_plaquettes)
