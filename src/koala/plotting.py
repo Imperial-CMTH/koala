@@ -11,6 +11,208 @@ from koala.lattice import LatticeException
 from .graph_utils import vertex_neighbours, clockwise_edges_about
 from .voronization import generate_point_array, Lattice
 
+#### New plotting interface ####
+
+def plot_vertices(lattice : Lattice,
+                  labels : np.ndarray = 0, 
+                  color_scheme : np.ndarray = 'black',
+                  subset : np.ndarray = slice(None, None, None), 
+                  ax = None,
+                  **kwargs):
+    """Plot the vertices of a lattice. 
+    This uses matplotlib.pyplot.scatter under the hood and you may 
+    pass in any keyword to be passed along to scatter.
+    You can use this to, for instance, plot some of the vertices as
+     triangles and some as squares.
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
+    :type labels: np.ndarray, optional
+    :param color_scheme: List or array of colors, defaults to ['black', ]
+    :type color_scheme: np.ndarray, optional
+    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
+    :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
+    """ 
+    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_vertices)          
+
+    args = dict(
+        x = lattice.vertices.positions[subset,0],
+        y = lattice.vertices.positions[subset,1],
+        c = colors,
+        zorder = 3
+    )
+    args.update(**kwargs) #doing this means the user can override zorder
+    ax.scatter(**args)
+    return ax
+
+def plot_edges(lattice : Lattice,
+                    labels : np.ndarray = 0,
+                    color_scheme : np.ndarray = ['k','r','b'],
+                    subset : np.ndarray = slice(None, None, None), 
+                    ax = None,
+                    **kwargs):
+    """
+    Plot the edges of a lattice. 
+    This uses matplotlib.collections.LineColection under the hood and you may 
+    pass in any keyword to be passed along to it. 
+    Note that arrays for alpha or linestyle don't currently work since they would have to be tiled correctly, and are not currently.
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
+    :type labels: np.ndarray, optional
+    :param color_scheme: List or array of colors, defaults to ['black', ]
+    :type color_scheme: np.ndarray, optional
+    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
+    :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
+    """ 
+
+    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_edges)           
+
+    edge_colors = np.tile(colors, 9)
+    edge_vertices = lattice.vertices.positions[lattice.edges.indices[subset]]
+    edge_vertices[:, 0, :] -= lattice.edges.crossing[subset]
+    
+    unit_cell_vectors = generate_point_array(np.array([0,0]), padding = 1)[:, None, None, :] #shape (9, 2) -> (9, 1, 1, 2)
+    replicated_edges = edge_vertices[None,...] + unit_cell_vectors #shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
+    replicated_edges =  replicated_edges.reshape((-1,2,2)) #shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
+    
+    vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(replicated_edges)
+    # print(edge_colors.shape, replicated_edges.shape, vis.shape)
+    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], **kwargs)
+    ax.add_collection(lc)
+
+    return ax
+
+def plot_plaquettes(lattice : Lattice,
+                    labels : np.ndarray = 0,
+                    color_scheme : np.ndarray = ['r','b','k'],
+                    subset : np.ndarray = slice(None, None, None), 
+                    ax = None,
+                    **kwargs):
+    """
+    Plot the plaquettes of a lattice. 
+    This uses matplotlib.collections.PolyColection under the hood and you may 
+    pass in any keyword to be passed along to it. 
+    Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
+
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
+    :type labels: np.ndarray, optional
+    :param color_scheme: List or array of colors, defaults to ['black', ]
+    :type color_scheme: np.ndarray, optional
+    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
+    :type subset: np.ndarray, optional
+    :param ax: The axis to plot on, defaults to plt.gca()
+    :type subset: axis, optional
+    """ 
+
+    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes)           
+
+    indices = np.arange(lattice.n_plaquettes)[subset]
+    plaquettes = lattice.plaquettes[subset]
+
+    for i, color, p in zip(indices, colors, plaquettes):
+        
+        #get the edge vectors going anticlockwise around the plaquette
+        vectors = lattice.edges.vectors[p.edges] * (1 - 2*p.directions[:, None])
+
+        #use those to construct the points around the plaquette ignoring PBC
+        points = lattice.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis = 0)
+
+        #represent the line segments of p with (start_point, end_point) tuples
+        lines = np.array(list(zip(points, np.roll(points, -1, axis = 0))))
+
+        #find out if the polygon crosses the x=0,1 or y=0,1 lines
+        partially_inside = np.any(_lines_cross_any_cell_boundary(lines), axis = 0)
+        
+        #figure out how this polygon needs to be replicated
+        #crossx[0] == True means one of the line segments of the polygon crossed x = 0 for example
+        crossx, crossy = partially_inside.T
+        padx_bool = np.array([crossx[1], 1, crossx[0]], dtype = bool)
+        padx = np.array([-1, 0, 1])[padx_bool]
+
+        pady_bool = np.array([crossy[1], 1, crossy[0]], dtype = bool)
+        pady = np.array([-1, 0, 1])[pady_bool]
+            
+        replicated_polygons = _replicate_polygon(points, padx, pady)
+        
+        #one could add all these up into one huge polycollection but it doesn't seem to be any faster
+        ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
+    return ax
+
+def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
+    """
+    Deals with housekeeping operations common to all plotting functions. 
+    Specifically:
+        Broadcast single values to be the size of the lattice.
+        Allow labels to refer to either the whole lattice or the subset.
+        Check if ax is none, and if so, create one.
+    """
+    # if labels is an int, brodcasts it to the size of the lattice.
+    if isinstance(labels, int): labels = np.full(N, labels)
+    # if color_scheme is a string, broadcast to the size of the lattice.
+    if isinstance(color_scheme, str): color_scheme = [color_scheme, ]
+    # make sure the color_scheme is a numpy array.
+    color_scheme = np.array(color_scheme)
+    labels = np.array(labels)
+    subset = np.arange(N)[subset]
+
+    #check if the labels run over all the vertices or just the subset we're plotting
+    subset_size = np.sum(np.ones(N)[subset]) 
+    if labels.shape[0] > subset_size: labels = labels[subset]
+
+    colors = color_scheme[labels]
+
+    if ax is None: ax = plt.gca()
+    ax.set(xlim = (0,1), ylim = (0,1))
+
+    return labels, colors, color_scheme, subset, ax
+
+#### Functions to plot index labels of the vertices ####
+
+def plot_vertex_indices(lattice : Lattice):
+    if ax is None: ax = plt.gca()
+    ax.set(xlim = (0,1), ylim = (0,1))
+    pass
+
+#TODO: Make this work with edges that cross the boundaries
+def plot_edge_indices(g, ax = None, offset = 0.01):
+    """
+    Plot the indices of the edges on a graph
+    """
+    if ax is None: ax = plt.gca()
+    for i, e in enumerate(g.edges.indices): 
+        midpoint = g.vertices.positions[e].mean(axis = 0)
+        if not np.any(g.edges.crossing[i]) != 0:
+            ax.text(*(midpoint+offset), f"{i}", color = 'g')
+  
+#   Keyword args you can pass to PolyColleciton: edgecolors, facecolors, linewidths, linestyles
+#   """
+
+############### Old plotting interface + internal stuff ##############################
+
+import warnings
+import functools
+
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.warn("Call to deprecated function {}.".format(func.__name__),
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        return func(*args, **kwargs)
+    return new_func
 
 def peru_friendly_colour_scheme(n_colours: int):
     if n_colours == 2:
@@ -71,6 +273,7 @@ def _lines_cross_unit_cell(lines : np.ndarray) -> np.ndarray:
     cross = (0 < t) & (t <= 1) & (0 < other_coord_value_at_t) & (other_coord_value_at_t <= 1)
     return np.any(cross, axis = (1,2))
 
+@deprecated
 def plot_lattice(lattice, ax = None, 
                  edge_labels = None, edge_color_scheme = ['r','g','b','k'],
                  vertex_labels = None, vertex_color_scheme = ['r','b','k'],
@@ -229,20 +432,11 @@ def plot_vertex_indices(g, ax = None, offset = 0.01):
     """
     if ax is None: ax = plt.gca()
     for i, v in enumerate(g.vertices.positions): ax.text(*(v+offset), f"{i}")
-    
-#TODO: Make this work with edges that cross the boundaries
-def plot_edge_indices(g, ax = None, offset = 0.01):
-    """
-    Plot the indices of the edges on a graph
-    """
-    if ax is None: ax = plt.gca()
-    for i, e in enumerate(g.edges.indices): 
-        midpoint = g.vertices.positions[e].mean(axis = 0)
-        if not np.any(g.edges.crossing[i]) != 0:
-            ax.text(*(midpoint+offset), f"{i}", color = 'g')
 
 def _lines_cross_any_cell_boundary(lines : np.ndarray) -> np.ndarray:
-    """Similar to the above, but tells you if the line cross y=0,1 and x=0,1 at any point rather than just the unit cell.
+    """
+    Used in plot_plaquettes to determine which plaquettes need to be plotted multiple times.
+    Similar to the above, but tells you if the line cross y=0,1 and x=0,1 at any point rather than just the unit cell.
 
     :param lines: : Represents lines by pairs of points
     :type lines: np.ndarray shape (n_lines, 2, 2)
@@ -265,43 +459,6 @@ def _lines_cross_any_cell_boundary(lines : np.ndarray) -> np.ndarray:
     return cross
 
 def _replicate_polygon(polygon, padx, pady):
+    """Used in plot plaquettes to periodically tile a polygon in the x or y directions"""
     dxdy = np.array(list(itertools.product(padx, pady)))
     return polygon[None, ...] + dxdy[:, None, :]
-
-                
-def plot_plaquettes(l: Lattice, labels,
-        color_scheme = ['r','b','k'],  
-        polygon_args = dict(), ax = None):
-    
-    if ax is None: ax = plt.gca()
-
-    polygons = []
-    colors = []
-    for i, p in enumerate(l.plaquettes):
-        
-        #get the edge vectors going anticlockwise around the plaquette
-        vectors = l.edges.vectors[p.edges] * (1 - 2*p.directions[:, None])
-
-        #use those to construct the points around the plaquette ignoring PBC
-        points = l.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis = 0)
-
-        #represent the line segments of p with (start_point, end_point) tuples
-        lines = np.array(list(zip(points, np.roll(points, -1, axis = 0))))
-
-        #find out if the polygon crosses the x=0,1 or y=0,1 lines
-        partially_inside = np.any(_lines_cross_any_cell_boundary(lines), axis = 0)
-        
-        #figure out how this polygon needs to be replicated
-        #crossx[0] == True means one of the line segments of the polygon crossed x = 0 for example
-        crossx, crossy = partially_inside.T
-        padx_bool = np.array([crossx[1], 1, crossx[0]], dtype = bool)
-        padx = np.array([-1, 0, 1])[padx_bool]
-
-        pady_bool = np.array([crossy[1], 1, crossy[0]], dtype = bool)
-        pady = np.array([-1, 0, 1])[pady_bool]
-            
-        replicated_polygons = _replicate_polygon(points, padx, pady)
-        color = color_scheme[labels[i]]
-        
-        #one could add all these up into one huge polycollection but it doesn't seem to be any faster
-        ax.add_collection(PolyCollection(replicated_polygons, color = color, **polygon_args))
