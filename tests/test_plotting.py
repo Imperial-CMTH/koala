@@ -89,6 +89,21 @@ def test_plot_vertices():
 
 def test_plot_edges():
     plotting_test(plotting.plot_edges, voronoi_lattice, voronoi_lattice.n_edges)
+    
+    # Test plotting lattice arrows
+    subset_size = voronoi_lattice.n_edges // 2
+    subset = np.random.randint(voronoi_lattice.n_edges, size = subset_size)
+
+    # single direction
+    plotting.plot_edges(voronoi_lattice, subset = subset, directions = 1)
+    
+    # directions for every edges
+    plotting.plot_edges(voronoi_lattice, subset = subset, 
+        directions = np.random.choice([1,-1], size = voronoi_lattice.n_edges))
+
+    # direction only for the subset
+    plotting.plot_edges(voronoi_lattice, subset = subset, 
+        directions = np.random.choice([1,-1], size = subset_size))
 
 def test_plot_plaquettes():
     plotting_test(plotting.plot_plaquettes, voronoi_lattice, voronoi_lattice.n_plaquettes)
