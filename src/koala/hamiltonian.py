@@ -39,10 +39,12 @@ def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.ND
 
   :param l: Lattice to construct Hamiltonian on, from which nearest bond-sharing vertices are determined
   :type l: Lattice
+  :param coloring: Edge coloring of `l`
+  :type coloring: npt.NDArray[np.integer] Shape (lattice.n_edges,)
   :param J: Coupling parameter for Kitaev model, defaults to 1.0
-  :type J: float, optional
-  :param method: Assignment rule for couplings, either 'random' or 'uniform, defaults to 'random'
-  :type method: str, optional
+  :type J: npt.NDArray[np.floating] or float
+  :param ujk: Link variables, with value +1 or -1
+
   :return: Quadratic Majorana Hamiltonian matrix representation in Majorana basis
   :rtype: npt.NDArray
   """  
