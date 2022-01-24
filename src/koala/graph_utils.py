@@ -209,3 +209,42 @@ def rotate(vector, angle):
         [np.sin(angle), np.cos(angle)]
     ])
     return rm @ vector
+
+import itertools
+
+def edge_crossing_that_minimises_length(start, end):
+    """Given two points in the unit plane, return the edge crossing = [-1/0/+1, -1/0/+1,]
+    that minimises the length of the edge between them.
+    
+    :param: start: The start point of the edge
+    :type: np.ndarray shape (2,)
+    :param: end: The start point of the edge
+    :type: np.ndarray shape (2,)
+
+    :return: The edge crossing that minimises the length of the edge.
+    :rtype: np.ndarray shape (2,)
+    """
+    if np.linalg.norm(start - end, ord = 2) < 0.5: return np.array([0,0])
+    crossings = np.array(list(itertools.product([-1,0,1], repeat = 2)))
+    lengths = np.linalg.norm(start - end - crossings, ord = 2, axis = -1)
+    return crossings[np.argmin(lengths)]
+
+def make_dual(lattice, subset = slice(None, None)):
+    """
+    Given a lattice and a subset of its edge, contruct the dual lattice
+    and return it as a new Lattice object.
+
+    :param lattice: The lattice to make the dual of.
+    :type lattice: Lattice
+    :param subset: The edges to include in the dual.
+    :type subset: slice, boolean array, or integer indices.
+
+    :return: The dual lattice.
+    :rtype: Lattice
+    """
+    st_edges = np.array([lattice.edges.adjacent_plaquettes[i] for i in subset])
+    def plaquette_index_to_center(i): return lattice.plaquettes[i].center
+    st_verts = np.array([plaquette_index_to_center(i) for i in range(lattice.n_plaquettes)])
+    st_crossing = np.array([edge_crossing_that_minimises_length(start, end) 
+                for start, end in st_verts[st_edges]])
+    return Lattice(st_verts, st_edges, st_crossing)

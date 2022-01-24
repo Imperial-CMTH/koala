@@ -6,10 +6,12 @@ import matplotlib
 from matplotlib.collections import LineCollection, PolyCollection
 from matplotlib import pyplot as plt
 
-from koala.lattice import LatticeException
+from . import graph_utils
 
+from .lattice import LatticeException
 from .graph_utils import vertex_neighbours, clockwise_edges_about
 from .voronization import generate_point_array, Lattice
+
 
 #### New plotting interface ####
 
@@ -95,7 +97,6 @@ def plot_edges(lattice : Lattice,
     if directions is not None:
         directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
         directions = np.tile(directions, 9)
-        print([x.shape for x in [edge_colors,replicated_edges,directions]])
         _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis])
 
 
@@ -159,6 +160,23 @@ def plot_plaquettes(lattice : Lattice,
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
         ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
     return ax
+
+def plot_dual(lattice, subset = slice(None,None), **kwargs):
+    """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param subset: a subset of edges to plot, defaults to all.
+    :type subset: slice, boolean array or indices, optional
+    :param ax: the ax to plot to, defaults to None
+    :type ax: axis, optional
+
+    :return: The dual lattice represented as a second Lattice object.
+    :rtype: Lattice
+    """    
+    st_as_lattice = graph_utils.make_dual(lattice, subset)
+    plot_edges(st_as_lattice, **kwargs)
+    return st_as_lattice
 
 def _plot_edge_arrows(ax, colors, edges, directions):
     for color, (start, end), dir in zip(colors, edges, directions):
@@ -233,8 +251,6 @@ def plot_edge_indices(g, ax = None, offset = 0.01):
         if not np.any(g.edges.crossing[i]) != 0:
             ax.text(*(midpoint+offset), f"{i}", color = 'g')
   
-#   Keyword args you can pass to PolyColleciton: edgecolors, facecolors, linewidths, linestyles
-#   """
 
 ############### Old plotting interface + internal stuff ##############################
 
