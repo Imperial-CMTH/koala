@@ -52,13 +52,16 @@ def plot_edges(lattice : Lattice,
                     labels : np.ndarray = 0,
                     color_scheme : np.ndarray = ['k','r','b'],
                     subset : np.ndarray = slice(None, None, None), 
+                    directions : np.ndarray = None,
                     ax = None,
                     **kwargs):
     """
-    Plot the edges of a lattice. 
+    Plot the edges of a lattice with optional arrows.
     This uses matplotlib.collections.LineColection under the hood and you may 
     pass in any keyword to be passed along to it. 
     Note that arrays for alpha or linestyle don't currently work since they would have to be tiled correctly, and are not currently.
+
+    If directions is not none, arrows are plotted from the first vertex to the second unless direction[i] == -1
 
     :param lattice: The lattice to use.
     :type lattice: Lattice
@@ -68,6 +71,8 @@ def plot_edges(lattice : Lattice,
     :type color_scheme: np.ndarray, optional
     :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all. 
     :type subset: np.ndarray, optional
+    :param directions: An array of arrow directions +/-1, defaults to None.
+    :type directions: np.ndarray, optional
     :param ax: The axis to plot on, defaults to plt.gca()
     :type subset: axis, optional
     """ 
@@ -86,6 +91,13 @@ def plot_edges(lattice : Lattice,
     # print(edge_colors.shape, replicated_edges.shape, vis.shape)
     lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], **kwargs)
     ax.add_collection(lc)
+
+    if directions is not None:
+        directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
+        directions = np.tile(directions, 9)
+        print([x.shape for x in [edge_colors,replicated_edges,directions]])
+        _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis])
+
 
     return ax
 
@@ -148,6 +160,40 @@ def plot_plaquettes(lattice : Lattice,
         ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
     return ax
 
+def _plot_edge_arrows(ax, colors, edges, directions):
+    for color, (start, end), dir in zip(colors, edges, directions):
+        start, end = [start, end][::dir]
+        center = 1/2 * (end + start)
+        length = np.linalg.norm(end - start)
+        head_length = min(0.2 * length, 0.02)
+        direction = head_length * (start - end) / length
+        arrow_start = center - direction
+        ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
+                color = color, head_width = head_length, head_length = head_length,
+                width = 0, zorder = 4, head_starts_at_zero = True, length_includes_head = True)
+
+
+def _broadcast_args(arg, subset, N, dtype = int):
+    """Normalise an argument for plotting that can take three forms:
+        1) a single thing of type [dtype]
+        2) an array of size l.n_vertices, l.n_edges or l.n_plaquettes
+        3) a smaller array that matches the subset
+    Returns an array of type 3
+    """
+    # Fix 1) if it's just a single int, broadcast it to the size of the lattice.
+    if isinstance(arg, dtype): arg = np.full(N, arg, dtype = dtype)
+
+    # make sure it's a numpy array (of the right type) and not a list.
+    arg = np.array(arg).astype(dtype)
+
+    # if it refers to the entire lattice, subset it down
+    subset_size = np.sum(np.ones(N)[subset], dtype = int) 
+    if arg.shape[0] == N: arg = arg[subset]
+    elif arg.shape[0] == subset_size: arg = arg
+    else: raise ValueError(f"Argument should shape either lattice.n_* ({N}) or the size of the subset ({subset_size})")
+
+    return arg
+
 def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
     """
     Deals with housekeeping operations common to all plotting functions. 
@@ -156,18 +202,11 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
         Allow labels to refer to either the whole lattice or the subset.
         Check if ax is none, and if so, create one.
     """
-    # if labels is an int, brodcasts it to the size of the lattice.
-    if isinstance(labels, int): labels = np.full(N, labels)
     # if color_scheme is a string, broadcast to the size of the lattice.
     if isinstance(color_scheme, str): color_scheme = [color_scheme, ]
-    # make sure the color_scheme is a numpy array.
     color_scheme = np.array(color_scheme)
-    labels = np.array(labels)
     subset = np.arange(N)[subset]
-
-    #check if the labels run over all the vertices or just the subset we're plotting
-    subset_size = np.sum(np.ones(N)[subset]) 
-    if labels.shape[0] > subset_size: labels = labels[subset]
+    labels = _broadcast_args(labels, subset, N, dtype = int)
 
     colors = color_scheme[labels]
 
