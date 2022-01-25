@@ -146,7 +146,7 @@ class Lattice(object):
         self.n_edges = self.edges.indices.shape[0]
         
     def __repr__(self):
-        return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges, {self.n_plaquettes} plaquettes)"
+        return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges)"
     
     # find all the plaquettes
     @cached_property
