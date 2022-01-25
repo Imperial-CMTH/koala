@@ -242,6 +242,7 @@ def make_dual(lattice, subset = slice(None, None)):
     :return: The dual lattice.
     :rtype: Lattice
     """
+    subset = np.arange(lattice.n_edges, dtype = int)[subset]
     st_edges = np.array([lattice.edges.adjacent_plaquettes[i] for i in subset])
     def plaquette_index_to_center(i): return lattice.plaquettes[i].center
     st_verts = np.array([plaquette_index_to_center(i) for i in range(lattice.n_plaquettes)])
