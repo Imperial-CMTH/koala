@@ -113,7 +113,7 @@ def plot_plaquettes(lattice : Lattice,
     This uses matplotlib.collections.PolyColection under the hood and you may 
     pass in any keyword to be passed along to it. 
     Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
-
+    Adding a color argument overides the color_scheme and labels.
 
     :param lattice: The lattice to use.
     :type lattice: Lattice
@@ -157,8 +157,12 @@ def plot_plaquettes(lattice : Lattice,
             
         replicated_polygons = _replicate_polygon(points, padx, pady)
         
+        # allow the user to overide color args
+        poly_args = dict(color = color)
+        poly_args.update(kwargs)
+
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
-        ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
+        ax.add_collection(PolyCollection(replicated_polygons, **poly_args))
     return ax
 
 def plot_dual(lattice, subset = slice(None,None), **kwargs):
