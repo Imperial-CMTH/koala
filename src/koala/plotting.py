@@ -212,7 +212,7 @@ def _broadcast_args(arg, subset, N, dtype = int):
     subset_size = np.sum(np.ones(N)[subset], dtype = int) 
     if arg.shape[0] == N: arg = arg[subset]
     elif arg.shape[0] == subset_size: arg = arg
-    else: raise ValueError(f"Argument should shape either lattice.n_* ({N}) or the size of the subset ({subset_size})")
+    else: raise ValueError(f"Argument shape {arg.shape} should be either lattice.n_* ({N}) or the size of the subset ({subset_size})")
 
     return arg
 
