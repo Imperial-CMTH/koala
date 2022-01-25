@@ -6,10 +6,12 @@ import matplotlib
 from matplotlib.collections import LineCollection, PolyCollection
 from matplotlib import pyplot as plt
 
-from koala.lattice import LatticeException
+from . import graph_utils
 
+from .lattice import LatticeException
 from .graph_utils import vertex_neighbours, clockwise_edges_about
 from .voronization import generate_point_array, Lattice
+
 
 #### New plotting interface ####
 
@@ -95,7 +97,6 @@ def plot_edges(lattice : Lattice,
     if directions is not None:
         directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
         directions = np.tile(directions, 9)
-        print([x.shape for x in [edge_colors,replicated_edges,directions]])
         _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis])
 
 
@@ -112,7 +113,7 @@ def plot_plaquettes(lattice : Lattice,
     This uses matplotlib.collections.PolyColection under the hood and you may 
     pass in any keyword to be passed along to it. 
     Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
-
+    Adding a color argument overides the color_scheme and labels.
 
     :param lattice: The lattice to use.
     :type lattice: Lattice
@@ -156,9 +157,30 @@ def plot_plaquettes(lattice : Lattice,
             
         replicated_polygons = _replicate_polygon(points, padx, pady)
         
+        # allow the user to overide color args
+        poly_args = dict(color = color)
+        poly_args.update(kwargs)
+
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
-        ax.add_collection(PolyCollection(replicated_polygons, color = color, **kwargs))
+        ax.add_collection(PolyCollection(replicated_polygons, **poly_args))
     return ax
+
+def plot_dual(lattice, subset = slice(None,None), **kwargs):
+    """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
+
+    :param lattice: The lattice to use.
+    :type lattice: Lattice
+    :param subset: a subset of edges to plot, defaults to all.
+    :type subset: slice, boolean array or indices, optional
+    :param ax: the ax to plot to, defaults to None
+    :type ax: axis, optional
+
+    :return: The dual lattice represented as a second Lattice object.
+    :rtype: Lattice
+    """    
+    st_as_lattice = graph_utils.make_dual(lattice, subset)
+    plot_edges(st_as_lattice, **kwargs)
+    return st_as_lattice
 
 def _plot_edge_arrows(ax, colors, edges, directions):
     for color, (start, end), dir in zip(colors, edges, directions):
@@ -190,7 +212,7 @@ def _broadcast_args(arg, subset, N, dtype = int):
     subset_size = np.sum(np.ones(N)[subset], dtype = int) 
     if arg.shape[0] == N: arg = arg[subset]
     elif arg.shape[0] == subset_size: arg = arg
-    else: raise ValueError(f"Argument should shape either lattice.n_* ({N}) or the size of the subset ({subset_size})")
+    else: raise ValueError(f"Argument shape {arg.shape} should be either lattice.n_* ({N}) or the size of the subset ({subset_size})")
 
     return arg
 
@@ -233,8 +255,6 @@ def plot_edge_indices(g, ax = None, offset = 0.01):
         if not np.any(g.edges.crossing[i]) != 0:
             ax.text(*(midpoint+offset), f"{i}", color = 'g')
   
-#   Keyword args you can pass to PolyColleciton: edgecolors, facecolors, linewidths, linestyles
-#   """
 
 ############### Old plotting interface + internal stuff ##############################
 
