@@ -132,6 +132,7 @@ def plot_plaquettes(lattice : Lattice,
     indices = np.arange(lattice.n_plaquettes)[subset]
     plaquettes = lattice.plaquettes[subset]
 
+    collections = []
     for i, color, p in zip(indices, colors, plaquettes):
         
         #get the edge vectors going anticlockwise around the plaquette
@@ -161,9 +162,11 @@ def plot_plaquettes(lattice : Lattice,
         poly_args = dict(color = color)
         poly_args.update(kwargs)
 
+        collection = PolyCollection(replicated_polygons, **poly_args)
+        collections.append(collection)
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
-        ax.add_collection(PolyCollection(replicated_polygons, **poly_args))
-    return ax
+        ax.add_collection(collection)
+    return collections
 
 def plot_dual(lattice, subset = slice(None,None), **kwargs):
     """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
