@@ -178,7 +178,6 @@ class Lattice(object):
 
         # set the neighbouring plaquettes for every plaquette - stored in same order as plaquette edges
         for n, plaquette in enumerate(_plaquettes):
-            print(plaquette.edges)
             edge_plaquettes = edges_plaquettes[plaquette.edges]
             roll_vals = np.where(edge_plaquettes != n)[1]
             other_plaquettes =  edge_plaquettes[np.arange(len(roll_vals)), roll_vals]
@@ -317,11 +316,18 @@ def _find_plaquette(
     plaquette_center = np.sum(points, 0) / (points.shape[0])%1
 
 
-    # now we check if the plaquette is acually the boundary of the lattice - this happens when we are in open boundaries, do this by checking the winding number!
-    angles = np.arctan2(plaquette_vectors[:,1], plaquette_vectors[:,0])/(2*np.pi)
+    # now we check if the plaquette is acually the boundary of the lattice - this happens when 
+    # we are in open boundaries, do this by checking how many times the vertices wind around the center of the plaquette
+    # if they go the wrong way round we have an exterior plaquette
+    relative_positions = points - np.sum(points, 0) / (points.shape[0])
+
+    angles = np.arctan2(relative_positions[:,1], relative_positions[:,0])/(2*np.pi)
     relative_angles = (np.roll(angles,1) - angles +0.5)%1 -0.5
+    # if an angle is 180 degrees we remove it as you cannot decide which way it goes
+    relative_angles = relative_angles*(np.abs(relative_angles) != 0.5)
+    
     w_number = round(np.sum(relative_angles))
-    if w_number == 1:
+    if w_number != -1:
         valid_plaquette = False
 
     n_sides = plaquette_edges.shape[0]
