@@ -160,7 +160,7 @@ def plot_plaquettes(lattice : Lattice,
     return ax
 
 def _plot_edge_arrows(ax, colors, edges, directions):
-    for color, (start, end), dir in zip(colors, edges, directions):
+    for color, (end, start), dir in zip(colors, edges, directions):
         start, end = [start, end][::dir]
         center = 1/2 * (end + start)
         length = np.linalg.norm(end - start)
