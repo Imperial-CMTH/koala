@@ -95,7 +95,6 @@ def plot_edges(lattice : Lattice,
     if directions is not None:
         directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
         directions = np.tile(directions, 9)
-        print([x.shape for x in [edge_colors,replicated_edges,directions]])
         _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis])
 
 
