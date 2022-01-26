@@ -21,7 +21,6 @@ def fluxes_from_bonds(l, bonds, real = True) -> np.ndarray:
 
     for i, p in enumerate(l.plaquettes):
         bond_signs = bonds[p.edges] #the signs of the bonds around this plaquette
-        bond_directions = p.directions #the direction of each edge expressed as +/- 1
 
         sign_real = np.array([1,-1,-1,1])
         sign = sign_real[p.n_sides%4]
@@ -29,7 +28,7 @@ def fluxes_from_bonds(l, bonds, real = True) -> np.ndarray:
         if not real and p.n_sides%2 == 1: 
             sign = sign*1j
 
-        fluxes[i] = sign*np.product(bond_signs * bond_directions)
+        fluxes[i] = sign*np.product(bond_signs * p.directions)
 
 
     return fluxes
