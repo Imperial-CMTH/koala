@@ -133,7 +133,7 @@ def plot_plaquettes(lattice : Lattice,
     for i, color, p in zip(indices, colors, plaquettes):
         
         #get the edge vectors going anticlockwise around the plaquette
-        vectors = lattice.edges.vectors[p.edges] * (1 - 2*p.directions[:, None])
+        vectors = lattice.edges.vectors[p.edges] * p.directions[:, None]
 
         #use those to construct the points around the plaquette ignoring PBC
         points = lattice.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis = 0)
