@@ -520,7 +520,7 @@ def _crossing(n_x, n_y, n, shift):
 
     return([shift[0]*x_looped, shift[1]*y_looped])
 
-
+# TODO - what does unit cell dimensions even do here???
 def tile_unit_cell(unit_points: np.ndarray, unit_edges: np.ndarray, unit_crossing: np.ndarray, unit_cell_dimensions:np.ndarray, n_xy) -> Lattice:
     """given a description of a unit cell, this tiles it to make a full lattice
 
