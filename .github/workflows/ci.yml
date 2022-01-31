@@ -49,5 +49,5 @@ jobs:
             conda install -y python pip
             pip install --upgrade --upgrade-strategy eager -e .
             pytest --maxfail=2 --verbose --failed-first -n 8
-            pytest --nbmake tutorial_notebooks -n 8
+            pytest --nbmake tutorial_notebooks -n 8 --nbmake-kernel=python3
             
