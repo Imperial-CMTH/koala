@@ -6,7 +6,7 @@ import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
 
-def plaquette_spaning_tree(lattice: Lattice, shortest_edges_only = True):
+def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only = True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
     The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used 
     (which is kind of a fudgey way of stopping the algorithm from picking edges that connect over the periodic boundaries). If you're hungry for 
