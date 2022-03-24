@@ -35,3 +35,34 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
         return H
 
     return k_hamiltonian
+
+
+def analyse_hk(Hk:function, k_num: int) -> tuple:
+    """Given a k-dependent Hamiltonian, this code samples over k-space to find the energy of the ground state and tells you the gap size
+
+    :param Hk: K-dependent Hamiltonian  
+    :type Hk: function
+    :param k_num: number of k states in the x and y direction that you want to sample   
+    :type k_num: int
+    :return: the ground state energy per site, gap size 
+    :rtype: tuple
+    """
+
+    k_values = np.arange(k_num)*2*np.pi/k_num
+    KX,KY = np.meshgrid(k_values,k_values)
+    kx = KX.flatten()
+    ky = KY.flatten()
+    k_list = np.array([[x,y] for x,y in zip(kx,ky)])
+    k_number = k_list.shape[0]
+    n_states = Hk(np.array([0,0])).shape[0]
+    energies = np.zeros((k_number,n_states//2))
+
+    for n, ks in enumerate(k_list):
+        H = Hk(ks)
+        e = la.eigvalsh(H)
+        energies[n]= e[:n_states//2]
+
+    ground_state_per_site = 2*np.sum(energies)/(k_number*n_states)
+    gap_size = np.min(np.abs(energies))
+
+    return ground_state_per_site, gap_size
