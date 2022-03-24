@@ -6,7 +6,7 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
 
     :param lattice: The lattice object defining the unit cell
     :type lattice: lattice
-    :param coloring: a colouring for the lattice
+    :param coloring: a colouring for the lattice (if None then you just use J[0])
     :type coloring: np.ndarray
     :param J: the J-values for the x y and z bonds
     :type J: np.ndarray
@@ -15,7 +15,7 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
     :return: a function that describes the Hamiltonian for a gven k
     :rtype: function
     """
-    j_vals = J[coloring]
+    j_vals = J[coloring] if coloring is not None else J[0]
 
     def k_hamiltonian(k: np.ndarray):
         """given a k value, returns a Bloch Hamiltonian
@@ -26,10 +26,12 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
         :rtype: np.ndarray
         """ 
         H = np.zeros((lattice.n_vertices,lattice.n_vertices), dtype = 'complex')
-        for n, edge_indices in enumerate(lattice.edges.indices):
-            cross = lattice.edges.crossing[n]
-            H[edge_indices[1],edge_indices[0]] = 0.5j  * j_vals[n] * ujk[n] * np.exp(1j*np.sum(cross*k))
-            out = H + H.conj().T
-        return out
+        cross = lattice.edges.crossing
+        phases = np.sum(cross*k, axis = -1)
+        hoppings = 0.5j*j_vals*ujk*np.exp(1j*phases)
+        H[lattice.edges.indices[:,1], lattice.edges.indices[:,0]] = hoppings
+        H[lattice.edges.indices[:,0], lattice.edges.indices[:,1]] = hoppings.conj()
+
+        return H
 
     return k_hamiltonian
