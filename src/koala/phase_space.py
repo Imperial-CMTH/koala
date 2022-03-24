@@ -1,7 +1,7 @@
 from .lattice import Lattice
 import numpy as np
 
-def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, J: np.ndarray, ujk: np.ndarray):
+def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarray, J: np.ndarray):
     """Generates a bloch Hamiltonian for a translational system with the unit cell given by lattice for a given k value
 
     :param lattice: The lattice object defining the unit cell
