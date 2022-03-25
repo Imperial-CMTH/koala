@@ -1,5 +1,6 @@
 from .lattice import Lattice
 import numpy as np
+from numpy import linalg as la
 
 def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarray, J: np.ndarray):
     """Generates a bloch Hamiltonian for a translational system with the unit cell given by lattice for a given k value
@@ -37,7 +38,7 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
     return k_hamiltonian
 
 
-def analyse_hk(Hk:function, k_num: int) -> tuple:
+def analyse_hk(Hk, k_num: int) -> tuple:
     """Given a k-dependent Hamiltonian, this code samples over k-space to find the energy of the ground state and tells you the gap size
 
     :param Hk: K-dependent Hamiltonian  
@@ -66,3 +67,26 @@ def analyse_hk(Hk:function, k_num: int) -> tuple:
     gap_size = np.min(np.abs(energies))
 
     return ground_state_per_site, gap_size
+
+
+def gap_over_phase_space(Hk, k_num: int) -> tuple:
+    """given a k-dependent hamiltonian, returns an array of the gap size over a k-lattice
+
+    :param Hk: k dependent hamiltonian
+    :type Hk: function
+    :param k_num: number of k states in the x and y direction that you want to sample   
+    :type k_num: int
+    :return: 
+    :rtype: np.ndarray
+    """
+
+    k_values = np.arange(k_num)*2*np.pi/k_num
+    KX,KY = np.meshgrid(k_values,k_values)
+    k_vals = np.concatenate([KX[:,:,np.newaxis],KY[:,:,np.newaxis]],axis=2)
+
+    def find_gap(k):
+        h = Hk(k)
+        vals = la.eigvalsh(h)
+        return np.min(np.abs(vals))
+    gaps = np.apply_along_axis(find_gap,2,k_vals)
+    return gaps
