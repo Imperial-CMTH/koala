@@ -130,6 +130,7 @@ dmypy.json
 
 # Specific to this repo - ie directories we use to test stuff
 perus_cool_stuff/
+python_notebooks/
 
 .DS_Store
 
