@@ -129,9 +129,9 @@ dmypy.json
 .pyre/
 
 # Specific to this repo - ie directories we use to test stuff
-python_notebooks/
+perus_cool_stuff/
 
 .DS_Store
 
-# VScode settins
+# VScode settings
 .vscode/
