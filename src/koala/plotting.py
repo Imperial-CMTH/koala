@@ -97,7 +97,7 @@ def plot_edges(lattice : Lattice,
     if directions is not None:
         directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
         directions = np.tile(directions, 9)
-        _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis])
+        _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis], lc)
 
 
     return ax
@@ -132,6 +132,7 @@ def plot_plaquettes(lattice : Lattice,
     indices = np.arange(lattice.n_plaquettes)[subset]
     plaquettes = lattice.plaquettes[subset]
 
+    collections = []
     for i, color, p in zip(indices, colors, plaquettes):
         
         #get the edge vectors going anticlockwise around the plaquette
@@ -161,9 +162,11 @@ def plot_plaquettes(lattice : Lattice,
         poly_args = dict(color = color)
         poly_args.update(kwargs)
 
+        collection = PolyCollection(replicated_polygons, **poly_args)
+        collections.append(collection)
         #one could add all these up into one huge polycollection but it doesn't seem to be any faster
-        ax.add_collection(PolyCollection(replicated_polygons, **poly_args))
-    return ax
+        ax.add_collection(collection)
+    return collections
 
 def plot_dual(lattice, subset = slice(None,None), **kwargs):
     """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
@@ -182,12 +185,13 @@ def plot_dual(lattice, subset = slice(None,None), **kwargs):
     plot_edges(st_as_lattice, **kwargs)
     return st_as_lattice
 
-def _plot_edge_arrows(ax, colors, edges, directions):
+def _plot_edge_arrows(ax, colors, edges, directions, linecollection):
+    linewidth = linecollection.get_linewidths()[0] #currently don't support multiple linewidths
     for color, (end, start), dir in zip(colors, edges, directions):
         start, end = [start, end][::dir]
         center = 1/2 * (end + start)
         length = np.linalg.norm(end - start)
-        head_length = min(0.2 * length, 0.02)
+        head_length = min(0.2 * length, 0.02 * linewidth / 1.5)
         direction = head_length * (start - end) / length
         arrow_start = center - direction
         ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],

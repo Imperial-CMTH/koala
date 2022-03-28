@@ -249,3 +249,45 @@ def make_dual(lattice, subset = slice(None, None)):
     st_crossing = np.array([edge_crossing_that_minimises_length(start, end) 
                 for start, end in st_verts[st_edges]])
     return Lattice(st_verts, st_edges, st_crossing)
+
+########### code that uses scipy.sparse.csgraph ################
+from scipy import sparse
+from scipy.sparse import csgraph
+
+def sparse_adjacency(lattice: Lattice):
+    """
+    Create a sparse (dok_matrix) adjacency matrix from a Lattice object.
+    Useful to use a Lattice object as input to a scipy.sparse.csgraph routine.
+    """
+    adj = sparse.dok_matrix((lattice.n_vertices, lattice.n_vertices))
+    adj[lattice.edges.indices[:,1], lattice.edges.indices[:,0]] = 1
+    adj[lattice.edges.indices[:,0], lattice.edges.indices[:,1]] = 1
+    return adj
+
+def edge_to_index_mapper(lattice: Lattice):
+    """
+    This returns a map where k = map[i,j] tells you the index k of an edge (i,j)
+    The order of (i,j) or (j,i) doesn't matter.
+    Useful to convert back from the output of a scipy.sparse.csgraph routine.
+    """
+    adj = np.zeros((lattice.n_vertices, lattice.n_vertices), dtype = int)
+    indices = lattice.edges.indices
+    adj[indices[:,1], indices[:,0]] = np.arange(lattice.n_edges)
+    adj[indices[:,0], indices[:,1]] = np.arange(lattice.n_edges)
+    return adj
+
+def adjacency_to_edgelist(adj):
+    "Given a sparse adjacency matrix, return the edges list of tuples."
+    return np.array(list(adj.todok().keys()))
+
+def minimum_spanning_tree(lattice : Lattice):
+    """"
+    Use scipy.sparse.csgraph.minimum_spanning_tree to find a 
+    minimum spanning tree of the given lattice.
+    """
+    adjacency = sparse_adjacency(lattice)
+    msp_adjacency = csgraph.minimum_spanning_tree(adjacency)
+    msp_edge_tuples = adjacency_to_edgelist(msp_adjacency)
+    edge_to_index = edge_to_index_mapper(lattice)
+    edge_indices = edge_to_index[msp_edge_tuples[:, 0], msp_edge_tuples[:, 1]]
+    return edge_indices
