@@ -52,8 +52,8 @@ def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.ND
   Js = J[coloring] if coloring is not None else J[0]
   hoppings = 2*Js*ujk
   
-  ham[l.edges.indices[:,0], l.edges.indices[:,1]] = hoppings
-  ham[l.edges.indices[:,1], l.edges.indices[:,0]] = -1*hoppings
+  ham[l.edges.indices[:,1], l.edges.indices[:,0]] = hoppings
+  ham[l.edges.indices[:,0], l.edges.indices[:,1]] = -1*hoppings
 
   ham = ham * 1.0j / 4.0
 
