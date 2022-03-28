@@ -140,3 +140,23 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
         raise ValueError("find_flux_sector thought that it worked but somehow still didn't, a bug.")
         
     return bonds
+
+def n_to_ujk_flipped(n: int, ujk: np.ndarray, min_spanning_set: np.ndarray):
+    """given an integer n in the 0 - 2^(number of edges in spanning tree), this code flips the edges of ujk in the spanning tree in the combination fiven by the bnary representation of n. Useful for exhaustively searching over the entire flux space fo a lattice
+
+    :param n: number determining the flip configuration
+    :type n: _type_
+    :param ujk: the edge signs of the lattice
+    :type ujk: np.ndarray( ±1 )
+    :param min_spanning_set: an array containing a minimum set of edges that form a plaquete-spanning tree on the system 
+    :type min_spanning_set: np.ndarray( int )
+    :return: a flipped set of ujk
+    :rtype: np.ndarray( ±1 )
+    """
+    n_in_tree =  len(min_spanning_set)
+    str_format = '0' + str(n_in_tree) + 'b'
+    flips = np.array([int(x) for x in format(n, str_format)])
+    ujk_flipped = ujk.copy()
+    new_f_values = 1-2*flips
+    ujk_flipped[min_spanning_set] = new_f_values
+    return ujk_flipped
