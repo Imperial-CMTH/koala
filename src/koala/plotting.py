@@ -136,7 +136,7 @@ def plot_plaquettes(lattice : Lattice,
     for i, color, p in zip(indices, colors, plaquettes):
         
         #get the edge vectors going anticlockwise around the plaquette
-        vectors = lattice.edges.vectors[p.edges] * (1 - 2*p.directions[:, None])
+        vectors = lattice.edges.vectors[p.edges] * p.directions[:, None]
 
         #use those to construct the points around the plaquette ignoring PBC
         points = lattice.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis = 0)
@@ -187,7 +187,7 @@ def plot_dual(lattice, subset = slice(None,None), **kwargs):
 
 def _plot_edge_arrows(ax, colors, edges, directions, linecollection):
     linewidth = linecollection.get_linewidths()[0] #currently don't support multiple linewidths
-    for color, (start, end), dir in zip(colors, edges, directions):
+    for color, (end, start), dir in zip(colors, edges, directions):
         start, end = [start, end][::dir]
         center = 1/2 * (end + start)
         length = np.linalg.norm(end - start)
