@@ -116,7 +116,7 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     A bond configuration is an assignment of +/-1 to each bond.
     A flux sector is an asignment of +/-1 to even plaquette and +/-i to odd plaquettes.
     """
-    
+    # TODO - this is changing the intiial guess as well as outputting the answer - not good if you want to keep the initial guess intact - scope issue
     if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = int)
     if initial_bond_guess is None: initial_bond_guess = _random_bonds(l)
     
