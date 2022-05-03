@@ -7,7 +7,7 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
 
     :param lattice: The lattice object defining the unit cell
     :type lattice: lattice
-    :param coloring: a colouring for the lattice (if None then you just use J[0])
+    :param coloring: a coloring for the lattice (if None then you just use J[0])
     :type coloring: np.ndarray
     :param J: the J-values for the x y and z bonds
     :type J: np.ndarray

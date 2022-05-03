@@ -277,15 +277,15 @@ def deprecated(func):
         return func(*args, **kwargs)
     return new_func
 
-def peru_friendly_colour_scheme(n_colours: int):
-    if n_colours == 2:
+def peru_friendly_color_scheme(n_colors: int):
+    if n_colors == 2:
         scheme = ['r', 'b']
-    elif n_colours == 3:
+    elif n_colors == 3:
         scheme = ['b', 'y', 'lightgrey' ]
-    elif n_colours == 4:
+    elif n_colors == 4:
         scheme = ['r','b', 'y', 'lightgrey']
     else:
-        raise LatticeException('Honestly you cannot possibly expect someone as colourblind as me to be able to find FIVE colours I can tell apart, thats ridiculous')
+        raise LatticeException('Honestly you cannot possibly expect someone as colorblind as me to be able to find FIVE colors I can tell apart, thats ridiculous')
 
     return scheme
 
@@ -342,15 +342,15 @@ def plot_lattice(lattice, ax = None,
                  vertex_labels = None, vertex_color_scheme = ['r','b','k'],
                  edge_arrows = False, edge_index_labels = False, bond_signs = None,
                  scatter_args = None):
-    """Plots a 2d graph. Optionally with coloured edges or vertices.
+    """Plots a 2d graph. Optionally with colored edges or vertices.
 
     Args:
         lattice (Lattice): A koala lattice dataclass containing the vertices, adjacency and adjacency_crossing
         ax (matplotlib axis, optional): Axis to plot to. Defaults to plt.gca().
         edge_labels (np.ndarray, optional): A list of integer edge labels, length must be the same as adjacency, If None, then all edges are plotted in black. Defaults to None.
-        edge_color_scheme (list, optional): List of matplotlib  colour strings for edge colouring. Defaults to ['r','g','b'].
-        vertex_labels (np.ndarray, optional): A list of labels for colouring the vertices, if None, vertices are not plotted. Defaults to None.
-        vertex_color_scheme (list, optional): List of matplotlib  colour strings for vertex colouring. Defaults to ['r','b'].
+        edge_color_scheme (list, optional): List of matplotlib  color strings for edge coloring. Defaults to ['r','g','b'].
+        vertex_labels (np.ndarray, optional): A list of labels for coloring the vertices, if None, vertices are not plotted. Defaults to None.
+        vertex_color_scheme (list, optional): List of matplotlib  color strings for vertex coloring. Defaults to ['r','b'].
         edge_arrows (bool | np.ndarray): If True or boolean array, arrows are drawn on the edges. Defaults to False.
         edge_index_labels (bool | np.ndarray): If True or boolean array, edge indices are plotted on the edges. Defaults to False.
         scatter_args (dict, optional): Directly passes arguments to plt.scatter for the vertices. Use if you want to put in custom vertex attributes. Defaults to None.

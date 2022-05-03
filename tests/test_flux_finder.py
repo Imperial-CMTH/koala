@@ -14,7 +14,7 @@ def find_random_flux_sector(l):
 def test_flux_finder():
     """find_flux_sector checks for itself if it finds an output within one flux of the input"""
     n = 15
-    honeycomb, _ = example_graphs.generate_honeycomb(n, return_colouring=True)
+    honeycomb, _ = example_graphs.generate_honeycomb(n, return_coloring=True)
     honeycomb_bonds, _ = find_random_flux_sector(honeycomb)
     
     random_points = pointsets.generate_random(n*n)

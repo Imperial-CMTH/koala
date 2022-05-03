@@ -6,16 +6,16 @@ A package to do topological marker calculations on amorphous lattices.
 Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-packaging).
 
 ## Changelog
-- Implement a way to find all the colourings of a lattice
+- Implement a way to find all the colorings of a lattice
 - Add an axes argument to plotting function
 - Changed pbc_voronisation to emit a third array adjacency_crossing with size (n_edges, 2) that tells you which of the 3x3 unit cell grid this edge goes into, alternatively you can think of it as saying if this edge crosses each of the two cuts that unrwrap the torus into the plane.
-- renamed SAT to graph_colour 
+- renamed SAT to graph_color 
 - renamed PBV_Voronoi datastructure to Lattice
 - replaced the first three arguments of plot_lattice with a Lattice object
 
 
 ## Todo
-- For an n-gon with fixed colored edges how many valid colourings are there? Is this the origin of the degeneracy of colorings?
+- For an n-gon with fixed colored edges how many valid colorings are there? Is this the origin of the degeneracy of colorings?
 
 
 Flux_finder

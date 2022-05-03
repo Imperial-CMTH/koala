@@ -64,14 +64,14 @@ def vertex_color(adjacency: np.ndarray, n_colors:int = 4, all_solutions = False)
     Args:
         adjacency (np.ndarray, (... ,2)): A list of pairs of vertex indices representing edges.
         n_colors (int): The maximum number of colors we can use.
-        all_solutions (bool, optional): If True, ooutputs a list of all possible solutions for the colouring. Defaults to False.
+        all_solutions (bool, optional): If True, ooutputs a list of all possible solutions for the coloring. Defaults to False.
 
     Returns:
         np.ndarray: An integer label for each vertex.
     """
 
     
-    #graph colouring g_ij where i is node and edge is color
+    #graph coloring g_ij where i is node and edge is color
     #two types of contraints:
         #a bunch of atmost1s for each of g_i1 gi2 gi3
         #a bunch of not(g_i1 and g_j1) and not(gi2 and gj2) and not(gi3 and gj3)
@@ -123,12 +123,12 @@ def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n
     Args:
         adjacency (np.ndarray): A list of pairs of vertex indices representing edges.
         n_colors (int): The maximum number of colors we can use.
-        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the colouring. Defaults to False.. Defaults to False.
+        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the coloring. Defaults to False.. Defaults to False.
         n_solutions (int, optional): If not None, returns up to this number of solutions. Defaults to None.
         fixed ( list of tuples (label, edge_index), optional): A list of edges indices that are fixed to a particular label. Defaults to [].
 
     Returns:
-        np.ndarray: A label for every edge. if n_solutions or all_solutions are used, gives an array containing all the colourings.
+        np.ndarray: A label for every edge. if n_solutions or all_solutions are used, gives an array containing all the colorings.
     """
     
     s = Solver(name='g3')

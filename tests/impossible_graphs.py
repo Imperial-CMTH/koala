@@ -14,7 +14,7 @@ def rotate(vector, angle):
 def create_peterson_graph():
 
     """
-    Returns a peterson graph, one of the simplest (but non-planar) cubic graphs that is not three-colourable. 
+    Returns a peterson graph, one of the simplest (but non-planar) cubic graphs that is not three-colorable. 
 
     Returns:
         vertices: np.array shape (nvertices, ndim) - A list of the positions of all the vertices that make up the graph
@@ -46,7 +46,7 @@ def create_peterson_graph():
 
 def create_tutte_graph():
     """
-    Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colourable. 
+    Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colorable. 
 
     Returns:
         vertices: np.array shape (nvertices, ndim) - A list of the positions of all the vertices that make up the graph

@@ -19,8 +19,8 @@ def color_honeycomb_lattice(lattice):
  
 def test_honeycomb():
     N = 10
-    honeycomb = generate_honeycomb(N, return_colouring=False)
-    honeycomb, coloring = generate_honeycomb(N, return_colouring=True)
+    honeycomb = generate_honeycomb(N, return_coloring=False)
+    honeycomb, coloring = generate_honeycomb(N, return_coloring=True)
 
     #all vertices have coordination number 3
     assert(is_trivalent(honeycomb)) 

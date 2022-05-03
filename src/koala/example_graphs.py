@@ -53,7 +53,7 @@ def tri_square_pent():
 
 def tutte_graph():
     """
-    Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colourable. 
+    Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colorable. 
 
     Returns:
         vertices: np.array shape (nvertices, ndim) - A list of the positions of all the vertices that make up the graph
@@ -269,15 +269,15 @@ def bridge_graph():
     return lat
 
 
-def generate_honeycomb(n_horizontal_cells: int, return_colouring = False)-> Lattice:
+def generate_honeycomb(n_horizontal_cells: int, return_coloring = False)-> Lattice:
     """Generates a regular honeycomb lattice with n_horizonta_cells number of cells in the x-direction, and a similar amount in the y direction
     but slightly fudged to fir a square system
 
     :param n_horizontal_cells: number of cells wide you want the lattice
     :type n_horizontal_cells: int
-    :param return_colouring: if True also returns a regular kitaev-style colouring for all the edges, defaults to False
-    :type return_colouring: bool, optional
-    :return: a lattice or a lattice and a colouring
+    :param return_coloring: if True also returns a regular kitaev-style coloring for all the edges, defaults to False
+    :type return_coloring: bool, optional
+    :return: a lattice or a lattice and a coloring
     :rtype: Lattice, np.ndarray (optional)
     """
     
@@ -346,10 +346,10 @@ def generate_honeycomb(n_horizontal_cells: int, return_colouring = False)-> Latt
     edges = np.concatenate([int_edges, ext_hor, ext_ver, ext_diag])
     crossing = np.concatenate([crossing_int, crossing_hor, crossing_ver, crossing_diag])
 
-    colouring = np.array( [0,2,0]*n_vertical*n_horizontal_cells +[1,1] * n_vertical*n_horizontal_cells + [2]* n_vertical*n_horizontal_cells )
+    coloring = np.array( [0,2,0]*n_vertical*n_horizontal_cells +[1,1] * n_vertical*n_horizontal_cells + [2]* n_vertical*n_horizontal_cells )
     
-    if return_colouring:
-        return Lattice(all_sites, edges, crossing), colouring
+    if return_coloring:
+        return Lattice(all_sites, edges, crossing), coloring
     else:
         return Lattice(all_sites, edges, crossing) 
 
@@ -421,14 +421,14 @@ def generate_hex_square_oct(n_cells: int)-> Lattice:
 
     return Lattice(all_sites, edges, crossing)
 
-def generate_tri_non(n_cells, return_colouring = False):
+def generate_tri_non(n_cells, return_coloring = False):
     """generate a lattice of nonagons and triangles
 
     :param n_cells: system dimensions. If an int is passed then the system is n_cells x n_cells. If an iterable is passed the system is n_cells[0] x n_cells[1]
     :type n_cells: int or iter[int]
-    :param return_colouring: optional arg to return a colouring of the edges, defaults to False
-    :type return_colouring: bool, optional
-    :return: the lattice and optionally a colouring 
+    :param return_coloring: optional arg to return a coloring of the edges, defaults to False
+    :type return_coloring: bool, optional
+    :return: the lattice and optionally a coloring 
     :rtype: Lattice or Lattice, np.ndarray
     """
 
@@ -468,10 +468,10 @@ def generate_tri_non(n_cells, return_colouring = False):
         nx = n_cells[0]
         ny = n_cells[1]
 
-    colouring = np.array([1,2,0,1,2,0] * nx*ny)
+    coloring = np.array([1,2,0,1,2,0] * nx*ny)
 
-    if return_colouring:
-        return lattice, colouring
+    if return_coloring:
+        return lattice, coloring
     else:
         return lattice
 
