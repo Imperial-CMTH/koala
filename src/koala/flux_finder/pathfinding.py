@@ -57,7 +57,7 @@ def a_star_search_backward_pass(came_from, start, goal):
 ###############################
 
 from ..lattice import Lattice
-from ..graph_utils import adjacent_plaquettes
+from ..graph_utils import adjacent_plaquettes, vertex_neighbours
 
 def straight_line_length(a, b) -> float:
     "Return the shortest path between two points on the unit square."
@@ -72,13 +72,11 @@ def periodic_straight_line_length(a, b) -> float:
 def path_between_plaquettes(l : Lattice, start : int, goal : int, 
                 heuristic = straight_line_length, 
                 early_stopping : bool = True, maxits : int = 1000):
-    """Find a path between two plaquettes. 
-    If early_stopping = False it's guranteed to be the shortest measured by center to center distance.
+    """Find a path along dual edges between two plaquettes. Returns (vertices, edges) in the path.
+    Note that the edges and dual edges are 1-1 so the same indices are used for interchangeably.
+    If early_stopping = False it's guaranteed to be the shortest measured by center to center distance.
     If early_stopping = True it's probably still pretty short but it stops as soon as it finds a path.
     The heuristic function must give a lower bound on the distance, it could be swapped out for a periodic one for instance.
-
-    This function is defined in terms of `a_star_search_forward_pass` and `a_star_search_backward_pass` which could equally well
-    be used to find paths on edge or vertices if they are given appropriate adjacency and heuristic functions.
 
     :param l: The lattice to pathfind on.
     :type l: Lattice
@@ -92,12 +90,47 @@ def path_between_plaquettes(l : Lattice, start : int, goal : int,
     :type early_stopping: bool, optional
     :param maxits: How many iterations to do before giving up, defaults to 1000
     :type maxits: int, optional
-    :return: nodes, edges, lists of nodes visited by a path and the indices of the edges used to get there.
+    :return: plaquettes, edges, lists of plaquettes visited by a path and the indices of the edges used to get there.
     :rtype: Tuple[array, array]
     """    
     # all information about the graph is stored in the adjacency(a) and heuristic(a,b) functions
     def adjacency(a): return adjacent_plaquettes(l, a)
     def pos(p): return l.plaquettes[p].center
+    def _heuristic(a,b): return heuristic(pos(a), pos(b))
+
+    came_from, _ = a_star_search_forward_pass(start, goal, _heuristic, adjacency, early_stopping, maxits)
+    return a_star_search_backward_pass(came_from, start, goal)
+
+def adjacent_vertices(lattice, a):
+    return vertex_neighbours(a, lattice.edges.indices)
+
+def path_between_vertices(l : Lattice, start : int, goal : int, 
+                            heuristic = straight_line_length, 
+                            early_stopping : bool = True, maxits : int = 1000):
+    """Find a path along edges between two vertices. Returns (vertices, edges) in the path.
+    Note that the edges and dual edges are 1-1 so the same indices are used for interchangeably.
+    If early_stopping = False it's guaranteed to be the shortest measured by center to center distance.
+    If early_stopping = True it's probably still pretty short but it stops as soon as it finds a path.
+    The heuristic function must give a lower bound on the distance, it could be swapped out for a periodic one for instance.
+
+    :param l: The lattice to pathfind on.
+    :type l: Lattice
+    :param start: The index of the vertex to start from.
+    :type start: int
+    :param goal: The index of the vertex to go to.
+    :type goal: int
+    :param heuristic: The distance metric (and periodicity) to use, defaults to straight_line_length
+    :type heuristic: function
+    :param early_stopping: If True, return as soon as a path is found, defaults to True
+    :type early_stopping: bool, optional
+    :param maxits: How many iterations to do before giving up, defaults to 1000
+    :type maxits: int, optional
+    :return: vertices, edges, lists of vertices visited by a path and the indices of the edges used to get there.
+    :rtype: Tuple[array, array]
+    """    
+    
+    def adjacency(a): return adjacent_vertices(l, a)
+    def pos(a): return l.vertices.positions[a]
     def _heuristic(a,b): return heuristic(pos(a), pos(b))
 
     came_from, _ = a_star_search_forward_pass(start, goal, _heuristic, adjacency, early_stopping, maxits)
