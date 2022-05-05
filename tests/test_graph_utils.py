@@ -15,7 +15,7 @@ def test_vertex_neighbours():
     plot_vertex_indices(g)
     plot_degeneracy_breaking(0, g)
 
-    vertex_indices, edge_indices = vertex_neighbours(0, g.edges.indices)
+    vertex_indices, edge_indices = vertex_neighbours(g, 0)
     assert(np.all(vertex_indices == (np.array([1, 2, 3]),)))
     assert(np.all(edge_indices == np.array([0,1,2])))
 

@@ -27,7 +27,7 @@ def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
         
         # get vertex and edge neighbours of the vertex
         this_vertex = g.vertices.positions[vertex_i]
-        vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.edges.indices)
+        vertex_indices, edge_indices = vertex_neighbours(g, vertex_i)
         vertex_indices, edge_indices = clockwise_about(vertex_i, g)
         
         # this function takes into account the fact that edges can cross boundaries

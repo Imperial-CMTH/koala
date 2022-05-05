@@ -79,7 +79,7 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only = True):
     return edges_in 
 
 # FIXME: change function signature to take lattice object instead of adjacency list
-def vertex_neighbours(vertex_i, adjacency):
+def vertex_neighbours(lattice, vertex_i):
     """
     Return the neighbouring nodes of a point
 
@@ -93,6 +93,7 @@ def vertex_neighbours(vertex_i, adjacency):
     Note that previous version of this function broke the expectation that edge_indices[i] is the edge that links 
     vertex_i to vertex_indices[i], make sure to preserve this property.
     """
+    adjacency = lattice.edges.indices
     edge_indices = np.where(np.any(vertex_i == adjacency, axis=-1))[0]
     edges = adjacency[edge_indices]
 
@@ -133,7 +134,7 @@ def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
         ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
     """
     #get the edges and vertices around vertex 0
-    vertex_indices, edge_indices = vertex_neighbours(vertex_i, g.edges.indices)
+    vertex_indices, edge_indices = vertex_neighbours(g, vertex_i)
     edge_vectors = get_edge_vectors(vertex_i, edge_indices, g)
 
     #order them clockwise from the positive x axis

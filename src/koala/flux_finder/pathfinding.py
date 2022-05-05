@@ -102,7 +102,7 @@ def path_between_plaquettes(l : Lattice, start : int, goal : int,
     return a_star_search_backward_pass(came_from, start, goal)
 
 def adjacent_vertices(lattice, a):
-    return vertex_neighbours(a, lattice.edges.indices)
+    return vertex_neighbours(lattice, a)
 
 def path_between_vertices(l : Lattice, start : int, goal : int, 
                             heuristic = straight_line_length, 

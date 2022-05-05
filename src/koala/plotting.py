@@ -478,7 +478,7 @@ def plot_degeneracy_breaking(vertex_i, g, ax = None):
     vertex_colors[vertex_i] = 'r'
     
     #label its neighbours green
-    vertex_colors[vertex_neighbours(vertex_i, g.edges.indices)[0]] = 'g'
+    vertex_colors[vertex_neighbours(g, vertex_i)[0]] = 'g'
 
     #color the edges in a clockwise fashion
     ordered_edge_indices = clockwise_edges_about(vertex_i, g)
