@@ -460,7 +460,8 @@ def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 10
 
     def to_points(xv, yv): return np.array([xv, yv]).transpose((1,2,0))
     s = scipy.interpolate.griddata(g.vertices.positions, scalar, to_points(xv,yv), method = method, rescale = True)
-    ax.pcolormesh(xv, yv, s, cmap = cmap, vmin = 0, vmax = 1)
+    ax.pcolormesh(xv, yv, s, cmap = cmap, vmin = vmin, vmax = vmax)
+    return xv, yv, s
 
 def plot_degeneracy_breaking(vertex_i, g, ax = None):
     """
