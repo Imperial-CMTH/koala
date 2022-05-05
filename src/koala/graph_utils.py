@@ -202,7 +202,7 @@ def adjacent_plaquettes(l : Lattice, p_index : int) -> Tuple[np.ndarray, np.ndar
     # get just the other plaquette of each set
     p_index_location = neighbouring_plaquettes[:, 1] == p_index
     other_index = 1 - p_index_location.astype(int)[:, None] 
-    neighbouring_plaquettes = np.take_along_axis(neighbouring_plaquettes, other_index, axis = 1).squeeze()
+    neighbouring_plaquettes = np.take_along_axis(neighbouring_plaquettes, other_index, axis = 1).squeeze(axis = -1)
     
     return neighbouring_plaquettes, edges
 

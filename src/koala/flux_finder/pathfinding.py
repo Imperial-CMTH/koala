@@ -5,7 +5,7 @@ from queue import PriorityQueue
 # General A* implementation   #
 ###############################
 
-def PathFindingError(Exception): pass
+class PathFindingError(Exception): pass
 
 def a_star_search_forward_pass(start: int, goal: int, heuristic, adjacency, early_stopping : bool, maxits : int):
     frontier = PriorityQueue() #represents nodes we might explore next
@@ -23,11 +23,10 @@ def a_star_search_forward_pass(start: int, goal: int, heuristic, adjacency, earl
     estimated_total_cost[start] = 0
     
     for i in range(maxits):
-        if frontier.empty():
-            raise PathFindingError(f"Could not find a path from {start} to {goal} in {maxits} steps.")
+        if frontier.empty(): break
         
         _, current = frontier.get()
-        if current == goal: break
+        if current == goal: return came_from, cost_so_far
         
         for next, shared_edge in zip(*adjacency(current)):
             if early_stopping and next == goal:
@@ -42,7 +41,7 @@ def a_star_search_forward_pass(start: int, goal: int, heuristic, adjacency, earl
                 frontier.put((priority, next))
                 came_from[next] = (current, shared_edge)
     
-    return came_from, cost_so_far
+    raise PathFindingError(f"Could not find a path from start={start} to goal={goal} in {maxits} steps.")
 
 def a_star_search_backward_pass(came_from, start, goal):
     nodes, edges = [goal,],[]
