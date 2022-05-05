@@ -27,14 +27,14 @@ def test_vertex_coloring():
 def test_edge_coloring():
     for n in [4,10,30,50]:
         points = generate_random(n)
-        g = generate_lattice(points)
-        solveable, solution = edge_color(g.edges.indices, n_colors = 3)
+        lattice = generate_lattice(points)
+        solveable, solution = edge_color(lattice, n_colors = 3)
         
         if solveable:
             colors = np.array(['r', 'g', 'b'])[solution]
         
             for i in range(colors.shape[0]):
-                neighbouring_edges = edge_neighbours(i, g.edges.indices)
+                neighbouring_edges = edge_neighbours(lattice, i)
                 assert(colors[i] not in colors[neighbouring_edges])
 
             
@@ -47,7 +47,7 @@ def test_color_lattice():
     graphs = [two_tri(), tri_square_pent(), tutte_graph()]
     for g in graphs:
         fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=g))
-        solveable, solution = edge_color(g.edges.indices, n_colors = 3, fixed = fixed)
+        solveable, solution = edge_color(g, n_colors = 3, fixed = fixed)
         if solveable:
             solution2 = color_lattice(g)
             assert(np.all(solution == solution2))

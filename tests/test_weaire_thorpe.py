@@ -19,9 +19,9 @@ def test_smoketest_weaire_thorpe():
     g = generate_lattice(points)
 
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
-    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
     WT_g = vertices_to_triangles(g, edge_labels)
 
     #ax.scatter(*g.vertices.positions.T, color = 'k', alpha = 0.9)
@@ -43,7 +43,7 @@ def test_multi_graphs():
     )
 
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     WT_g = vertices_to_triangles(g, edge_labels)
 
@@ -75,10 +75,10 @@ def test_all():
 
     #color it
     ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
-    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     #transform it to a Weaire-Thorpe model
-    solveable, edge_labels = edge_color(g.edges.indices, n_colors = 3, fixed = enumerate(ordered_edge_indices))
+    solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
     WT_g = vertices_to_triangles(g, edge_labels)
 
     #label the internal and external edges

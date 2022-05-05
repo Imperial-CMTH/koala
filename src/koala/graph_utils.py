@@ -78,6 +78,7 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only = True):
             
     return edges_in 
 
+# FIXME: change function signature to take lattice object instead of adjacency list
 def vertex_neighbours(vertex_i, adjacency):
     """
     Return the neighbouring nodes of a point
@@ -102,20 +103,21 @@ def vertex_neighbours(vertex_i, adjacency):
     assert(vertex_indices.shape == edge_indices.shape)
     return vertex_indices, edge_indices
 
-def edge_neighbours(edge_i, adjacency):
+def edge_neighbours(lattice, edge_i):
     """
     Return the neighbouring edges of an edge (the edges connected to the same nodes as this edge)
 
-    Args:
-        edge_i: int the index into vertices of the node we want the neighbours of
-        adjacency: (M, 2) A list of pairs of vertices representing edges
-    Returns:
-        edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours 
+    :param lattice: The lattice
+    :type lattice: Lattice
+    :param edge_i: the index of the edge we want the neighbours of
+    :type edge_i: integer
+    :return: edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours 
+    :rtype: np.ndarray (k,)
     """
-    edge = adjacency[edge_i]
+    edge = lattice.edges.indices[edge_i]
     v1 = edge[0]
     v2 = edge[1]
-    mask = np.any(v1 == adjacency, axis = -1) | np.any(v2 == adjacency, axis=-1)
+    mask = np.any(v1 == lattice.edges.indices, axis = -1) | np.any(v2 == lattice.edges.indices, axis=-1)
     mask[edge_i] = False #not a neighbour of itself
     return np.where(mask)[0]
 

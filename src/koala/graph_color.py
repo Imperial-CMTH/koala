@@ -117,7 +117,7 @@ def vertex_color(adjacency: np.ndarray, n_colors:int = 4, all_solutions = False)
 
 from .graph_utils import clockwise_edges_about
 
-def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n_solutions = None, fixed = []):
+def edge_color(lattice: Lattice, n_colors:int = 3, all_solutions = False, n_solutions = None, fixed = []):
     """Return a coloring of the edges using n_colors different labels.
 
     Args:
@@ -132,6 +132,7 @@ def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n
     """
     
     s = Solver(name='g3')
+    adjacency = lattice.edges.indices
     n_edges = adjacency.shape[0]
     n_reserved_literals = n_colors * n_edges
 
@@ -151,7 +152,7 @@ def edge_color(adjacency: np.ndarray, n_colors:int = 3, all_solutions = False, n
             
         #the second contraint is that nieghbouring nodes are not the same color
         for i in range(n_edges):
-            for j in edge_neighbours(i, adjacency):
+            for j in edge_neighbours(lattice, i):
                 cnf = [[-int(l[i,k]), -int(l[j,k])] for k in range(n_colors)]
                 s.append_formula(cnf)
         
@@ -187,7 +188,7 @@ def color_lattice(lattice: Lattice):
     """    
     #fix the coloring to be clockwise about vertex 0
     fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=lattice))
-    solveable, solution = edge_color(lattice.edges.indices, n_colors = 3, fixed = fixed)
+    solveable, solution = edge_color(lattice, n_colors = 3, fixed = fixed)
     if not solveable:
         raise ValueError("No coloring exists for this lattice.")
     return solution

@@ -23,7 +23,7 @@ test_lattices = [voronoi_lattice,h]
 
 def test_plotting():
     for g in test_lattices:
-        solvable, solution = edge_color(g.edges.indices, n_colors = 3)
+        solvable, solution = edge_color(g, n_colors = 3)
         point_coloring = np.random.randint(2,size=g.vertices.positions.shape[0])
         plot_lattice(g,edge_labels=solution)
         plot_lattice(g,edge_labels=solution,edge_color_scheme=['k','lightgrey','blue'])
