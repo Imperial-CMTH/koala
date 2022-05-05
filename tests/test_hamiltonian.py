@@ -2,16 +2,17 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from koala.pointsets import generate_bluenoise
+from koala.pointsets import generate_random
 from koala.voronization import generate_lattice
 from koala.graph_color import edge_color
 from koala.hamiltonian import *
 
+n = 10
+points = generate_random(n*n)
+g = generate_lattice(points)
+solvable, solution = edge_color(g.edges.indices, n_colors = 3)
+
 def test_sublattice_labelling():
-  n = 20
-  points = generate_bluenoise(30,n,n)
-  g = generate_lattice(points)
-  solvable, solution = edge_color(g.edges.indices, n_colors = 3)
   # bisect lattice, dimerizing along 0 bonds
   l = bisect_lattice(g, solution, 0)
   nverts = l.vertices.positions.shape[0]
@@ -28,10 +29,6 @@ def test_sublattice_labelling():
     )
 
 def test_hamiltonians():
-  n = 20
-  points = generate_bluenoise(30,n,n)
-  g = generate_lattice(points)
-  solvable, solution = edge_color(g.edges.indices, n_colors = 3)
   # bisect lattice, dimerizing along 0 bonds
   l = bisect_lattice(g, solution, 0)
 
