@@ -25,7 +25,7 @@ def test_vertex_coloring():
 
 
 def test_edge_coloring():
-    for n in range(4, 50):
+    for n in [4,10,30,50]:
         points = generate_random(n)
         g = generate_lattice(points)
         solveable, solution = edge_color(g.edges.indices, n_colors = 3)
