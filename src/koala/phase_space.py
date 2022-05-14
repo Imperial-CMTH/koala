@@ -73,7 +73,7 @@ def analyse_hk(Hk, k_num: int, return_all_results = False) -> tuple:
     else:
         out = (ground_state_per_site, gap_size)
 
-    return ground_state_per_site, gap_size
+    return out
 
 
 def gap_over_phase_space(Hk, k_num: int) -> tuple:
