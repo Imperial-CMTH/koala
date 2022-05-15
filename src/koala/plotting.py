@@ -526,3 +526,58 @@ def _replicate_polygon(polygon, padx, pady):
     """Used in plot plaquettes to periodically tile a polygon in the x or y directions"""
     dxdy = np.array(list(itertools.product(padx, pady)))
     return polygon[None, ...] + dxdy[:, None, :]
+
+def cross_product_2d(a,b): return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0] 
+
+def line_intersection(lines, lines2, abs_tolerance = 1e-14, full_output = False):
+    """
+    Generic Line to line intersection function
+    
+    :param lines: The first set of lines, with shape [n_lines, 2, 2] where lines[i, 0, :] is the first point of the ith line
+    :type line: np.ndarray
+    
+    :param lines2: The second set of lines to intersect with. Shape [n_lines2, 2, 2]
+    :type line2: np.ndarray
+    
+    :param abs_tolerance: The absolute floating point tolerance to use for the parallel and colinear special cases.
+    :type abs_tolerance: float
+    
+    :return: intersection, boolean array shape [n_lines, n_lines2]
+    :rtype: np.ndarray
+    """
+    
+    s1 = lines[:, 0, :][:, None]
+    e1 = lines[:, 1, :][:, None]
+    d1 = e1 - s1 #shape of s1, e1, d1 = (n_lines, 1, 2)
+    
+    s2 = lines2[:, 0, :][None, :]
+    e2 = lines2[:, 1, :][None, :]
+    d2 = e2 - s2 #shape of s2, e2, d2 = (1, n_lines2, 2)
+
+    d2_cross_d1 = cross_product_2d(d2, d1) # 0 if lines are parallel
+    displacement_cross_d1 = cross_product_2d((s1 - s2), d1) # when parallel this is 0 if lines are also colinear
+    
+    with np.errstate(divide='ignore', invalid='ignore'):
+
+        #only works if not parallel, hence the use of np.errstate
+        t1 = cross_product_2d((s1 - s2), d1) / cross_product_2d(d2, d1)
+        t2 = cross_product_2d((s2 - s1), d2) / cross_product_2d(d1, d2)
+        
+        #used for the colinear case
+        t_star1 = ((s1 - s2) / d1)[..., 0]
+        t_star2 = ((s1 - s2) / d2)[..., 0]
+    
+    #add some floating point tolerance
+    are_parallel = np.abs(d2_cross_d1) < abs_tolerance
+    are_colinear = are_parallel & (np.abs(displacement_cross_d1) < abs_tolerance)
+    
+    t_in_range = (0 <= t1) & (t1 <= 1) & (0 <= t2) & (t2 <= 1)
+    t_star_in_range = ((-1 <= t_star1) & (t_star1 <= 1)) | ((-1 <= t_star2) & (t_star2 <= 1))
+
+    intersect = np.select(
+        condlist = [~are_parallel, ~are_colinear, are_colinear], 
+        choicelist = [t_in_range, False, t_star_in_range],
+        default=False
+    )
+    if full_output: return intersect, are_parallel, are_colinear
+    return intersect
