@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass, field
 from functools import cached_property
+import matplotlib.transforms
 
 INVALID = np.iinfo(int).max
 
@@ -101,13 +102,15 @@ class Lattice(object):
     :type edges: Edges
     :param plaquettes: All of the polygons (aka plaquettes) comprising the lattice, specifying their constituent vertices, edges,
         winding directions, and centers.
-    :type list[Plaquette]
+    :type plaquettes: list[Plaquette]
     """    
     def __init__(
             self,
             vertices: npt.NDArray[np.floating],
             edge_indices: npt.NDArray[np.integer],
-            edge_crossing: npt.NDArray[np.integer]):
+            edge_crossing: npt.NDArray[np.integer],
+            unit_cell = matplotlib.transforms.IdentityTransform(),
+            ):
         """Constructor for Lattices
 
         :param vertices: Spatial locations of lattice vertices
@@ -144,6 +147,8 @@ class Lattice(object):
         # some properties that count edges and vertices etc...
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
+        
+        self.unit_cell = unit_cell
         
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges)"
