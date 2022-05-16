@@ -76,7 +76,7 @@ def analyse_hk(Hk, k_num: int, return_all_results = False) -> tuple:
     return out
 
 
-def gap_over_phase_space(Hk, k_num: int) -> tuple:
+def gap_over_phase_space(Hk, k_num: int, return_k_values = False) -> tuple:
     """given a k-dependent hamiltonian, returns an array of the gap size over a k-lattice
 
     :param Hk: k dependent hamiltonian
@@ -96,4 +96,7 @@ def gap_over_phase_space(Hk, k_num: int) -> tuple:
         vals = la.eigvalsh(h)
         return np.min(np.abs(vals))
     gaps = np.apply_along_axis(find_gap,2,k_vals)
-    return gaps
+    if return_k_values:
+        return gaps, k_vals
+    else:
+        return gaps
