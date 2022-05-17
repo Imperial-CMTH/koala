@@ -1,9 +1,17 @@
-# koala
-[![DOI](https://zenodo.org/badge/422218038.svg)](https://zenodo.org/badge/latestdoi/422218038)
+<h1 align="center">🐨  Koala  🎋</h1>
+<p align="center">
+    <em>Putting Condensed Matter Hamiltonians on Amorphous lattice models since 2021!</em>
+</p>
 
-A package to do topological marker calculations on amorphous lattices.
-
-Package structure copied from [here](https://blog.ionelmc.ro/2014/05/25/python-packaging).
+<p align="center">
+<a href="https://zenodo.org/badge/latestdoi/422218038">
+    <img src="https://zenodo.org/badge/422218038.svg"/>
+</a>
+<a href="https://wfxr.mit-license.org/2017">
+        <img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+</a>
+<img src="https://github.com/Imperial-CMTH/koala/actions/workflows/ci.yml/badge.svg"/>
+</p>
 
 ## Changelog
 - Implement a way to find all the colorings of a lattice
