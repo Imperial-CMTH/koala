@@ -41,7 +41,7 @@ def fluxes_to_labels(fluxes: np.ndarray) -> np.ndarray:
     :return: labels in [0,1]
     :rtype: np.ndarray
     """    
-    return ((1 - fluxes)//2).astype(int)
+    return ((1 - fluxes)//2).astype(np.int8)
 
 def _random_bonds(l : Lattice) -> np.ndarray:
     return 1 - 2*np.random.choice(2, size = l.n_edges)
@@ -117,7 +117,7 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     A flux sector is an asignment of +/-1 to even plaquette and +/-i to odd plaquettes.
     """
     # TODO - this is changing the intiial guess as well as outputting the answer - not good if you want to keep the initial guess intact - scope issue
-    if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = int)
+    if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = np.int8)
     if initial_bond_guess is None: initial_bond_guess = _random_bonds(l)
     
     initial_flux_sector = fluxes_from_bonds(l, initial_bond_guess)
@@ -139,7 +139,7 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     if np.count_nonzero(found_fluxes - target_flux_sector) > 1:
         raise ValueError("find_flux_sector thought that it worked but somehow still didn't, a bug.")
         
-    return bonds
+    return bonds.astype(np.int8)
 
 def n_to_ujk_flipped(n: int, ujk: np.ndarray, min_spanning_set: np.ndarray):
     """given an integer n in the 0 - 2^(number of edges in spanning tree), this code flips the edges of ujk in the spanning tree in the combination given by the binary representation of n. Useful for exhaustively searching over the entire flux space of a lattice.
@@ -159,4 +159,4 @@ def n_to_ujk_flipped(n: int, ujk: np.ndarray, min_spanning_set: np.ndarray):
     ujk_flipped = ujk.copy()
     new_f_values = 1-2*flips
     ujk_flipped[min_spanning_set] = new_f_values
-    return ujk_flipped
+    return ujk_flipped.astype(np.int8)
