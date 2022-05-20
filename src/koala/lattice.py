@@ -194,6 +194,38 @@ class Lattice(object):
     def n_plaquettes(self):
         return len(self.plaquettes)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__): return False
+        average_separation = 1 / np.sqrt(self.n_vertices)
+        return all([np.allclose(self.vertices.positions, other.vertices.positions, atol = average_separation / 100),
+                    np.all(self.edges.indices == other.edges.indices),
+                    np.all(self.edges.crossing == other.edges.crossing)])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __getstate__(self):
+        #define a minimal representation for the lattice
+        for dtype in [np.uint8, np.uint16, np.uint32, np.uint64]:
+            if self.n_vertices <= np.iinfo(dtype).max:
+                edges = self.edges.indices.astype(dtype)
+                break
+        else:
+            raise ValueError("A lattice with > 2**64 vertices is just too much")
+        
+        vertices = self.vertices.positions.astype(np.float32)
+        def check_fits(array, dtype): assert (np.iinfo(dtype).min <= np.min(array) and np.max(array) <= np.iinfo(dtype).max)
+        check_fits(self.edges.crossing, np.int8)
+        crossing = self.edges.crossing.astype(np.int8)
+        
+        return vertices, edges, crossing
+
+    def __setstate__(self, state):
+        if isinstance(state, dict):
+            self.__dict__.update(state) #For backwards compatibility
+        else: #The new way to pickle just saves vertex positions, edge indices and edge crossing
+            self.__init__(*state)
+
 
 def _sorted_vertex_adjacent_edges(
         vertex_positions,
