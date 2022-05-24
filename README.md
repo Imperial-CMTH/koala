@@ -24,41 +24,20 @@
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Imperial-cmth/koala">
 </p>
 
-## Changelog
-- Implement a way to find all the colorings of a lattice
-- Add an axes argument to plotting function
-- Changed pbc_voronisation to emit a third array adjacency_crossing with size (n_edges, 2) that tells you which of the 3x3 unit cell grid this edge goes into, alternatively you can think of it as saying if this edge crosses each of the two cuts that unrwrap the torus into the plane.
-- renamed SAT to graph_color 
-- renamed PBV_Voronoi datastructure to Lattice
-- replaced the first three arguments of plot_lattice with a Lattice object
+A library for working with physics models defined on arbitray graphs. Key features:
+
+- Generate periodic or open 2D planar graphs via voronisation.
+- A Lattice class that calculates useful adjacency information for vertices, edges and faces along with a compact pickled representation.
+- Functions for plotting the edges, vertices and faces of 2D graphs.
+- The ability to asign a coloring to vertices or edges of the model, useful for Kitaev type models.
+- Functions to map between the gauge field $u_[ij]$ and plaquettes of the Kitaev model.
+- Functions to dress the model with Majorana hamiltonians.
 
 
-## Todo
-- For an n-gon with fixed colored edges how many valid colorings are there? Is this the origin of the degeneracy of colorings?
-
-
-Flux_finder
-    - currently code uses 0/1 for edge directions and +/- 1 U_ij values, do we like this?
-    - do docstrings in flux_finder (except _functions)
-    - Move _functions in flux_finder to bottom or top depending on what works
-    - Possibly move pathfinding to a folder or something
-
-Long Term:
-    Refactor plotting
-        - make functions like plot_edges, plot_vertices, plot_plaquettes...
-
-    Add a little explanation to the beginning of each file explaining what it's for
-
-## Examples
+## Installation
+```bash
+git clone git@github.com:Imperial-CMTH/koala.git
+cd koala
+pip install .
 ```
-n = 10
 
-from koala.pointsets import generate_random
-points = generate_random(n)
-
-from koala.voronization import generate_pbc_voronoi_adjacency, cut_boundaries
-vertices, adjacency = generate_pbc_voronoi_adjacency(points)
-
-from koala.plotting import plot_lattice
-plot_lattice(vertices, adjacency)
-```
