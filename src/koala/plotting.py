@@ -56,6 +56,7 @@ def plot_edges(lattice : Lattice,
                     subset : np.ndarray = slice(None, None, None), 
                     directions : np.ndarray = None,
                     ax = None,
+                    arrow_head_length = None,
                     **kwargs):
     """
     Plot the edges of a lattice with optional arrows.
@@ -184,7 +185,7 @@ def plot_dual(lattice, subset = slice(None,None), **kwargs):
     plot_edges(st_as_lattice, **kwargs)
     return st_as_lattice
 
-def _plot_edge_arrows(ax, colors, edges, directions, linecollection, unit_cell):
+def _plot_edge_arrows(ax, colors, edges, directions, linecollection, unit_cell, head_length = None):
     n_edges = edges.shape[0]
     edges = unit_cell.transform(edges.reshape(-1,2)).reshape(n_edges, 2, 2)
     linewidth = linecollection.get_linewidths()[0] #currently don't support multiple linewidths
@@ -192,7 +193,7 @@ def _plot_edge_arrows(ax, colors, edges, directions, linecollection, unit_cell):
         start, end = [start, end][::dir]
         center = 1/2 * (end + start)
         length = np.linalg.norm(end - start)
-        head_length = min(0.2 * length, 0.02 * linewidth / 1.5)
+        head_length = head_length or min(0.2 * length, 0.02 * linewidth / 1.5)
         direction = head_length * (start - end) / length
         arrow_start = center - direction
         ax.arrow(x=arrow_start[0], y=arrow_start[1], dx=direction[0], dy=direction[1],
