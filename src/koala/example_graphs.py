@@ -609,10 +609,12 @@ def ground_state_ansatz(n):
     return l
 
 from koala import voronization, graph_color, flux_finder
+from koala.lattice import cut_boundaries
 
-def make_amorphous(L, return_points = False):
+def make_amorphous(L, return_points = False, open_boundary_conditions = False):
     points = np.random.uniform(size=(L**2,2))
     lattice = voronization.generate_lattice(points)
+    if open_boundary_conditions: lattice = cut_boundaries(lattice)
     coloring = graph_color.color_lattice(lattice)
     gs_flux_sector = np.array([ground_state_ansatz(p.n_sides) for p in lattice.plaquettes], dtype = np.int8)
     ujk = flux_finder.find_flux_sector(lattice, gs_flux_sector)
