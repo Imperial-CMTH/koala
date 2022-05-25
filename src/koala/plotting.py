@@ -467,8 +467,8 @@ def plot_scalar(g: Lattice, scalar: np.ndarray, ax = None, resolution : int = 10
     if ax is None: ax = plt.gca()
     if isinstance(cmap, str): cmap = plt.get_cmap(cmap)
         
-    x = np.linspace(0, 1, resolution)
-    y = np.linspace(0, 1, resolution)
+    x = np.linspace(0, 1, resolution, endpoint = True)
+    y = np.linspace(0, 1, resolution, endpoint = True)
 
     xv, yv = np.meshgrid(x, y, sparse=False, indexing='ij')
 
