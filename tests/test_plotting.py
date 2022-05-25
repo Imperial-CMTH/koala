@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from koala.pointsets import generate_bluenoise
 from koala.voronization import generate_lattice
 from koala.graph_color import edge_color
-from koala.plotting import plot_lattice, plot_vertex_indices, plot_degeneracy_breaking, plot_plaquettes
+from koala.plotting import plot_lattice, plot_vertex_indices, plot_degeneracy_breaking, plot_plaquettes, line_intersection
 from koala.voronization import Lattice
 
 from koala import plotting, example_graphs
@@ -107,3 +107,39 @@ def test_plot_edges():
 
 def test_plot_plaquettes():
     plotting_test(plotting.plot_plaquettes, voronoi_lattice, voronoi_lattice.n_plaquettes)
+
+def test_line_intersection():
+    t = np.pi/6
+    def angle(t): return np.array([np.sin(t), np.cos(t)])
+
+    O = np.array([0, 0])
+    e1 = angle(np.pi/4) * 0.7
+    e2 = angle(np.pi/6) * 0.7
+
+    l1 = [O,e1]
+    l2 = [O, e2]
+    test_lines = np.array([l1,l2])
+
+    crossing_line = np.array([[0.1,0.5], [0.3,0.4]]) + 0.05
+    parallel_line = np.array([0.5*e1,e1*0.6]) + np.array([0,-0.1])
+    parallel_line2 = np.array([0.5*e2,e2*0.6]) + np.array([0,+0.1])
+
+    colinear_line_yes = np.array([0.9*e1,1.1*e1])
+    colinear_line_no = np.array([1.2*e1,1.5*e1])
+
+    colinear_line_yes2 = np.array([0.9*e2,1.1*e2])
+    colinear_line_no2 = np.array([1.2*e2,1.5*e2])
+
+    lines = np.array([parallel_line, parallel_line2, crossing_line,
+                    colinear_line_yes, colinear_line_no,
+                    colinear_line_yes2, colinear_line_no2,
+                    ])
+
+
+    cross, are_parallel, are_colinear = line_intersection(lines, test_lines, full_output = True)
+    cross_r = np.array([[0, 0],[0, 0],[0, 1],[1, 0],[0, 0],[0, 1],[0, 0]])
+    are_parallel_r = np.array([[1, 0],[0, 1],[0, 0],[1, 0],[1, 0],[0, 1],[0, 1]])
+    are_colinear_r = np.array([[0, 0],[0, 0],[0, 0],[1, 0],[1, 0],[0, 1],[0, 1]])
+    assert(np.all(are_parallel == are_parallel_r))
+    assert(np.all(are_colinear == are_colinear_r))
+    assert(np.all(cross == cross_r))

@@ -191,4 +191,4 @@ def color_lattice(lattice: Lattice):
     solveable, solution = edge_color(lattice, n_colors = 3, fixed = fixed)
     if not solveable:
         raise ValueError("No coloring exists for this lattice.")
-    return solution
+    return solution.astype(np.int8)

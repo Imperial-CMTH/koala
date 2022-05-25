@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass, field
 from functools import cached_property
+import matplotlib.transforms
 
 INVALID = np.iinfo(int).max
 
@@ -101,13 +102,15 @@ class Lattice(object):
     :type edges: Edges
     :param plaquettes: All of the polygons (aka plaquettes) comprising the lattice, specifying their constituent vertices, edges,
         winding directions, and centers.
-    :type list[Plaquette]
+    :type plaquettes: list[Plaquette]
     """    
     def __init__(
             self,
             vertices: npt.NDArray[np.floating],
             edge_indices: npt.NDArray[np.integer],
-            edge_crossing: npt.NDArray[np.integer]):
+            edge_crossing: npt.NDArray[np.integer],
+            unit_cell = matplotlib.transforms.IdentityTransform(),
+            ):
         """Constructor for Lattices
 
         :param vertices: Spatial locations of lattice vertices
@@ -144,6 +147,8 @@ class Lattice(object):
         # some properties that count edges and vertices etc...
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
+        
+        self.unit_cell = unit_cell
         
     def __repr__(self):
         return f"Lattice({self.n_vertices} vertices, {self.n_edges} edges)"
@@ -188,6 +193,38 @@ class Lattice(object):
     @cached_property
     def n_plaquettes(self):
         return len(self.plaquettes)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__): return False
+        average_separation = 1 / np.sqrt(self.n_vertices)
+        return all([np.allclose(self.vertices.positions, other.vertices.positions, atol = average_separation / 100),
+                    np.all(self.edges.indices == other.edges.indices),
+                    np.all(self.edges.crossing == other.edges.crossing)])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __getstate__(self):
+        #define a minimal representation for the lattice
+        for dtype in [np.uint8, np.uint16, np.uint32, np.uint64]:
+            if self.n_vertices <= np.iinfo(dtype).max:
+                edges = self.edges.indices.astype(dtype)
+                break
+        else:
+            raise ValueError("A lattice with > 2**64 vertices is just too much")
+        
+        vertices = self.vertices.positions.astype(np.float32)
+        def check_fits(array, dtype): assert (np.iinfo(dtype).min <= np.min(array) and np.max(array) <= np.iinfo(dtype).max)
+        check_fits(self.edges.crossing, np.int8)
+        crossing = self.edges.crossing.astype(np.int8)
+        
+        return vertices, edges, crossing
+
+    def __setstate__(self, state):
+        if isinstance(state, dict):
+            self.__dict__.update(state) #For backwards compatibility
+        else: #The new way to pickle just saves vertex positions, edge indices and edge crossing
+            self.__init__(*state)
 
 
 def _sorted_vertex_adjacent_edges(

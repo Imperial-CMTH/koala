@@ -603,3 +603,23 @@ def single_plaquette(n_sides: int) -> Lattice:
     crossing = np.zeros_like(edges)
 
     return Lattice(vertices, edges, crossing)
+
+def ground_state_ansatz(n):
+    l = -(-1) ** ((n-3) // 2)
+    return l
+
+from koala import voronization, graph_color, flux_finder
+
+def make_amorphous(L, return_points = False):
+    points = np.random.uniform(size=(L**2,2))
+    lattice = voronization.generate_lattice(points)
+    coloring = graph_color.color_lattice(lattice)
+    gs_flux_sector = np.array([ground_state_ansatz(p.n_sides) for p in lattice.plaquettes], dtype = np.int8)
+    ujk = flux_finder.find_flux_sector(lattice, gs_flux_sector)
+    if return_points: return lattice, coloring, ujk, return_points
+    return lattice, coloring, ujk
+
+def make_honeycomb(L):
+    lattice, coloring = generate_honeycomb(L, return_coloring = True)
+    ujk = np.ones(lattice.n_edges, dtype = np.int8)
+    return lattice, coloring.astype(np.int8), ujk

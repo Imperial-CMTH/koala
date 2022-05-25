@@ -38,7 +38,7 @@ def plot_vertices(lattice : Lattice,
     :param ax: The axis to plot on, defaults to plt.gca()
     :type subset: axis, optional
     """ 
-    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_vertices)          
+    labels, colors, color_scheme, subset, ax, transform = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_vertices)          
 
     args = dict(
         x = lattice.vertices.positions[subset,0],
@@ -47,7 +47,7 @@ def plot_vertices(lattice : Lattice,
         zorder = 3
     )
     args.update(**kwargs) #doing this means the user can override zorder
-    ax.scatter(**args)
+    ax.scatter(**args, transform = transform)
     return ax
 
 def plot_edges(lattice : Lattice,
@@ -78,8 +78,7 @@ def plot_edges(lattice : Lattice,
     :param ax: The axis to plot on, defaults to plt.gca()
     :type subset: axis, optional
     """ 
-
-    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_edges)           
+    labels, colors, color_scheme, subset, ax, transform = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_edges)  
 
     edge_colors = np.tile(colors, 9)
     edge_vertices = lattice.vertices.positions[lattice.edges.indices[subset]]
@@ -91,13 +90,13 @@ def plot_edges(lattice : Lattice,
     
     vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(replicated_edges)
     # print(edge_colors.shape, replicated_edges.shape, vis.shape)
-    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], **kwargs)
+    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], transform = transform, **kwargs)
     ax.add_collection(lc)
 
     if directions is not None:
         directions = _broadcast_args(directions, subset, lattice.n_edges, dtype = int)
         directions = np.tile(directions, 9)
-        _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis], lc)
+        _plot_edge_arrows(ax, edge_colors[vis],replicated_edges[vis, ...],directions[vis], lc, lattice.unit_cell)
 
 
     return ax
@@ -127,7 +126,7 @@ def plot_plaquettes(lattice : Lattice,
     :type subset: axis, optional
     """ 
 
-    labels, colors, color_scheme, subset, ax = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes)           
+    labels, colors, color_scheme, subset, ax, transform = _process_plot_args(lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes)           
 
     indices = np.arange(lattice.n_plaquettes)[subset]
     plaquettes = lattice.plaquettes[subset]
@@ -159,7 +158,7 @@ def plot_plaquettes(lattice : Lattice,
         replicated_polygons = _replicate_polygon(points, padx, pady)
         
         # allow the user to overide color args
-        poly_args = dict(color = color)
+        poly_args = dict(color = color, transform = transform)
         poly_args.update(kwargs)
 
         collection = PolyCollection(replicated_polygons, **poly_args)
@@ -185,7 +184,9 @@ def plot_dual(lattice, subset = slice(None,None), **kwargs):
     plot_edges(st_as_lattice, **kwargs)
     return st_as_lattice
 
-def _plot_edge_arrows(ax, colors, edges, directions, linecollection):
+def _plot_edge_arrows(ax, colors, edges, directions, linecollection, unit_cell):
+    n_edges = edges.shape[0]
+    edges = unit_cell.transform(edges.reshape(-1,2)).reshape(n_edges, 2, 2)
     linewidth = linecollection.get_linewidths()[0] #currently don't support multiple linewidths
     for color, (end, start), dir in zip(colors, edges, directions):
         start, end = [start, end][::dir]
@@ -220,6 +221,15 @@ def _broadcast_args(arg, subset, N, dtype = int):
 
     return arg
 
+def _scale_nicely(lattice, ax):
+    square = np.array([[(0,0), (1,0)] , [(1,0), (1,1)], [(1,1), (0,1)], [(0,1), (0,0)]])
+    transformed_square = lattice.unit_cell.transform(square.reshape(-2,2)).reshape(4,2,2)
+    lx, hx = np.min(transformed_square[...,0]), np.max(transformed_square[...,0])
+    ly, hy = np.min(transformed_square[...,1]), np.max(transformed_square[...,1])
+    extent = max((hx - lx)/2, (hy - ly)/2)
+    mid_x, mid_y = (hx + lx)/2, (hy + ly)/2
+    ax.set(xlim = (mid_x - extent,mid_x + extent), ylim = (mid_y - extent,mid_y + extent))
+
 def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
     """
     Deals with housekeeping operations common to all plotting functions. 
@@ -229,17 +239,20 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N):
         Check if ax is none, and if so, create one.
     """
     # if color_scheme is a string, broadcast to the size of the lattice.
+    if not hasattr(Lattice, 'unit_cell'): Lattice.unit_cell = matplotlib.transforms.IdentityTransform()
     if isinstance(color_scheme, str): color_scheme = [color_scheme, ]
     color_scheme = np.array(color_scheme)
     subset = np.arange(N)[subset]
     labels = _broadcast_args(labels, subset, N, dtype = int)
-
+    
     colors = color_scheme[labels]
 
     if ax is None: ax = plt.gca()
-    ax.set(xlim = (0,1), ylim = (0,1))
+    _scale_nicely(lattice, ax)
 
-    return labels, colors, color_scheme, subset, ax
+    transform = lattice.unit_cell + ax.transData
+
+    return labels, colors, color_scheme, subset, ax, transform
 
 #### Functions to plot index labels of the vertices ####
 
@@ -526,3 +539,58 @@ def _replicate_polygon(polygon, padx, pady):
     """Used in plot plaquettes to periodically tile a polygon in the x or y directions"""
     dxdy = np.array(list(itertools.product(padx, pady)))
     return polygon[None, ...] + dxdy[:, None, :]
+
+def cross_product_2d(a,b): return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0] 
+
+def line_intersection(lines, lines2, abs_tolerance = 1e-14, full_output = False):
+    """
+    Generic Line to line intersection function
+    
+    :param lines: The first set of lines, with shape [n_lines, 2, 2] where lines[i, 0, :] is the first point of the ith line
+    :type line: np.ndarray
+    
+    :param lines2: The second set of lines to intersect with. Shape [n_lines2, 2, 2]
+    :type line2: np.ndarray
+    
+    :param abs_tolerance: The absolute floating point tolerance to use for the parallel and colinear special cases.
+    :type abs_tolerance: float
+    
+    :return: intersection, boolean array shape [n_lines, n_lines2]
+    :rtype: np.ndarray
+    """
+    
+    s1 = lines[:, 0, :][:, None]
+    e1 = lines[:, 1, :][:, None]
+    d1 = e1 - s1 #shape of s1, e1, d1 = (n_lines, 1, 2)
+    
+    s2 = lines2[:, 0, :][None, :]
+    e2 = lines2[:, 1, :][None, :]
+    d2 = e2 - s2 #shape of s2, e2, d2 = (1, n_lines2, 2)
+
+    d2_cross_d1 = cross_product_2d(d2, d1) # 0 if lines are parallel
+    displacement_cross_d1 = cross_product_2d((s1 - s2), d1) # when parallel this is 0 if lines are also colinear
+    
+    with np.errstate(divide='ignore', invalid='ignore'):
+
+        #only works if not parallel, hence the use of np.errstate
+        t1 = cross_product_2d((s1 - s2), d1) / cross_product_2d(d2, d1)
+        t2 = cross_product_2d((s2 - s1), d2) / cross_product_2d(d1, d2)
+        
+        #used for the colinear case
+        t_star1 = ((s1 - s2) / d1)[..., 0]
+        t_star2 = ((s1 - s2) / d2)[..., 0]
+    
+    #add some floating point tolerance
+    are_parallel = np.abs(d2_cross_d1) < abs_tolerance
+    are_colinear = are_parallel & (np.abs(displacement_cross_d1) < abs_tolerance)
+    
+    t_in_range = (0 <= t1) & (t1 <= 1) & (0 <= t2) & (t2 <= 1)
+    t_star_in_range = ((-1 <= t_star1) & (t_star1 <= 1)) | ((-1 <= t_star2) & (t_star2 <= 1))
+
+    intersect = np.select(
+        condlist = [~are_parallel, ~are_colinear, are_colinear], 
+        choicelist = [t_in_range, False, t_star_in_range],
+        default=False
+    )
+    if full_output: return intersect, are_parallel, are_colinear
+    return intersect

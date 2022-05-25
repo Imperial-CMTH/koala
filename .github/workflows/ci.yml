@@ -37,8 +37,10 @@ jobs:
       
       - name: Test with pytest
         run: |
-          pytest -c pytest.ini
+          pytest -c pytest.ini --cov=koala --cov-report=xml
           # pytest -c pytest_notebooks.ini
+      
+      - uses: codecov/codecov-action@v2
   # hpc:
   #   runs-on: hpc
   #   steps:
