@@ -92,7 +92,7 @@ def _flip_isolated_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
     close_pairs = _greedy_plaquette_pairing(indices_to_flip, distance_func)
     
     for a,b in close_pairs:
-        plaquettes, edges_to_flip = path_between_plaquettes(l, a, b)
+        plaquettes, edges_to_flip = path_between_plaquettes(l, a, b, maxits = l.n_edges)
         bonds[edges_to_flip] *= -1
         fluxes[a] *= -1
         fluxes[b] *= -1
