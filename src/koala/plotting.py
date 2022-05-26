@@ -5,6 +5,7 @@ import itertools
 import matplotlib
 from matplotlib.collections import LineCollection, PolyCollection
 from matplotlib import pyplot as plt
+from matplotlib import patheffects as path_effects #https://stackoverflow.com/questions/11578760/matplotlib-control-capstyle-of-line-collection-large-number-of-lines
 
 from . import graph_utils
 
@@ -91,7 +92,7 @@ def plot_edges(lattice : Lattice,
     
     vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(replicated_edges)
     # print(edge_colors.shape, replicated_edges.shape, vis.shape)
-    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], transform = transform, **kwargs)
+    lc = LineCollection(replicated_edges[vis, ...], colors = edge_colors[vis], transform = transform, path_effects=[path_effects.Stroke(capstyle="round")], **kwargs)
     ax.add_collection(lc)
 
     if directions is not None:
