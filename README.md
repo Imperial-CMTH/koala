@@ -1,3 +1,6 @@
+<p align="center">
+<image src="logo.svg"/>
+</p>
 <h1 align="center">🐨  Koala  🎋</h1>
 <p align="center">
     <em>Putting Condensed Matter Hamiltonians on Amorphous lattice models since 2021!</em>
