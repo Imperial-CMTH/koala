@@ -96,11 +96,14 @@ def vertex_neighbours(lattice, vertex_i):
     adjacency = lattice.edges.indices
     edge_indices = np.where(np.any(vertex_i == adjacency, axis=-1))[0]
     edges = adjacency[edge_indices]
+    # print(f"{edges = }, {edge_indices = }")
 
     #the next two lines replaces the simpler vertex_indices = edges[edges != vertex_i] because the allow points to neighbour themselves
     start_or_end = (edges != vertex_i)[:, 1] #this is true if vertex_i starts the edge and false if it ends it
-    vertex_indices = np.take_along_axis(edges, start_or_end[:, None].astype(int), axis = 1).squeeze() #this gets the index of the other end of each edge
+    vertex_indices = np.take_along_axis(edges, start_or_end[:, None].astype(int), axis = 1).flatten() #this gets the index of the other end of each edge
+    # print(f"{start_or_end = }, {vertex_indices = }")
     #vertex_indices = edges[edges != vertex_i]
+    # print(vertex_indices.shape, edge_indices.shape)
     assert(vertex_indices.shape == edge_indices.shape)
     return vertex_indices, edge_indices
 

@@ -32,7 +32,7 @@ def bisect_lattice(l: Lattice, solution: npt.NDArray[np.integer], along: int = 0
   bisected_lattice = permute_vertices(l, vertex_reordering)
   return bisected_lattice
 
-def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.NDArray, J: npt.NDArray[np.floating] = (1.0,1.0,1.0)) -> npt.NDArray[np.complexfloating]:
+def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.NDArray, J: npt.NDArray[np.floating] = np.array([1.0,1.0,1.0])) -> npt.NDArray[np.complexfloating]:
   """Assign couplings ($A_{jk} \in \pm 2J$) to each bond in lattice `l` and construct the matrix. Indices refer
   to the vertex indices in the Lattice object. This is the quadratic Majorana Hamiltonian of eqn (13)
   in Kitaev's paper.

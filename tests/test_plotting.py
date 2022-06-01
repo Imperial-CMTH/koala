@@ -105,6 +105,9 @@ def test_plot_edges():
     plotting.plot_edges(voronoi_lattice, subset = subset, 
         directions = np.random.choice([1,-1], size = subset_size))
 
+    # arrow_head_length
+    plotting.plot_edges(voronoi_lattice, subset = subset, directions = 1, arrow_head_length = 1)
+
 def test_plot_plaquettes():
     plotting_test(plotting.plot_plaquettes, voronoi_lattice, voronoi_lattice.n_plaquettes)
 

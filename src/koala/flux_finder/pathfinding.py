@@ -70,7 +70,7 @@ def periodic_straight_line_length(a, b) -> float:
 
 def path_between_plaquettes(l : Lattice, start : int, goal : int, 
                 heuristic = straight_line_length, 
-                early_stopping : bool = True, maxits : int = 10_0000):
+                early_stopping : bool = True, maxits : int = 1000_000):
     """Find a path along dual edges between two plaquettes. Returns (vertices, edges) in the path.
     Note that the edges and dual edges are 1-1 so the same indices are used for interchangeably.
     If early_stopping = False it's guaranteed to be the shortest measured by center to center distance.
