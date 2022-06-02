@@ -625,3 +625,24 @@ def make_honeycomb(L):
     lattice, coloring = generate_honeycomb(L, return_coloring = True)
     ujk = np.ones(lattice.n_edges, dtype = np.int8)
     return lattice, coloring.astype(np.int8), ujk
+
+def concave_plaquette():
+    vertices = np.array([
+        [0.1,0.1],
+        [0.6,0.9],
+        [0.5,0.5],
+        [0.9,0.6],
+    ])
+
+    edges = np.array([
+        [0,1],
+        [1,2],
+        [2,3],
+        [3,0],
+    ])
+
+    edge_crossing = np.array([[0,0]]*edges.shape[0])
+
+    lat = Lattice(vertices,edges,edge_crossing)
+
+    return lat
