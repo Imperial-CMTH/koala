@@ -114,12 +114,13 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     
     Where:
     A bond configuration is an assignment of +/-1 to each bond.
-    A flux sector is an asignment of +/-1 to even plaquette and +/-i to odd plaquettes.
+    A flux sector is an assignment of +/-1 to even plaquette and +/-i to odd plaquettes.
     """
     # TODO - this is changing the intiial guess as well as outputting the answer - not good if you want to keep the initial guess intact - scope issue
     if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = np.int8)
-    if initial_bond_guess is None: initial_bond_guess = _random_bonds(l)
-    
+    if initial_bond_guess is None: initial_bond_guess = np.ones(l.n_edges, dtype = np.int8)
+    initial_bond_guess, target_flux_sector = initial_bond_guess.copy(), target_flux_sector.copy()
+
     initial_flux_sector = fluxes_from_bonds(l, initial_bond_guess)
     
     # figure out which fluxes need to be flipped
