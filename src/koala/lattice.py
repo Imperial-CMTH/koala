@@ -333,6 +333,7 @@ def _find_plaquette(
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
     
+    # check --- not sure if this is necessary --- check
     # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
     # this means the plaquette is not legit!
     # if len(np.unique(plaquette_edges)) != len(plaquette_edges):
@@ -354,25 +355,13 @@ def _find_plaquette(
     plaquette_center = np.sum(points, 0) / (points.shape[0])%1
 
     # now we check if the plaquette is acually the boundary of the lattice - this happens when 
-    # we are in open boundaries, do this by checking how many times the vertices wind around the center of the plaquette
+    # we are in open boundaries, do this by checking the winding number using the outer angles 
     # if they go the wrong way round we have an exterior plaquette
-
 
     angs = np.arctan2(plaquette_vectors[:,0] ,plaquette_vectors[:,1])
     rel_angs = angs - np.roll(angs,1)
     ang = np.sum((rel_angs + np.pi) % (2*np.pi)  - np.pi)
     w_number = np.round(ang / (2*np.pi)).astype('int')
-
-
-    # TODO - clean_this_up!!!!
-    # relative_positions = points - np.sum(points, 0) / (points.shape[0])
-    # angles = np.arctan2(relative_positions[:,1], relative_positions[:,0])/(2*np.pi)
-    # relative_angles = (np.roll(angles,1) - angles +0.5)%1 -0.5
-    # # if an angle is 180 degrees we remove it as you cannot decide which way it goes
-    # relative_angles = relative_angles*(np.abs(relative_angles) != 0.5)
-    # w_number = round(np.sum(relative_angles))
-    # if w_number == 0:   
-    #     valid_plaquette = False
 
     if w_number != -1:
         valid_plaquette = False
