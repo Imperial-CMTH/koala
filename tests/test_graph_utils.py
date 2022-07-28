@@ -20,7 +20,7 @@ def test_vertex_neighbours():
     assert(np.all(edge_indices == np.array([0,1,2])))
 
 def test_clockwise_edges_about():
-    assert(np.all(clockwise_edges_about(vertex_i = 0, g = g) == np.array([1,0,2])))
+    assert(np.all(clockwise_edges_about(vertex_index = 0, g = g) == np.array([1,0,2])))
 
 def test_adjacent_plaquettes_function():
     from koala.example_graphs import tri_square_pent

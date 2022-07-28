@@ -411,7 +411,7 @@ def _find_all_plaquettes(l: Lattice):
     return np.array(plaquettes, dtype = object)
 
 
-def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
+def permute_vertices(lattice: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   """Create a new lattice with the vertex indices rearranged according to ordering,
   such that new_l.vertices[i] = l.vertices[ordering[i]].
 
@@ -422,8 +422,8 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   :return: New lattice object with permuted vertex indices
   :rtype: Lattice
   """
-  original_verts = l.vertices
-  original_edges = l.edges
+  original_verts = lattice.vertices
+  original_edges = lattice.edges
   nverts = original_verts.positions.shape[0]
 
   inverse_ordering = np.zeros((nverts,)).astype(int)
@@ -442,7 +442,7 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
     edge_crossing=new_edges.crossing
   )
 
-def cut_boundaries(l: Lattice, boundary_to_cut: list = [True,True]) -> Lattice:
+def cut_boundaries(lattice: Lattice, boundary_to_cut: list = [True,True]) -> Lattice:
     """Removes the x and/or y boundary edges of the lattice.
 
     :param l: The lattice to cut.
@@ -452,9 +452,9 @@ def cut_boundaries(l: Lattice, boundary_to_cut: list = [True,True]) -> Lattice:
     :return: A new lattice with boundaries cut.
     :rtype: Lattice
     """    
-    vertices = l.vertices.positions
-    edges = l.edges.indices
-    crossing = l.edges.crossing
+    vertices = lattice.vertices.positions
+    edges = lattice.edges.indices
+    crossing = lattice.edges.crossing
 
     x_external = crossing[:,0] != 0
     y_external = crossing[:,1] != 0

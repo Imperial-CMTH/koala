@@ -18,7 +18,7 @@ def test_smoketest_weaire_thorpe():
     points =  generate_bluenoise(k = 100, nx = 5, ny = 5)
     g = generate_lattice(points)
 
-    ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
+    ordered_edge_indices = clockwise_edges_about(vertex_index = 0, g=g)
     solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
@@ -42,7 +42,7 @@ def test_multi_graphs():
         edge_crossing = np.array([[0,0],[1,0],[1,0],[1,0]]),
     )
 
-    ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
+    ordered_edge_indices = clockwise_edges_about(vertex_index = 0, g=g)
     solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     WT_g = vertices_to_triangles(g, edge_labels)
@@ -74,7 +74,7 @@ def test_all():
     g = generate_lattice(points)
 
     #color it
-    ordered_edge_indices = clockwise_edges_about(vertex_i = 0, g=g)
+    ordered_edge_indices = clockwise_edges_about(vertex_index = 0, g=g)
     solveable, edge_labels = edge_color(g, n_colors = 3, fixed = enumerate(ordered_edge_indices))
 
     #transform it to a Weaire-Thorpe model

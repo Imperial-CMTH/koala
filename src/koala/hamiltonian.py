@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from koala.lattice import Lattice, permute_vertices
 
-def bisect_lattice(l: Lattice, solution: npt.NDArray[np.integer], along: int = 0) -> npt.NDArray[np.integer]:
+def bisect_lattice(lattice: Lattice, solution: npt.NDArray[np.integer], along: int = 0) -> npt.NDArray[np.integer]:
   """Generate a new lattice with vertex indices permuted such that the first nvert/2 entries are in sublattice A
   and the rest are in sublattice B, according to the given coloring `solution`
   
@@ -19,20 +19,20 @@ def bisect_lattice(l: Lattice, solution: npt.NDArray[np.integer], along: int = 0
   # given by solution. By default, the first entry in solution will define the flavor of bond along
   # which the lattice is 'dimerized' to form the sublattices.
 
-  nverts = l.vertices.positions.shape[0]
+  nverts = lattice.vertices.positions.shape[0]
   # Pick all edges of color `along`
   dimer_mask = (solution == along)
-  dimer_vertices = l.edges.indices[dimer_mask]
+  dimer_vertices = lattice.edges.indices[dimer_mask]
   # Create empty array with vertex sublattice labels and populate
   sublattice_labels = np.zeros(shape=(nverts,))
   sublattice_labels[dimer_vertices[:,0]] = 0
   sublattice_labels[dimer_vertices[:,1]] = 1
 
   vertex_reordering = np.argsort(sublattice_labels)
-  bisected_lattice = permute_vertices(l, vertex_reordering)
+  bisected_lattice = permute_vertices(lattice, vertex_reordering)
   return bisected_lattice
 
-def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.NDArray, J: npt.NDArray[np.floating] = np.array([1.0,1.0,1.0])) -> npt.NDArray[np.complexfloating]:
+def generate_majorana_hamiltonian(lattice: Lattice, coloring: npt.NDArray, ujk: npt.NDArray, J: npt.NDArray[np.floating] = np.array([1.0,1.0,1.0])) -> npt.NDArray[np.complexfloating]:
   """Assign couplings ($A_{jk} \in \pm 2J$) to each bond in lattice `l` and construct the matrix. Indices refer
   to the vertex indices in the Lattice object. This is the quadratic Majorana Hamiltonian of eqn (13)
   in Kitaev's paper.
@@ -48,12 +48,12 @@ def generate_majorana_hamiltonian(l: Lattice, coloring: npt.NDArray, ujk: npt.ND
   :return: Quadratic Majorana Hamiltonian matrix representation in Majorana basis
   :rtype: npt.NDArray
   """  
-  ham = np.zeros((l.n_vertices, l.n_vertices))
+  ham = np.zeros((lattice.n_vertices, lattice.n_vertices))
   Js = J[coloring] if coloring is not None else J[0]
   hoppings = 2*Js*ujk
   
-  ham[l.edges.indices[:,1], l.edges.indices[:,0]] = hoppings
-  ham[l.edges.indices[:,0], l.edges.indices[:,1]] = -1*hoppings
+  ham[lattice.edges.indices[:,1], lattice.edges.indices[:,0]] = hoppings
+  ham[lattice.edges.indices[:,0], lattice.edges.indices[:,1]] = -1*hoppings
 
   ham = ham * 1.0j / 4.0
 

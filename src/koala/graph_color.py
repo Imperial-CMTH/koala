@@ -187,7 +187,7 @@ def color_lattice(lattice: Lattice):
     :type Lattice: lattice
     """    
     #fix the coloring to be clockwise about vertex 0
-    fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=lattice))
+    fixed = enumerate(clockwise_edges_about(vertex_index = 0, g=lattice))
     solveable, solution = edge_color(lattice, n_colors = 3, fixed = fixed)
     if not solveable:
         raise ValueError("No coloring exists for this lattice.")

@@ -46,7 +46,7 @@ def test_color_lattice():
     from koala.example_graphs import two_tri, tri_square_pent, tutte_graph
     graphs = [two_tri(), tri_square_pent(), tutte_graph()]
     for g in graphs:
-        fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=g))
+        fixed = enumerate(clockwise_edges_about(vertex_index = 0, g=g))
         solveable, solution = edge_color(g, n_colors = 3, fixed = fixed)
         if solveable:
             solution2 = color_lattice(g)

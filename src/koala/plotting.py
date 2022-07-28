@@ -332,36 +332,36 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N, kwargs):
 #### Functions to plot index labels of the vertices ####
 
 
-def plot_vertex_indices(g, ax=None, offset=0.01, **kwargs):
+def plot_vertex_indices(lattice, ax=None, offset=0.01, **kwargs):
     """
     Plot the indices of the vertices on a graph
     """
     if ax is None:
         ax = plt.gca()
-    for i, v in enumerate(g.vertices.positions):
+    for i, v in enumerate(lattice.vertices.positions):
         ax.text(*(v + offset), f"{i}", **kwargs)
 
 
 # TODO: Make this work with edges that cross the boundaries
-def plot_edge_indices(g, ax=None, offset=0.01):
+def plot_edge_indices(lattice, ax=None, offset=0.01):
     """
     Plot the indices of the edges on a graph
     """
     if ax is None:
         ax = plt.gca()
-    for i, e in enumerate(g.edges.indices):
-        midpoint = g.vertices.positions[e].mean(axis=0)
-        if not np.any(g.edges.crossing[i]) != 0:
+    for i, e in enumerate(lattice.edges.indices):
+        midpoint = lattice.vertices.positions[e].mean(axis=0)
+        if not np.any(lattice.edges.crossing[i]) != 0:
             ax.text(*(midpoint + offset), f"{i}", color="g")
 
 
-def plot_plaquette_indices(l, ax=None, **kwargs):
+def plot_plaquette_indices(lattice, ax=None, **kwargs):
     """
     Plot the indices of the vertices on a graph
     """
     if ax is None:
         ax = plt.gca()
-    for i, p in enumerate(l.plaquettes):
+    for i, p in enumerate(lattice.plaquettes):
         ax.text(*p.center, f"{i}", **kwargs)
 
 
