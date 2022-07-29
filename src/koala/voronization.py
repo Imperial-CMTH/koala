@@ -9,7 +9,6 @@ from scipy.spatial import Voronoi, KDTree
 from matplotlib.collections import LineCollection
 from matplotlib import pyplot as plt
 import itertools
-import scipy
 
 from .lattice import Lattice
 
@@ -51,8 +50,7 @@ def plot_lines(ax, lines, **kwargs):
     lc = LineCollection(lines, **kwargs)
     ax.add_collection(lc)
 
-#TODO:
-# - Factor out debugging plot code
+#TODO - Factor out debugging plot code
 def generate_lattice(
     original_points: npt.NDArray[np.floating],
     debug_plot: bool = False, 

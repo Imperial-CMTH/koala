@@ -5,7 +5,7 @@ from koala.lattice import Lattice, permute_vertices
 def bisect_lattice(lattice: Lattice, solution: npt.NDArray[np.integer], along: int = 0) -> npt.NDArray[np.integer]:
   """Generate a new lattice with vertex indices permuted such that the first nvert/2 entries are in sublattice A
   and the rest are in sublattice B, according to the given coloring `solution`
-  
+
   :param l: Non-bisected lattice
   :type l: Lattice
   :param solution: Edge coloring of `l`

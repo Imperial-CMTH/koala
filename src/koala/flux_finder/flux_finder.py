@@ -3,24 +3,24 @@ import numpy as np
 from ..lattice import INVALID, Lattice
 from .pathfinding import straight_line_length, periodic_straight_line_length, path_between_plaquettes
 
-def fluxes_from_bonds(l, bonds, real = True) -> np.ndarray:
+def fluxes_from_bonds(lattice: Lattice, ujk: np.ndarray, real = True) -> np.ndarray:
     """
     Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
     The fluxes are defined on each plaquette as the the product of each bond in the direction,
     with the sign fliped otherwise.
 
-    :param l: The lattice.
-    :type l: Lattice
-    :param bonds: The bond variables +1 or -1
-    :type bonds: np.ndarray
+    :param lattice: The lattice.
+    :type lattice: Lattice
+    :param ujk: The bond variables +1 or -1
+    :type ujk: np.ndarray
     :return: fluxes
     :rtype: np.ndarray
     """
-    fluxes = np.zeros(len(l.plaquettes), dtype = 'int') if real else np.zeros(len(l.plaquettes), dtype = 'complex')
+    fluxes = np.zeros(lattice.n_plaquettes, dtype = 'int') if real else np.zeros(lattice.n_plaquettes, dtype = 'complex')
 
 
-    for i, p in enumerate(l.plaquettes):
-        bond_signs = bonds[p.edges] #the signs of the bonds around this plaquette
+    for i, p in enumerate(lattice.plaquettes):
+        bond_signs = ujk[p.edges] #the signs of the bonds around this plaquette
 
         sign_real = np.array([1,-1,-1,1])
         sign = sign_real[p.n_sides%4]
@@ -99,7 +99,7 @@ def _flip_isolated_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
     
     return bonds, fluxes
     
-def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None, 
+def find_flux_sector(lattice: Lattice, target_flux_sector : np.ndarray = None, 
                      initial_bond_guess : np.ndarray = None,
                     ):
     """
@@ -116,26 +116,26 @@ def find_flux_sector(l: Lattice, target_flux_sector : np.ndarray = None,
     A bond configuration is an assignment of +/-1 to each bond.
     A flux sector is an assignment of +/-1 to even plaquette and +/-i to odd plaquettes.
     """
-    # TODO - this is changing the intiial guess as well as outputting the answer - not good if you want to keep the initial guess intact - scope issue
-    if target_flux_sector is None: target_flux_sector = np.ones(l.n_plaquettes, dtype = np.int8)
-    if initial_bond_guess is None: initial_bond_guess = np.ones(l.n_edges, dtype = np.int8)
+    # TODO - this is changing the intial guess as well as outputting the answer - not good if you want to keep the initial guess intact - scope issue
+    if target_flux_sector is None: target_flux_sector = np.ones(lattice.n_plaquettes, dtype = np.int8)
+    if initial_bond_guess is None: initial_bond_guess = np.ones(lattice.n_edges, dtype = np.int8)
     initial_bond_guess, target_flux_sector = initial_bond_guess.copy(), target_flux_sector.copy()
 
-    initial_flux_sector = fluxes_from_bonds(l, initial_bond_guess)
+    initial_flux_sector = fluxes_from_bonds(lattice, initial_bond_guess)
     
     # figure out which fluxes need to be flipped
     fluxes_to_flip = target_flux_sector // initial_flux_sector
 
     # step 2) flip edges that join adjacent -1 fluxes
-    bonds, fluxes_to_flip = _flip_adjacent_fluxes(l, initial_bond_guess, fluxes_to_flip)
+    bonds, fluxes_to_flip = _flip_adjacent_fluxes(lattice, initial_bond_guess, fluxes_to_flip)
     
     # steps 3) 4) and 5) Use A* to flip the remainging isolated fluxes
-    bonds, fluxes_to_flip = _flip_isolated_fluxes(l, bonds, fluxes_to_flip)
+    bonds, fluxes_to_flip = _flip_isolated_fluxes(lattice, bonds, fluxes_to_flip)
     
     if np.count_nonzero(fluxes_to_flip == -1) > 1: 
         raise ValueError("find_flux_sector failed to get rid of all the -1 fluxes, this is a bug.")
     
-    found_fluxes = fluxes_from_bonds(l, bonds) 
+    found_fluxes = fluxes_from_bonds(lattice, bonds) 
     
     if np.count_nonzero(found_fluxes - target_flux_sector) > 1:
         raise ValueError("find_flux_sector thought that it worked but somehow still didn't, a bug.")

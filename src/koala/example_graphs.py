@@ -644,9 +644,6 @@ def ground_state_ansatz(n):
     return l
 
 
-
-
-
 def make_amorphous(
     L,
     return_points=False,
