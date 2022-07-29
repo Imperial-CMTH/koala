@@ -251,7 +251,7 @@ def bridge_graph():
     return lat
 
 
-def generate_honeycomb(n_horizontal_cells: int, return_coloring=False) -> Lattice:
+def honeycomb_lattice(n_horizontal_cells: int, return_coloring=False) -> Lattice:
     """Generates a regular honeycomb lattice with n_horizonta_cells number of cells in the x-direction, and a similar amount in the y direction
     but slightly fudged to fir a square system
 
@@ -379,7 +379,7 @@ def generate_honeycomb(n_horizontal_cells: int, return_coloring=False) -> Lattic
         return Lattice(all_sites, edges, crossing)
 
 
-def generate_hex_square_oct(n_cells: int) -> Lattice:
+def hex_square_oct_lattice(n_cells: int) -> Lattice:
     """Generates a lattice containing squares, hexagons and octagons
 
     :param n_cells: Number of unit cells in the x or y directions
@@ -454,7 +454,7 @@ def generate_hex_square_oct(n_cells: int) -> Lattice:
     return Lattice(all_sites, edges, crossing)
 
 
-def generate_tri_non(n_cells, return_coloring=False):
+def tri_non_lattice(n_cells, return_coloring=False):
     """generate a lattice of nonagons and triangles
 
     :param n_cells: system dimensions. If an int is passed then the system is n_cells x n_cells. If an iterable is passed the system is n_cells[0] x n_cells[1]
@@ -682,7 +682,7 @@ def make_amorphous(
 
 
 def make_honeycomb(L):
-    lattice, coloring = generate_honeycomb(L, return_coloring=True)
+    lattice, coloring = honeycomb_lattice(L, return_coloring=True)
     ujk = np.ones(lattice.n_edges, dtype=np.int8)
     return lattice, coloring.astype(np.int8), ujk
 

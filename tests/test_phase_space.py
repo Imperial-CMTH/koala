@@ -14,7 +14,7 @@ def test_phase_and_regular_energies():
     # generate the lattice and fluxes
     system_size = 2
 
-    lattice = generate_hex_square_oct(system_size)
+    lattice = hex_square_oct_lattice(system_size)
     coloring = color_lattice(lattice)
     j_vals = np.array([1,1,1])
     ujk = np.ones(lattice.n_edges)
@@ -29,7 +29,7 @@ def test_phase_and_regular_energies():
     # create the phase space quantum system
 
     # generate a minimal lattice unit cell
-    lattice = generate_hex_square_oct(1)
+    lattice = hex_square_oct_lattice(1)
     coloring = color_lattice(lattice)
     ujk = np.ones(lattice.n_edges)
     j_vals = np.array([1,1,1])
@@ -58,7 +58,7 @@ def test_phase_and_regular_energies():
 
 def test_phase_space_analysers():
     system_size = 5
-    lattice = generate_hex_square_oct(1)
+    lattice = hex_square_oct_lattice(1)
     coloring = color_lattice(lattice)
     ujk = np.ones(lattice.n_edges)
     j_vals = np.array([1,1,1])

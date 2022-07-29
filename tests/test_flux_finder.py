@@ -8,7 +8,7 @@ from koala.flux_finder.pathfinding import path_between_plaquettes, path_between_
 
 # make some lattices to test
 n = 15
-honeycomb, _ = example_graphs.generate_honeycomb(n, return_coloring=True)
+honeycomb, _ = example_graphs.honeycomb_lattice(n, return_coloring=True)
 random_points = pointsets.generate_random(n*n)
 amorphous = voronization.generate_lattice(random_points, shift_vertices=True)
 

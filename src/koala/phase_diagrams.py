@@ -10,7 +10,7 @@ symmetric = True
 if symmetric: sampling_points, triangulation = get_triangular_sampling_points(samples = 20)
 else: sampling_points, triangulation = get_non_symmetric_triangular_sampling_points(samples = 20)
 
-lattice, coloring = eg.generate_honeycomb(15, True)
+lattice, coloring = eg.honeycomb_lattice(15, True)
 ujk = np.ones(lattice.n_edges)
 
 def function(Js): return some data
