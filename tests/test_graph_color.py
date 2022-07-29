@@ -43,8 +43,8 @@ def test_unsolveable():
     pass
 
 def test_color_lattice():
-    from koala.example_graphs import two_tri, tri_square_pent, tutte_graph
-    graphs = [two_tri(), tri_square_pent(), tutte_graph()]
+    from koala.example_graphs import two_triangles, tri_square_pent, tutte_graph
+    graphs = [two_triangles(), tri_square_pent(), tutte_graph()]
     for g in graphs:
         fixed = enumerate(clockwise_edges_about(vertex_index = 0, g=g))
         solveable, solution = edge_color(g, n_colors = 3, fixed = fixed)

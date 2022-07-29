@@ -1,11 +1,12 @@
 import numpy as np
 
 from koala.graph_utils import rotate
-from koala.lattice import Lattice
+from koala.lattice import Lattice, cut_boundaries
 from koala.voronization import generate_lattice
+from koala import flux_finder, graph_color, voronization
 
 
-def two_tri():
+def two_triangles():
     vertices = np.array([[0.5, 0.5], [0.5, 0.95], [0.1, 0.1], [0.9, 0.1]])
     edge_indices = np.array([[0, 1], [0, 2], [0, 3], [1, 2], [2, 3]])
 
@@ -643,8 +644,7 @@ def ground_state_ansatz(n):
     return l
 
 
-from koala import flux_finder, graph_color, voronization
-from koala.lattice import cut_boundaries
+
 
 
 def make_amorphous(

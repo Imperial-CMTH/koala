@@ -13,7 +13,7 @@ def test_lattice_class():
     points2 = pointsets.generate_bluenoise(30,3,3)
     weird_graphs = [
                 tri_square_pent(),
-                two_tri(),
+                two_triangles(),
                 tutte_graph(),
                 n_ladder(6,True),
                 bridge_graph(),
