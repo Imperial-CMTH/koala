@@ -364,8 +364,9 @@ def plot_plaquette_indices(lattice, ax=None, **kwargs):
     for i, p in enumerate(lattice.plaquettes):
         ax.text(*p.center, f"{i}", **kwargs)
 
-
-############### Old plotting interface + internal stuff ##############################
+#########################################################################################################
+################################ Old plotting interface + internal stuff ################################
+#########################################################################################################
 
 import functools
 import warnings
