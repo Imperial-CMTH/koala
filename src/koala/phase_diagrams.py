@@ -29,11 +29,10 @@ else: plot_phase_diagram(lattice, ujk, triangulation, number_in_range, gaps)
 
 
 def get_non_symmetric_triangular_sampling_points(samples = 10):
-    """
-    Usage:
+    """Usage:
     sampling_points, triangulation = pd.get_non_symmetric_triangular_sampling_points(samples = 20)
     data = f(sampling_points)
-    
+
     ax.triplot(triangulation, 'ko-', markersize = 1) #to plots the points where samples were taken
     ax.tricontourf(triangulation, data) #to plot the data
     """

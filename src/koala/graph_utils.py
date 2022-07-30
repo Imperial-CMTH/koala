@@ -8,16 +8,17 @@ from typing import Tuple
 
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only = True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
-    The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used 
-    (which is kind of a fudgey way of stopping the algorithm from picking edges that connect over the periodic boundaries). If you're hungry for 
+    The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used
+    (which is kind of a fudgey way of stopping the algorithm from picking edges that connect over the periodic boundaries). If you're hungry for
     speed you might want to turn it off. The algorith is basically prim's algorithm - so it should run in linear time.
 
-    :param lattice: the lattice you want the tree on
-    :type lattice: Lattice
-    :param shortest_edges_only: do you want a minimum spanning tree - distance wise, defaults to True
-    :type shortest_edges_only: bool, optional
-    :return: a list of the edges that form the tree
-    :rtype: np.ndarray
+    Args:
+        lattice (Lattice): the lattice you want the tree on
+        shortest_edges_only (bool, optional): do you want a minimum
+            spanning tree - distance wise, defaults to True
+
+    Returns:
+        np.ndarray: a list of the edges that form the tree
     """
     plaquettes_in = np.full(lattice.n_plaquettes, -1)
     edges_in = np.full(lattice.n_plaquettes-1, -1)
@@ -80,17 +81,16 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only = True):
 
 # FIXME: change function signature to take lattice object instead of adjacency list
 def vertex_neighbours(lattice, vertex_i):
-    """
-    Return the neighbouring nodes of a point
+    """Return the neighbouring nodes of a point
 
     Args:
         vertex_i: int the index into vertices of the node we want the neighbours of
         adjacency: (M, 2) A list of pairs of vertices representing edges
     Returns:
         vertex_indices: (k), the indices into vertices of the neighbours
-        edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours 
-        
-    Note that previous version of this function broke the expectation that edge_indices[i] is the edge that links 
+        edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours
+
+    Note that previous version of this function broke the expectation that edge_indices[i] is the edge that links
     vertex_i to vertex_indices[i], make sure to preserve this property.
     """
     adjacency = lattice.edges.indices
@@ -108,15 +108,16 @@ def vertex_neighbours(lattice, vertex_i):
     return vertex_indices, edge_indices
 
 def edge_neighbours(lattice, edge_i):
-    """
-    Return the neighbouring edges of an edge (the edges connected to the same nodes as this edge)
+    """Return the neighbouring edges of an edge (the edges connected to the same nodes as this edge)
 
-    :param lattice: The lattice
-    :type lattice: Lattice
-    :param edge_i: the index of the edge we want the neighbours of
-    :type edge_i: integer
-    :return: edge_indices: (k), the indices into adjacency of the edges that link vertex_i to its neighbours 
-    :rtype: np.ndarray (k,)
+    Args:
+        lattice (Lattice): The lattice
+        edge_i (integer): the index of the edge we want the neighbours
+            of
+
+    Returns:
+        np.ndarray (k,): edge_indices: (k), the indices into adjacency
+        of the edges that link vertex_i to its neighbours
     """
     edge = lattice.edges.indices[edge_i]
     v1 = edge[0]
@@ -126,15 +127,14 @@ def edge_neighbours(lattice, edge_i):
     return np.where(mask)[0]
 
 def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
-    """
-    Finds the vertices/edges that border vertex_i, order them clockwise starting from the positive x axis
+    """Finds the vertices/edges that border vertex_i, order them clockwise starting from the positive x axis
     and returns those indices in order.
 
     Args:
         vertex_i (int): int the index into g.vertices.positions of the node we want to use. Generally use 0
         g (Lattice): a graph object with keys vertices, adjacency, adjacency_crossing
     Returns:
-        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
+        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges.
     """
     #get the edges and vertices around vertex 0
     vertex_indices, edge_indices = vertex_neighbours(g, vertex_i)
@@ -149,28 +149,26 @@ def clockwise_about(vertex_i : int, g : Lattice) -> np.ndarray:
     return ordered_vertex_indices, ordered_edge_indices
 
 def clockwise_edges_about(vertex_i : int, g : Lattice) -> np.ndarray:
-    """
-    Finds the edges that border vertex_i, orders them clockwise starting from the positive x axis
+    """Finds the edges that border vertex_i, orders them clockwise starting from the positive x axis
     and returns those indices in order. Use this to break the degeneracy of graph coloring.
 
     Args:
         vertex_i (int): int the index into g.vertices.positions of the node we want to use. Generally use 0
         g (Lattice): a graph object with keys vertices, adjacency, adjacency_crossing
     Returns:
-        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges. 
+        ordered_edge_indices: np.ndarray (n_neighbours_of_vertex_i) ordered indices of the edges.
     """
     return clockwise_about(vertex_i, g)[1]
 
 def get_edge_vectors(vertex_i : int, edge_indices : np.ndarray, l : Lattice) -> np.ndarray:
-    """
-    Get the vector starting from vertex_i along edge_i, taking into account boundary conditions
+    """Get the vector starting from vertex_i along edge_i, taking into account boundary conditions
     Args:
         vertex_i (int): the index of the vertex
         edge_i (int): the index of the edge
         lattice (Lattice): the lattice to use
 
     Returns:
-        np.ndarray (2,): 
+        np.ndarray (2,):
     """
     #this is a bit nontrivial, g.adjacency_crossing tells us if the edge crossed into another unit cell but 
     #it is directional, hence we need to check for each edge if vertex_i was the first of second vertex stored
@@ -187,13 +185,14 @@ def adjacent_plaquettes(l : Lattice, p_index : int) -> Tuple[np.ndarray, np.ndar
     """For a given lattice, compute the plaquettes that share an edge with lattice.plaquettes[p_index] and the shared edge.
     Returns a list of plaquettes indices and a matching list of edge indices.
 
-    :param l: The lattice.
-    :type l: Lattice
-    :param p_index: The index of the plaquette to find the neighbours of.
-    :type p_index: int
-    :return: (plaque_indices, edge_indices)
-    :rtype: Tuple[np.ndarray, np.ndarray]
-    """    
+    Args:
+        l (Lattice): The lattice.
+        p_index (int): The index of the plaquette to find the neighbours
+            of.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: (plaque_indices, edge_indices)
+    """
     p = l.plaquettes[p_index]
     edges = p.edges
     neighbouring_plaquettes = l.edges.adjacent_plaquettes[edges]
@@ -221,14 +220,15 @@ import itertools
 def edge_crossing_that_minimises_length(start, end):
     """Given two points in the unit plane, return the edge crossing = [-1/0/+1, -1/0/+1,]
     that minimises the length of the edge between them.
-    
+
     :param: start: The start point of the edge
     :type: np.ndarray shape (2,)
     :param: end: The start point of the edge
     :type: np.ndarray shape (2,)
 
-    :return: The edge crossing that minimises the length of the edge.
-    :rtype: np.ndarray shape (2,)
+    Returns:
+        np.ndarray shape (2,): The edge crossing that minimises the
+        length of the edge.
     """
     if np.linalg.norm(start - end, ord = 2) < 0.5: return np.array([0,0])
     crossings = np.array(list(itertools.product([-1,0,1], repeat = 2)))
@@ -236,17 +236,16 @@ def edge_crossing_that_minimises_length(start, end):
     return crossings[np.argmin(lengths)]
 
 def make_dual(lattice, subset = slice(None, None)):
-    """
-    Given a lattice and a subset of its edge, contruct the dual lattice
+    """Given a lattice and a subset of its edge, contruct the dual lattice
     and return it as a new Lattice object.
 
-    :param lattice: The lattice to make the dual of.
-    :type lattice: Lattice
-    :param subset: The edges to include in the dual.
-    :type subset: slice, boolean array, or integer indices.
+    Args:
+        lattice (Lattice): The lattice to make the dual of.
+        subset (slice, boolean array, or integer indices.): The edges to
+            include in the dual.
 
-    :return: The dual lattice.
-    :rtype: Lattice
+    Returns:
+        Lattice: The dual lattice.
     """
     subset = np.arange(lattice.n_edges, dtype = int)[subset]
     st_edges = np.array([lattice.edges.adjacent_plaquettes[i] for i in subset])
@@ -261,8 +260,7 @@ from scipy import sparse
 from scipy.sparse import csgraph
 
 def sparse_adjacency(lattice: Lattice):
-    """
-    Create a sparse (dok_matrix) adjacency matrix from a Lattice object.
+    """Create a sparse (dok_matrix) adjacency matrix from a Lattice object.
     Useful to use a Lattice object as input to a scipy.sparse.csgraph routine.
     """
     adj = sparse.dok_matrix((lattice.n_vertices, lattice.n_vertices))
@@ -271,8 +269,7 @@ def sparse_adjacency(lattice: Lattice):
     return adj
 
 def edge_to_index_mapper(lattice: Lattice):
-    """
-    This returns a map where k = map[i,j] tells you the index k of an edge (i,j)
+    """This returns a map where k = map[i,j] tells you the index k of an edge (i,j)
     The order of (i,j) or (j,i) doesn't matter.
     Useful to convert back from the output of a scipy.sparse.csgraph routine.
     """
@@ -288,7 +285,7 @@ def adjacency_to_edgelist(adj):
 
 def minimum_spanning_tree(lattice : Lattice):
     """"
-    Use scipy.sparse.csgraph.minimum_spanning_tree to find a 
+    Use scipy.sparse.csgraph.minimum_spanning_tree to find a
     minimum spanning tree of the given lattice.
     """
     adjacency = sparse_adjacency(lattice)

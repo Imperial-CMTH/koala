@@ -13,19 +13,23 @@ class LatticeException(Exception):
 class Plaquette:
     """Represents a single plaquette in a lattice. Not a list since plaquettes can have varying size.
 
-    :param vertices: Indices correspondng to the vertices that border the plaquette. These are always organised to start from the lowest index and then go clockwise around the plaquette
-    :type vertices: np.ndarray[int] (n_sides)
-    :param edges: Indices correspondng to the edges that border the plaquette. These are arranged to start from the lowest indexed vertex and progress clockwise.
-    :type edges: np.ndarray[int] (n_sides)
-    :param directions: Valued +1,-1 depending on whether the i'th edge points clockwise/anticlockwise around the plaquette
-    :type directions: np.ndarray[int] (n_sides)
-    :param centers: Coordinates of the center of the plaquette
-    :type centers: np.ndarray[float] (2)
-    :param n_sides: Number of sides to the plaquette
-    :type n_sides: int
-    :param adjacent_plaquettes: Indices of all the plaquettes that share an edge with this one, ordered in the same order as the plaquette edges
-    :type adjacent_plaquettes: np.ndarray[int] (n_sides)
-
+    Args:
+        vertices (np.ndarray[int] (n_sides)): Indices correspondng to
+            the vertices that border the plaquette. These are always
+            organised to start from the lowest index and then go
+            clockwise around the plaquette
+        edges (np.ndarray[int] (n_sides)): Indices correspondng to the
+            edges that border the plaquette. These are arranged to start
+            from the lowest indexed vertex and progress clockwise.
+        directions (np.ndarray[int] (n_sides)): Valued +1,-1 depending
+            on whether the i'th edge points clockwise/anticlockwise
+            around the plaquette
+        centers (np.ndarray[float] (2)): Coordinates of the center of
+            the plaquette
+        n_sides (int): Number of sides to the plaquette
+        adjacent_plaquettes (np.ndarray[int] (n_sides)): Indices of all
+            the plaquettes that share an edge with this one, ordered in
+            the same order as the plaquette edges
     """
     vertices: np.ndarray
     edges: np.ndarray
@@ -37,17 +41,18 @@ class Plaquette:
 
 @dataclass(frozen=True)
 class Edges:
-    """
-    Represents the list of edges in the lattice
+    """Represents the list of edges in the lattice
 
-    :param indices: Indices of points connected by each edge.
-    :type indices: np.ndarray[int] (nedges, 2)
-    :param vectors: Vectors pointing along each edge
-    :type vectors: np.ndarray[float] (nedges, 2)
-    :param crossing: Tells you whether the edge crosses the boundary conditions, and if so, in which direction. One value for x-direction and one for y-direction
-    :type crossing: np.ndarray[int] (nedges, 2)
-    :param adjacent_plaquettes: Lists the indices of every plaquette that touches each edge
-    :type adjacent_plaquettes: np.ndarray[int] (nedges, 2)
+    Args:
+        indices (np.ndarray[int] (nedges, 2)): Indices of points
+            connected by each edge.
+        vectors (np.ndarray[float] (nedges, 2)): Vectors pointing along
+            each edge
+        crossing (np.ndarray[int] (nedges, 2)): Tells you whether the
+            edge crosses the boundary conditions, and if so, in which
+            direction. One value for x-direction and one for y-direction
+        adjacent_plaquettes (np.ndarray[int] (nedges, 2)): Lists the
+            indices of every plaquette that touches each edge
     """
 
     indices: np.ndarray
@@ -67,15 +72,16 @@ class Edges:
 
 @dataclass(frozen=True)
 class Vertices:
-    """
-    Represents a list of vertices in the lattice
+    """Represents a list of vertices in the lattice
 
-    :param positions: List of the positions of every vertex
-    :type positions: np.ndarray[float] (nvertices, 2)
-    :param adjacent_edges: Lists the indices of every edge that connects to that vertex. Listed in clockwise order from the lowest index
-    :type adjacent_edges: list[np.ndarray] (nvertices, n_edges_per_vertex)
-    :param adjacent_plaquettes: Lists the indices of every plaquette that touches the vertex
-    :type adjacent_plaquettes: np.ndarray[int] (nvertices, 3)
+    Args:
+        positions (np.ndarray[float] (nvertices, 2)): List of the
+            positions of every vertex
+        adjacent_edges (list[np.ndarray] (nvertices, n_edges_per_vertex)):
+            Lists the indices of every edge that connects to that
+            vertex. Listed in clockwise order from the lowest index
+        adjacent_plaquettes (np.ndarray[int] (nvertices, 3)): Lists the
+            indices of every plaquette that touches the vertex
     """
 
     positions: np.ndarray
@@ -94,16 +100,19 @@ class Vertices:
 class Lattice(object):
     """Data structure containing information about a lattice consisting of vertices in real space connected by undirected edges.
 
-    :param vertices: Data structure containing vertex positions, and the edges/plaquettes touching each vertex
-    :type vertices: Vertices
-    :param edges: Data structure containing indices of vertices comprising each edge, the spatial displacement vectors
-        corresponding to those edges, flags for edges which cross the system boundary in periodic Lattices, and the plaquettes
-        touching each edge.
-    :type edges: Edges
-    :param plaquettes: All of the polygons (aka plaquettes) comprising the lattice, specifying their constituent vertices, edges,
-        winding directions, and centers.
-    :type plaquettes: list[Plaquette]
-    """    
+    Args:
+        vertices (Vertices): Data structure containing vertex positions,
+            and the edges/plaquettes touching each vertex
+        edges (Edges): Data structure containing indices of vertices
+            comprising each edge, the spatial displacement vectors
+            corresponding to those edges, flags for edges which cross
+            the system boundary in periodic Lattices, and the plaquettes
+            touching each edge.
+        plaquettes (list[Plaquette]): All of the polygons (aka
+            plaquettes) comprising the lattice, specifying their
+            constituent vertices, edges, winding directions, and
+            centers.
+    """
     def __init__(
             self,
             vertices: npt.NDArray[np.floating],
@@ -113,15 +122,18 @@ class Lattice(object):
             ):
         """Constructor for Lattices
 
-        :param vertices: Spatial locations of lattice vertices
-        :type vertices: npt.NDArray[np.floating] Shape (nverts, 2)
-        :param edge_indices: Indices corresponding to the vertices which each edge connects
-        :type edge_indices: npt.NDArray[np.integer] Shape (nedges, 2)
-        :param edge_crossing: Flags describing which boundaries of the system each edge crosses in periodic boundary conditions.
+        Args:
+            vertices (npt.NDArray[np.floating] Shape (nverts, 2)):
+                Spatial locations of lattice vertices
+            edge_indices (npt.NDArray[np.integer] Shape (nedges, 2)):
+                Indices corresponding to the vertices which each edge
+                connects
+            edge_crossing (npt.NDArray[np.integer] Shape (nedges, 2)):
+                Flags describing which boundaries of the system each
+                edge crosses in periodic boundary conditions.
         Each entry in the final axis corresponds to a spatial dimension, 1(-1) denotes an edge crossing a boundary in the positive
         (negative) direction along that dimension. 0 corresponds to no boundary crossing.
-        :type edge_crossing: npt.NDArray[np.integer] Shape (nedges, 2)
-        """            
+        """
 
         # calculate the vector corresponding to each edge
         edge_vectors = (vertices[edge_indices][:, 1] -
@@ -231,17 +243,21 @@ def _sorted_vertex_adjacent_edges(
         vertex_positions,
         edge_indices,
         edge_vectors):
-    """Gives you an array where the i'th row contains the indices of the edges that connect to the i'th vertex. 
+    """Gives you an array where the i'th row contains the indices of the edges that connect to the i'th vertex.
     The edges are always organised in clockwise order starting from 12:00, which will be handy later ;)
 
-    :param vertex_positions: List of the positions of every vertex
-    :type vertex_positions: np.ndarray[float] (nvertices, 2)
-    :param edge_indices: Indices of points connected by each edge. 
-    :type edge_indices: np.ndarray[int] (nedges, 2)
-    :param edge_vectors: Vectors pointing along each edge
-    :type edge_vectors: np.ndarray[float] (nedges, 2)
-    :return: List containing the indices of the edges that connect to each point, ordered clockwise around the point.
-    :rtype: list[int] (nvertices, nedges_per_vertex)
+    Args:
+        vertex_positions (np.ndarray[float] (nvertices, 2)): List of the
+            positions of every vertex
+        edge_indices (np.ndarray[int] (nedges, 2)): Indices of points
+            connected by each edge.
+        edge_vectors (np.ndarray[float] (nedges, 2)): Vectors pointing
+            along each edge
+
+    Returns:
+        list[int] (nvertices, nedges_per_vertex): List containing the
+        indices of the edges that connect to each point, ordered
+        clockwise around the point.
     """
 
    # sorts these lists to make sure that they always are ordered clockwise from 12:00 like on a clock face
@@ -275,17 +291,18 @@ def _find_plaquette(
         starting_edge: int,
         starting_direction: int,
         l: Lattice):
-    """Given a single edge, and a direction, this code finds the plaquette corresponding to starting in that 
+    """Given a single edge, and a direction, this code finds the plaquette corresponding to starting in that
     direction and only taking left turns. This means plaquettes are ordered anticlockwise - which amounts to going round each vertex clockwise.
 
-    :param starting_edge: Index of the edge where you start
-    :type starting_edge: int
-    :param starting_direction: Direction to take the first step. +1 means the same direction as the edge, -1 means opposite
-    :type starting_direction: int (+1 or -1)
-    :param l: Lattice to be searched for the plaquette
-    :type l: Lattice
-    :return: A plaquette object representing the found plaquette
-    :rtype: Plaquette
+    Args:
+        starting_edge (int): Index of the edge where you start
+        starting_direction (int (+1 or -1)): Direction to take the first
+            step. +1 means the same direction as the edge, -1 means
+            opposite
+        l (Lattice): Lattice to be searched for the plaquette
+
+    Returns:
+        Plaquette: A plaquette object representing the found plaquette
     """
 
     edge_indices = l.edges.indices
@@ -377,10 +394,11 @@ def _find_plaquette(
 def _find_all_plaquettes(l: Lattice):
     """Construct a list of Plaquette objects, representing all of the polygons in the lattice.
 
-    :param l: Lattice whose plaquettes are to be found
-    :type l: Lattice
-    :return: List of all plaquettes in the lattice
-    :rtype: list[Plaquette]
+    Args:
+        l (Lattice): Lattice whose plaquettes are to be found
+
+    Returns:
+        list[Plaquette]: List of all plaquettes in the lattice
     """
 
     edge_indices = l.edges.indices
@@ -415,12 +433,13 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
   """Create a new lattice with the vertex indices rearranged according to ordering,
   such that new_l.vertices[i] = l.vertices[ordering[i]].
 
-  :param l: Original lattice to have vertices reordered
-  :type l: Lattice
-  :param ordering: Permutation of vertex ordering, i = ordering[i']
-  :type ordering: npt.NDArray[np.integer]
-  :return: New lattice object with permuted vertex indices
-  :rtype: Lattice
+  Args:
+      l (Lattice): Original lattice to have vertices reordered
+      ordering (npt.NDArray[np.integer]): Permutation of vertex
+          ordering, i = ordering[i']
+
+  Returns:
+      Lattice: New lattice object with permuted vertex indices
   """
   original_verts = l.vertices
   original_edges = l.edges
@@ -445,13 +464,14 @@ def permute_vertices(l: Lattice, ordering: npt.NDArray[np.integer]) -> Lattice:
 def cut_boundaries(l: Lattice, boundary_to_cut: list = [True,True]) -> Lattice:
     """Removes the x and/or y boundary edges of the lattice.
 
-    :param l: The lattice to cut.
-    :type l: Lattice
-    :param boundary_to_cut: whether to cut the x or y boundaries, defaults to [True,True]
-    :type boundary_to_cut: list[Bool], optional
-    :return: A new lattice with boundaries cut.
-    :rtype: Lattice
-    """    
+    Args:
+        l (Lattice): The lattice to cut.
+        boundary_to_cut (list[Bool], optional): whether to cut the x or
+            y boundaries, defaults to [True,True]
+
+    Returns:
+        Lattice: A new lattice with boundaries cut.
+    """
     vertices = l.vertices.positions
     edges = l.edges.indices
     crossing = l.edges.crossing

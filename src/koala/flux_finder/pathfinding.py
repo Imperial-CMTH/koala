@@ -77,21 +77,22 @@ def path_between_plaquettes(l : Lattice, start : int, goal : int,
     If early_stopping = True it's probably still pretty short but it stops as soon as it finds a path.
     The heuristic function must give a lower bound on the distance, it could be swapped out for a periodic one for instance.
 
-    :param l: The lattice to pathfind on.
-    :type l: Lattice
-    :param start: The index of the plaquette to start from.
-    :type start: int
-    :param goal: The index of the plaquette to go to.
-    :type goal: int
-    :param heuristic: The distance metric (and periodicity) to use, defaults to straight_line_length
-    :type heuristic: function
-    :param early_stopping: If True, return as soon as a path is found, defaults to True
-    :type early_stopping: bool, optional
-    :param maxits: How many iterations to do before giving up, defaults to 1000
-    :type maxits: int, optional
-    :return: plaquettes, edges, lists of plaquettes visited by a path and the indices of the edges used to get there.
-    :rtype: Tuple[array, array]
-    """    
+    Args:
+        l (Lattice): The lattice to pathfind on.
+        start (int): The index of the plaquette to start from.
+        goal (int): The index of the plaquette to go to.
+        heuristic (function): The distance metric (and periodicity) to
+            use, defaults to straight_line_length
+        early_stopping (bool, optional): If True, return as soon as a
+            path is found, defaults to True
+        maxits (int, optional): How many iterations to do before giving
+            up, defaults to 1000
+
+    Returns:
+        Tuple[array, array]: plaquettes, edges, lists of plaquettes
+        visited by a path and the indices of the edges used to get
+        there.
+    """
     # all information about the graph is stored in the adjacency(a) and heuristic(a,b) functions
     def adjacency(a): return adjacent_plaquettes(l, a)
     def pos(p): return l.plaquettes[p].center
@@ -112,21 +113,21 @@ def path_between_vertices(l : Lattice, start : int, goal : int,
     If early_stopping = True it's probably still pretty short but it stops as soon as it finds a path.
     The heuristic function must give a lower bound on the distance, it could be swapped out for a periodic one for instance.
 
-    :param l: The lattice to pathfind on.
-    :type l: Lattice
-    :param start: The index of the vertex to start from.
-    :type start: int
-    :param goal: The index of the vertex to go to.
-    :type goal: int
-    :param heuristic: The distance metric (and periodicity) to use, defaults to straight_line_length
-    :type heuristic: function
-    :param early_stopping: If True, return as soon as a path is found, defaults to True
-    :type early_stopping: bool, optional
-    :param maxits: How many iterations to do before giving up, defaults to 1000
-    :type maxits: int, optional
-    :return: vertices, edges, lists of vertices visited by a path and the indices of the edges used to get there.
-    :rtype: Tuple[array, array]
-    """    
+    Args:
+        l (Lattice): The lattice to pathfind on.
+        start (int): The index of the vertex to start from.
+        goal (int): The index of the vertex to go to.
+        heuristic (function): The distance metric (and periodicity) to
+            use, defaults to straight_line_length
+        early_stopping (bool, optional): If True, return as soon as a
+            path is found, defaults to True
+        maxits (int, optional): How many iterations to do before giving
+            up, defaults to 1000
+
+    Returns:
+        Tuple[array, array]: vertices, edges, lists of vertices visited
+        by a path and the indices of the edges used to get there.
+    """
     
     def adjacency(a): return adjacent_vertices(l, a)
     def pos(a): return l.vertices.positions[a]
