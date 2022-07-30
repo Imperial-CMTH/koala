@@ -130,7 +130,7 @@ def edge_color(lattice: Lattice,
                n_colors: int = 3,
                all_solutions=False,
                n_solutions=None,
-               fixed=[]):
+               fixed=()):
     """Return a coloring of the edges using n_colors different labels.
 
     Args:
