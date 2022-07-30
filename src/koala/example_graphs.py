@@ -38,8 +38,7 @@ def tri_square_pent():
 
 
 def tutte_graph():
-    """
-    Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colorable.
+    """Returns a tutte graph, a cubic graph with no Hamiltonian cycle, but is three-colorable.
 
     Returns:
         vertices: np.array shape (nvertices, ndim) - A list of the positions of all the vertices that make up the graph
@@ -182,12 +181,14 @@ def tutte_graph():
 def n_ladder(n_sites: int, wobble=False):
     """Produces a strip-ladder type graph - good for testing if things work in strip geometry
 
-    :param n_sites: number of sites in the x-direction
-    :type n_sites: int
-    :param wobble: adds a sin wobble to the ladder shape - for testing if plaquettes come out that shouldnt be there, defaults to False
-    :type wobble: bool, optional
-    :return: a lattice for the ladder system
-    :rtype: Lattice
+    Args:
+        n_sites (int): number of sites in the x-direction
+        wobble (bool, optional): adds a sin wobble to the ladder shape -
+            for testing if plaquettes come out that shouldnt be there,
+            defaults to False
+
+    Returns:
+        Lattice: a lattice for the ladder system
     """
 
     x_positions = np.linspace(0.05, 0.95, n_sites)
@@ -222,8 +223,8 @@ def n_ladder(n_sites: int, wobble=False):
 def multi_graph() -> Lattice:
     """Returns a graph with multiple edges between the same two sites
 
-    :return: A multiple-y connected graph
-    :rtype: Lattice
+    Returns:
+        Lattice: A multiple-y connected graph
     """
     return Lattice(
         vertices=np.array([[0.5, 0.7], [0.5, 0.3]]),
@@ -235,8 +236,8 @@ def multi_graph() -> Lattice:
 def bridge_graph():
     """gives a simple example of a graph with a bridge - somethiing that could mess up the plaquette finder (but shouldnt any more!)
 
-    :return: A simple lattice with a bridge
-    :rtype: Lattice
+    Returns:
+        Lattice: A simple lattice with a bridge
     """
     vertices = np.array(
         [[0.1, 0.2], [0.1, 0.8], [0.4, 0.5], [0.6, 0.5], [0.9, 0.8], [0.9, 0.2]]
@@ -255,12 +256,15 @@ def generate_honeycomb(n_horizontal_cells: int, return_coloring=False) -> Lattic
     """Generates a regular honeycomb lattice with n_horizonta_cells number of cells in the x-direction, and a similar amount in the y direction
     but slightly fudged to fir a square system
 
-    :param n_horizontal_cells: number of cells wide you want the lattice
-    :type n_horizontal_cells: int
-    :param return_coloring: if True also returns a regular kitaev-style coloring for all the edges, defaults to False
-    :type return_coloring: bool, optional
-    :return: a lattice or a lattice and a coloring
-    :rtype: Lattice, np.ndarray (optional)
+    Args:
+        n_horizontal_cells (int): number of cells wide you want the
+            lattice
+        return_coloring (bool, optional): if True also returns a regular
+            kitaev-style coloring for all the edges, defaults to False
+
+    Returns:
+        Lattice, np.ndarray (optional): a lattice or a lattice and a
+        coloring
     """
 
     # define a basic unit cell with four sites
@@ -382,10 +386,11 @@ def generate_honeycomb(n_horizontal_cells: int, return_coloring=False) -> Lattic
 def generate_hex_square_oct(n_cells: int) -> Lattice:
     """Generates a lattice containing squares, hexagons and octagons
 
-    :param n_cells: Number of unit cells in the x or y directions
-    :type n_cells: int
-    :return: the lattice object for this system
-    :rtype: Lattice
+    Args:
+        n_cells (int): Number of unit cells in the x or y directions
+
+    Returns:
+        Lattice: the lattice object for this system
     """
 
     site_coordinates = np.array(
@@ -457,12 +462,16 @@ def generate_hex_square_oct(n_cells: int) -> Lattice:
 def generate_tri_non(n_cells, return_coloring=False):
     """generate a lattice of nonagons and triangles
 
-    :param n_cells: system dimensions. If an int is passed then the system is n_cells x n_cells. If an iterable is passed the system is n_cells[0] x n_cells[1]
-    :type n_cells: int or iter[int]
-    :param return_coloring: optional arg to return a coloring of the edges, defaults to False
-    :type return_coloring: bool, optional
-    :return: the lattice and optionally a coloring
-    :rtype: Lattice or Lattice, np.ndarray
+    Args:
+        n_cells (int or iter[int]): system dimensions. If an int is
+            passed then the system is n_cells x n_cells. If an iterable
+            is passed the system is n_cells[0] x n_cells[1]
+        return_coloring (bool, optional): optional arg to return a
+            coloring of the edges, defaults to False
+
+    Returns:
+        Lattice or Lattice, np.ndarray: the lattice and optionally a
+        coloring
     """
 
     unit_points = np.array([[0.4, 0.1], [0.1, 0.4], [0.4, 0.4], [0.6, 0.6]])
@@ -493,14 +502,11 @@ def generate_tri_non(n_cells, return_coloring=False):
 def _next_cell_number(n_horizontal, n_vertical, n, shift):
     """gives you the index of the next unit cell in the list of all unit cells
 
-    :param n_horizontal: number unit cells in x direction
-    :type n_horizontal: int
-    :param n_vertical: number of unit cells in y direction
-    :type n_vertical: int
-    :param n: what index you are currently at
-    :type n: int
-    :param shift: whoch way you want to shift to
-    :type shift: list
+    Args:
+        n_horizontal (int): number unit cells in x direction
+        n_vertical (int): number of unit cells in y direction
+        n (int): what index you are currently at
+        shift (list): whoch way you want to shift to
     """
     y = n // n_horizontal
     new_y = (y + shift[1]) % n_vertical
@@ -513,14 +519,11 @@ def _next_cell_number(n_horizontal, n_vertical, n, shift):
 def _crossing(n_x, n_y, n, shift):
     """tells you if the shift crosses PBC in the x or why direction
 
-    :param n_x: system size in x
-    :type n_x: int
-    :param n_y: system_size in y
-    :type n_y: int
-    :param n: what index you are currently at
-    :type n: int
-    :param shift: whoch way you want to shift to
-    :type shift: list
+    Args:
+        n_x (int): system size in x
+        n_y (int): system_size in y
+        n (int): what index you are currently at
+        shift (list): whoch way you want to shift to
     """
 
     x = n % n_x
@@ -545,18 +548,18 @@ def tile_unit_cell(
 ) -> Lattice:
     """given a description of a unit cell, this tiles it to make a full lattice
 
-    :param unit_points: coordinates of points in the unit cell
-    :type unit_points: np.ndarray
-    :param unit_edges: indices of edges in unit cell
-    :type unit_edges: np.ndarray
-    :param unit_crossing: whether the edges cross to the next unit cell in x and y direction
-    :type unit_crossing: np.ndarray
-    :param unit_cell_dimensions: size of unit cell
-    :type unit_cell_dimensions: np.ndarray
-    :param n_xy: number of tilings you want. if this is iterable then assume it has the form [nx, ny]. If an int then we assume we want [n,n]
-    :type n_xy: int or list
-    :return: the final lattice
-    :rtype: Lattice
+    Args:
+        unit_points (np.ndarray): coordinates of points in the unit cell
+        unit_edges (np.ndarray): indices of edges in unit cell
+        unit_crossing (np.ndarray): whether the edges cross to the next
+            unit cell in x and y direction
+        unit_cell_dimensions (np.ndarray): size of unit cell
+        n_xy (int or list): number of tilings you want. if this is
+            iterable then assume it has the form [nx, ny]. If an int
+            then we assume we want [n,n]
+
+    Returns:
+        Lattice: the final lattice
     """
 
     try:
@@ -606,11 +609,14 @@ def tile_unit_cell(
 def single_plaquette(n_sides: int) -> Lattice:
     """Makes a graph consisting of a single plaquette with n_sides sides
 
-    :param n_sides: how many sides the polygon should have
-    :type n_sides: int
-    :raises Exception: n_sides must be >2
-    :return: a lattice containing a single polygon
-    :rtype: Lattice
+    Args:
+        n_sides (int): how many sides the polygon should have
+
+    Raises:
+        Exception: n_sides must be >2
+
+    Returns:
+        Lattice: a lattice containing a single polygon
     """
 
     if n_sides < 3:
@@ -656,14 +662,13 @@ def make_amorphous(
 ):
     """Makes an amorphous lattice with L**2 plaquettes
 
-    :param L: The lattice will have L**2 plaquettes
-    :type L: int
+    Args:
+        L (int): The lattice will have L**2 plaquettes
+        return_points (bool): if True returns Lattice, coloring, ground
+            state ujk, original_random_points
 
-    :param return_points: if True returns Lattice, coloring, ground state ujk, original_random_points
-    :type return_points: bool
-
-    :return: Lattice, coloring, ground state ujk
-    :rtype: Lattice
+    Returns:
+        Lattice: Lattice, coloring, ground state ujk
     """
     if rng is None:
         rng = np.random.default_rng()

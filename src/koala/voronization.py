@@ -15,8 +15,7 @@ from .lattice import Lattice
 
 
 def points_near_unit_image(vor, idx):
-    """
-    Find the vertex in unit cell near the image of the vertex with index
+    """Find the vertex in unit cell near the image of the vertex with index
     idx. Assumes a voronoi diagram vor generated from a point set in a
     3x3 replicated geometry spanning [-1, 2].
     """
@@ -61,15 +60,20 @@ def generate_lattice(
     """Generate a `Lattice` object with periodic boundary conditions from an initial set of points
         ``original_points`` whose voronoi diagram constitute the vertices and edges of the lattice.
 
-    :param original_points: Points used to generating lattice voronoi diagram
-    :type original_points: npt.NDArray[np.floating]
-    :param debug_plot: Output intermediate debugging plots to check PBC logic, defaults to False
-    :type debug_plot: bool, optional
-    :param shift_vertices: If True, shift all the vertices to the center of the delaunay triangle they sit in - stops any vertices getting too close together and makes things a bit neater
-    :type shift_vertices: bool, optional
-    :return: Lattice object containing information about vertices, edges, and
-    :rtype: Lattice object
-    """    
+    Args:
+        original_points (npt.NDArray[np.floating]): Points used to
+            generating lattice voronoi diagram
+        debug_plot (bool, optional): Output intermediate debugging plots
+            to check PBC logic, defaults to False
+        shift_vertices (bool, optional): If True, shift all the vertices
+            to the center of the delaunay triangle they sit in - stops
+            any vertices getting too close together and makes things a
+            bit neater
+
+    Returns:
+        Lattice object: Lattice object containing information about
+        vertices, edges, and
+    """
     padding = 1 if original_points.shape[0] > 10 else 2 #how many layers to add, 1 -> 3x3, 2 -> 5x5 etc.
     #Create periodic boundary conditions by replicating the point set across 3x3 unit cells 
     points = generate_point_array(original_points, padding)
