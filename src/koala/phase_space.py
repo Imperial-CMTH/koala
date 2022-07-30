@@ -2,7 +2,9 @@ from .lattice import Lattice
 import numpy as np
 from numpy import linalg as la
 
-def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarray, J: np.ndarray):
+
+def k_hamiltonian_generator(lattice: Lattice, coloring: np.ndarray,
+                            ujk: np.ndarray, J: np.ndarray):
     """Generates a bloch Hamiltonian for a translational system with the unit cell given by lattice for a given k value
 
     Args:
@@ -24,20 +26,21 @@ def k_hamiltonian_generator(lattice:Lattice, coloring:np.ndarray, ujk: np.ndarra
         :type k: np.ndarray
         :return: Hamiltonian
         :rtype: np.ndarray
-        """ 
-        H = np.zeros((lattice.n_vertices,lattice.n_vertices), dtype = 'complex')
+        """
+        H = np.zeros((lattice.n_vertices, lattice.n_vertices), dtype='complex')
         cross = lattice.edges.crossing
-        phases = np.sum(cross*k, axis = -1)
-        hoppings = 0.5j*j_vals*ujk*np.exp(1j*phases)
-        H[lattice.edges.indices[:,1], lattice.edges.indices[:,0]] = hoppings
-        H[lattice.edges.indices[:,0], lattice.edges.indices[:,1]] = hoppings.conj()
+        phases = np.sum(cross * k, axis=-1)
+        hoppings = 0.5j * j_vals * ujk * np.exp(1j * phases)
+        H[lattice.edges.indices[:, 1], lattice.edges.indices[:, 0]] = hoppings
+        H[lattice.edges.indices[:, 0],
+          lattice.edges.indices[:, 1]] = hoppings.conj()
 
         return H
 
     return k_hamiltonian
 
 
-def analyse_hk(Hk, k_num: int, return_all_results = False) -> tuple:
+def analyse_hk(Hk, k_num: int, return_all_results=False) -> tuple:
     """Given a k-dependent Hamiltonian, this code samples over k-space to find the energy of the ground state and tells you the gap size
 
     Args:
@@ -51,21 +54,21 @@ def analyse_hk(Hk, k_num: int, return_all_results = False) -> tuple:
         tuple: the ground state energy per site, gap size
     """
 
-    k_values = np.arange(k_num)*2*np.pi/k_num
-    KX,KY = np.meshgrid(k_values,k_values)
+    k_values = np.arange(k_num) * 2 * np.pi / k_num
+    KX, KY = np.meshgrid(k_values, k_values)
     kx = KX.flatten()
     ky = KY.flatten()
-    k_list = np.array([[x,y] for x,y in zip(kx,ky)])
+    k_list = np.array([[x, y] for x, y in zip(kx, ky)])
     k_number = k_list.shape[0]
-    n_states = Hk(np.array([0,0])).shape[0]
-    energies = np.zeros((k_number,n_states//2))
+    n_states = Hk(np.array([0, 0])).shape[0]
+    energies = np.zeros((k_number, n_states // 2))
 
     for n, ks in enumerate(k_list):
         H = Hk(ks)
         e = la.eigvalsh(H)
-        energies[n]= e[:n_states//2]
+        energies[n] = e[:n_states // 2]
 
-    ground_state_per_site = 2*np.sum(energies)/(k_number*n_states)
+    ground_state_per_site = 2 * np.sum(energies) / (k_number * n_states)
     gap_size = np.min(np.abs(energies))
 
     if return_all_results:
@@ -76,7 +79,7 @@ def analyse_hk(Hk, k_num: int, return_all_results = False) -> tuple:
     return out
 
 
-def gap_over_phase_space(Hk, k_num: int, return_k_values = False) -> tuple:
+def gap_over_phase_space(Hk, k_num: int, return_k_values=False) -> tuple:
     """given a k-dependent hamiltonian, returns an array of the gap size over a k-lattice
 
     Args:
@@ -88,15 +91,17 @@ def gap_over_phase_space(Hk, k_num: int, return_k_values = False) -> tuple:
         np.ndarray
     """
 
-    k_values = np.arange(k_num)*2*np.pi/k_num
-    KX,KY = np.meshgrid(k_values,k_values)
-    k_vals = np.concatenate([KX[:,:,np.newaxis],KY[:,:,np.newaxis]],axis=2)
+    k_values = np.arange(k_num) * 2 * np.pi / k_num
+    KX, KY = np.meshgrid(k_values, k_values)
+    k_vals = np.concatenate([KX[:, :, np.newaxis], KY[:, :, np.newaxis]],
+                            axis=2)
 
     def find_gap(k):
         h = Hk(k)
         vals = la.eigvalsh(h)
         return np.min(np.abs(vals))
-    gaps = np.apply_along_axis(find_gap,2,k_vals)
+
+    gaps = np.apply_along_axis(find_gap, 2, k_vals)
     if return_k_values:
         return gaps, k_vals
     else:
