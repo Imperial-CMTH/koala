@@ -11,8 +11,7 @@ from .graph_utils import get_edge_vectors
 def normalised(a): return a / np.linalg.norm(a)
 
 def vertices_to_triangles(g, edge_labels, triangle_size = 0.05):
-    """
-    Map every vertex to a triangle.
+    """Map every vertex to a triangle.
     The original vertex labeled by i get mapped to vertices 3*i, 3*i + 1, 3*i + 2
     Where the mapping with those three is determined by the edge coloring which allows us to connect the right
     vertices of neighbouring triangles together.

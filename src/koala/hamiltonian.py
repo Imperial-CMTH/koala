@@ -6,15 +6,15 @@ def bisect_lattice(lattice: Lattice, solution: npt.NDArray[np.integer], along: i
   """Generate a new lattice with vertex indices permuted such that the first nvert/2 entries are in sublattice A
   and the rest are in sublattice B, according to the given coloring `solution`
 
-  :param l: Non-bisected lattice
-  :type l: Lattice
-  :param solution: Edge coloring of `l`
-  :type solution: npt.NDArray[np.integer] Shape (nedges,)
-  :param along: Bond type along which to dimerize the system
-  :type along: int
-  :return: Bisected lattice
-  :rtype: Lattice
-  """    
+  Args:
+      l (Lattice): Non-bisected lattice
+      solution (npt.NDArray[np.integer] Shape (nedges,)): Edge coloring
+          of `l`
+      along (int): Bond type along which to dimerize the system
+
+  Returns:
+      Lattice: Bisected lattice
+  """
   # Label each vertex in lattice g as belonging to A or B sublattice, according to the coloring
   # given by solution. By default, the first entry in solution will define the flavor of bond along
   # which the lattice is 'dimerized' to form the sublattices.
@@ -37,17 +37,19 @@ def majorana_hamiltonian(lattice: Lattice, coloring: npt.NDArray, ujk: npt.NDArr
   to the vertex indices in the Lattice object. This is the quadratic Majorana Hamiltonian of eqn (13)
   in Kitaev's paper.
 
-  :param l: Lattice to construct Hamiltonian on, from which nearest bond-sharing vertices are determined
-  :type l: Lattice
-  :param coloring: Edge coloring of `l`
-  :type coloring: npt.NDArray[np.integer] Shape (lattice.n_edges,)
-  :param J: Coupling parameter for Kitaev model, defaults to 1.0
-  :type J: npt.NDArray[np.floating] or float
-  :param ujk: Link variables, with value +1 or -1
+  Args:
+      l (Lattice): Lattice to construct Hamiltonian on, from which
+          nearest bond-sharing vertices are determined
+      coloring (npt.NDArray[np.integer] Shape (lattice.n_edges,)): Edge
+          coloring of `l`
+      J (npt.NDArray[np.floating] or float): Coupling parameter for
+          Kitaev model, defaults to 1.0
+      ujk: Link variables, with value +1 or -1
 
-  :return: Quadratic Majorana Hamiltonian matrix representation in Majorana basis
-  :rtype: npt.NDArray
-  """  
+  Returns:
+      npt.NDArray: Quadratic Majorana Hamiltonian matrix representation
+      in Majorana basis
+  """
   ham = np.zeros((lattice.n_vertices, lattice.n_vertices))
   Js = J[coloring] if coloring is not None else J[0]
   hoppings = 2*Js*ujk
@@ -64,11 +66,14 @@ def majorana_to_fermion_ham(majorana_ham: npt.NDArray[np.complexfloating]) -> np
   will be dictated by the sublattice layout of the Majoranas. Elements of the A(B) sublattice
   correspond to the first(second) half of the Majorana indices.
 
-  :param majorana_ham: (nvert,nvert) matrix representation of Hamiltonian in Majorana basis
-  :type majorana_ham: npt.NDArray[np.complexfloating]
-  :return: (nvert,nvert) matrix representation of Hamiltonian in Fermion basis
-  :rtype: npt.NDArray[np.complexfloating]
-  """  
+  Args:
+      majorana_ham (npt.NDArray[np.complexfloating]): (nvert,nvert)
+          matrix representation of Hamiltonian in Majorana basis
+
+  Returns:
+      npt.NDArray[np.complexfloating]: (nvert,nvert) matrix
+      representation of Hamiltonian in Fermion basis
+  """
   sublat_size = majorana_ham.shape[0] // 2
   F = -1.0j*majorana_ham[:sublat_size, :sublat_size]
   D = -1*-1.0j*majorana_ham[sublat_size:, sublat_size:]

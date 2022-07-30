@@ -58,7 +58,7 @@ which means vertex 0 is red, vertex 1 is green etc
 
 def vertex_color(adjacency: np.ndarray, n_colors:int = 4, all_solutions = False):
     """Return a coloring of the vertices using n_colors.
-    Note the code assumes that all vertices actually appear in the adjacency list 
+    Note the code assumes that all vertices actually appear in the adjacency list
     because it calculates n_vertices = np.max(adjacency) + 1
 
     Args:
@@ -183,9 +183,9 @@ def color_lattice(lattice: Lattice):
     """Return an asignment of one of 3 labels to each lattice edge such that mp edges with the same label meet at a vertex.
     If such a coloring cannot be found raises a ValueError.
 
-    :param Lattice: The lattice to color.
-    :type Lattice: lattice
-    """    
+    Args:
+        Lattice (lattice): The lattice to color.
+    """
     #fix the coloring to be clockwise about vertex 0
     fixed = enumerate(clockwise_edges_about(vertex_index = 0, g=lattice))
     solveable, solution = edge_color(lattice, n_colors = 3, fixed = fixed)

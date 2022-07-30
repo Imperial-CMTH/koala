@@ -32,16 +32,17 @@ def plot_vertices(
     You can use this to, for instance, plot some of the vertices as
      triangles and some as squares.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        ax: The axis to plot on, defaults to plt.gca()
     """
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
         lattice, ax, labels, color_scheme, subset, lattice.n_vertices, kwargs
@@ -68,26 +69,26 @@ def plot_edges(
     arrow_head_length=None,
     **kwargs,
 ):
-    """
-    Plot the edges of a lattice with optional arrows.
+    """Plot the edges of a lattice with optional arrows.
     This uses matplotlib.collections.LineColection under the hood and you may
     pass in any keyword to be passed along to it.
     Note that arrays for alpha or linestyle don't currently work since they would have to be tiled correctly, and are not currently.
 
     If directions is not none, arrows are plotted from the first vertex to the second unless direction[i] == -1
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param directions: An array of arrow directions +/-1, defaults to None.
-    :type directions: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        directions (np.ndarray, optional): An array of arrow directions
+            +/-1, defaults to None.
+        ax: The axis to plot on, defaults to plt.gca()
     """
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
         lattice, ax, labels, color_scheme, subset, lattice.n_edges, kwargs
@@ -144,23 +145,23 @@ def plot_plaquettes(
     ax=None,
     **kwargs,
 ):
-    """
-    Plot the plaquettes of a lattice.
+    """Plot the plaquettes of a lattice.
     This uses matplotlib.collections.PolyColection under the hood and you may
     pass in any keyword to be passed along to it.
     Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
     Adding a color argument overides the color_scheme and labels.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        ax: The axis to plot on, defaults to plt.gca()
     """
 
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
@@ -210,15 +211,15 @@ def plot_plaquettes(
 def plot_dual(lattice, subset=slice(None, None), **kwargs):
     """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param subset: a subset of edges to plot, defaults to all.
-    :type subset: slice, boolean array or indices, optional
-    :param ax: the ax to plot to, defaults to None
-    :type ax: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        subset (slice, boolean array or indices, optional): a subset of
+            edges to plot, defaults to all.
+        ax (axis, optional): the ax to plot to, defaults to None
 
-    :return: The dual lattice represented as a second Lattice object.
-    :rtype: Lattice
+    Returns:
+        Lattice: The dual lattice represented as a second Lattice
+        object.
     """
     st_as_lattice = graph_utils.make_dual(lattice, subset)
     plot_edges(st_as_lattice, **kwargs)
@@ -298,8 +299,7 @@ def _scale_nicely(lattice, ax):
 
 
 def _process_plot_args(lattice, ax, labels, color_scheme, subset, N, kwargs):
-    """
-    Deals with housekeeping operations common to all plotting functions.
+    """Deals with housekeeping operations common to all plotting functions.
     Specifically:
         Broadcast single values to be the size of the lattice.
         Allow labels to refer to either the whole lattice or the subset.
@@ -333,9 +333,7 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N, kwargs):
 
 
 def plot_vertex_indices(lattice, ax=None, offset=0.01, **kwargs):
-    """
-    Plot the indices of the vertices on a graph
-    """
+    """Plot the indices of the vertices on a graph"""
     if ax is None:
         ax = plt.gca()
     for i, v in enumerate(lattice.vertices.positions):
@@ -344,9 +342,7 @@ def plot_vertex_indices(lattice, ax=None, offset=0.01, **kwargs):
 
 # TODO: Make this work with edges that cross the boundaries
 def plot_edge_indices(lattice, ax=None, offset=0.01):
-    """
-    Plot the indices of the edges on a graph
-    """
+    """Plot the indices of the edges on a graph"""
     if ax is None:
         ax = plt.gca()
     for i, e in enumerate(lattice.edges.indices):
@@ -356,9 +352,7 @@ def plot_edge_indices(lattice, ax=None, offset=0.01):
 
 
 def plot_plaquette_indices(lattice, ax=None, **kwargs):
-    """
-    Plot the indices of the vertices on a graph
-    """
+    """Plot the indices of the vertices on a graph"""
     if ax is None:
         ax = plt.gca()
     for i, p in enumerate(lattice.plaquettes):
@@ -375,7 +369,8 @@ import warnings
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    when the function is used.
+    """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -431,10 +426,14 @@ def _lines_cross_unit_cell(lines: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: out[i] == 1 if line[i] is fully inside the unit cell
 
-    :param lines: : Represents lines by pairs of points
-    :type lines: np.ndarray shape (n_lines, 2, 2)
-    :return: cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell
-    :rtype: np.ndarray shape (n_lines,)
+    Args:
+        lines (np.ndarray shape (n_lines, 2, 2)): : Represents lines by
+            pairs of points
+
+    Returns:
+        np.ndarray shape (n_lines,): cross[i] is true is the
+        corresponding line crossed any of the 4 boundaries of the unit
+        cell
     """
     start, end = (
         lines[:, 0, None, :],
@@ -652,8 +651,7 @@ def plot_scalar(
 
 
 def plot_degeneracy_breaking(vertex_i, g, ax=None):
-    """
-    Companion function to graph_utils.clockwise_edges_about,
+    """Companion function to graph_utils.clockwise_edges_about,
     plots the edges on an axis with labelled angles and the positive x axis as a dotted line
     """
     if ax is None:
@@ -693,17 +691,20 @@ def plot_degeneracy_breaking(vertex_i, g, ax=None):
 
 
 def _lines_cross_any_cell_boundary(lines: np.ndarray) -> np.ndarray:
-    """
-    Used in plot_plaquettes to determine which plaquettes need to be plotted multiple times.
+    """Used in plot_plaquettes to determine which plaquettes need to be plotted multiple times.
     Similar to the above, but tells you if the line cross y=0,1 and x=0,1 at any point rather than just the unit cell.
 
-    :param lines: : Represents lines by pairs of points
-    :type lines: np.ndarray shape (n_lines, 2, 2)
-    :param which: If True output information about which lines were crossed, defaults to False
-    :type which: bool, optional
-    :return: If which is false, cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell,
+    Args:
+        lines (np.ndarray shape (n_lines, 2, 2)): : Represents lines by
+            pairs of points
+        which (bool, optional): If True output information about which
+            lines were crossed, defaults to False
+
+    Returns:
+        np.ndarray shape (n_lines,) or (n_lines, 2, 2) if which is True:
+        If which is false, cross[i] is true is the corresponding line
+        crossed any of the 4 boundaries of the unit cell,
     if which is true, cross[i] = ((x=0, y=0), (x=1, y=1)) where each entry if true if line[i] crossed the corresponding boundary.
-    :rtype: np.ndarray shape (n_lines,) or (n_lines, 2, 2) if which is True
     """
     start, end = (
         lines[:, 0, None, :],
@@ -732,20 +733,21 @@ def cross_product_2d(a, b):
 
 
 def line_intersection(lines, lines2, abs_tolerance=1e-14, full_output=False):
-    """
-    Generic Line to line intersection function
+    """Generic Line to line intersection function
 
-    :param lines: The first set of lines, with shape [n_lines, 2, 2] where lines[i, 0, :] is the first point of the ith line
-    :type line: np.ndarray
+    Args:
+        lines: The first set of lines, with shape [n_lines, 2, 2] where
+            lines[i, 0, :] is the first point of the ith line
+        line (np.ndarray)
+        lines2: The second set of lines to intersect with. Shape
+            [n_lines2, 2, 2]
+        line2 (np.ndarray)
+        abs_tolerance (float): The absolute floating point tolerance to
+            use for the parallel and colinear special cases.
 
-    :param lines2: The second set of lines to intersect with. Shape [n_lines2, 2, 2]
-    :type line2: np.ndarray
-
-    :param abs_tolerance: The absolute floating point tolerance to use for the parallel and colinear special cases.
-    :type abs_tolerance: float
-
-    :return: intersection, boolean array shape [n_lines, n_lines2]
-    :rtype: np.ndarray
+    Returns:
+        np.ndarray: intersection, boolean array shape [n_lines,
+        n_lines2]
     """
 
     s1 = lines[:, 0, :][:, None]

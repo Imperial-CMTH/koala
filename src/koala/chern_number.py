@@ -5,14 +5,17 @@ import scipy.linalg as la
 def crosshair_marker(lattice: Lattice, projector: np.ndarray, crosshair_position: np.ndarray):
     """Generate the crosshair marker for a lattice and Hamiltonian
 
-    :param lattice: the lattice on which the Hamiltonian is placed 
-    :type lattice: Lattice
-    :param projector: A projectro onto a set of occupied states
-    :type projector: np.ndarray
-    :param crosshair_position: the position of the crosshair in the bulk
-    :type crosshair_position: np.ndarray
-    :return: an array giving the marker value at every point in the system
-    :rtype: np.ndarray
+    Args:
+        lattice (Lattice): the lattice on which the Hamiltonian is
+            placed
+        projector (np.ndarray): A projectro onto a set of occupied
+            states
+        crosshair_position (np.ndarray): the position of the crosshair
+            in the bulk
+
+    Returns:
+        np.ndarray: an array giving the marker value at every point in
+        the system
     """
 
 
@@ -28,12 +31,13 @@ def crosshair_marker(lattice: Lattice, projector: np.ndarray, crosshair_position
 def chern_marker(lattice: Lattice, projector: np.ndarray):
     """generate the Chern marker for the system
 
-    :param lattice: the lattice 
-    :type lattice: Lattice
-    :param projector: a projector onto a set of occupied states
-    :type projector: np.ndarray
-    :return: the Chern marker value for each point in the system
-    :rtype: np.ndarray
+    Args:
+        lattice (Lattice): the lattice
+        projector (np.ndarray): a projector onto a set of occupied
+            states
+
+    Returns:
+        np.ndarray: the Chern marker value for each point in the system
     """
 
     positions = lattice.vertices.positions

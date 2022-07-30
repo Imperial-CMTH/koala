@@ -7,7 +7,8 @@ import warnings
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    when the function is used.
+    """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -21,8 +22,7 @@ def deprecated(func):
     return new_func
 
 def fluxes_from_ujk(lattice: Lattice, ujk: np.ndarray, real = True) -> np.ndarray:
-    """
-    Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
+    """Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
     The fluxes are defined on each plaquette as the the product of each bond in the direction,
     with the sign fliped otherwise.
 
@@ -89,14 +89,15 @@ def ujk_from_fluxes(lattice: Lattice, target_flux_sector : np.ndarray = None,
 def n_to_ujk_flipped(n: int, ujk: np.ndarray, min_spanning_set: np.ndarray):
     """given an integer n in the 0 - 2^(number of edges in spanning tree), this code flips the edges of ujk in the spanning tree in the combination given by the binary representation of n. Useful for exhaustively searching over the entire flux space of a lattice.
 
-    :param n: number determining the flip configuration
-    :type n: int
-    :param ujk: the edge signs of the whole lattice
-    :type ujk: np.ndarray( ±1 )
-    :param min_spanning_set: an array containing a minimum set of edges that form a plaquete-spanning tree on the system 
-    :type min_spanning_set: np.ndarray( int )
-    :return: a flipped set of ujk
-    :rtype: np.ndarray( ±1 )
+    Args:
+        n (int): number determining the flip configuration
+        ujk (np.ndarray( ±1 )): the edge signs of the whole lattice
+        min_spanning_set (np.ndarray( int )): an array containing a
+            minimum set of edges that form a plaquete-spanning tree on
+            the system
+
+    Returns:
+        np.ndarray( ±1 ): a flipped set of ujk
     """
     n_in_tree =  len(min_spanning_set)
     str_format = '0' + str(n_in_tree) + 'b'
@@ -110,11 +111,12 @@ def n_to_ujk_flipped(n: int, ujk: np.ndarray, min_spanning_set: np.ndarray):
 def fluxes_to_labels(fluxes: np.ndarray) -> np.ndarray:
     """Remaps fluxes from the set {1,-1} to labels in the form {0,1} for plotting.
 
-    :param fluxes: Fluxes in the format +1 or -1
-    :type fluxes: np.ndarray
-    :return: labels in [0,1]
-    :rtype: np.ndarray
-    """    
+    Args:
+        fluxes (np.ndarray): Fluxes in the format +1 or -1
+
+    Returns:
+        np.ndarray: labels in [0,1]
+    """
     return ((1 - fluxes)//2).astype(np.int8)
 
 def _random_bonds(l : Lattice) -> np.ndarray:
@@ -135,8 +137,7 @@ def _greedy_plaquette_pairing(plaquettes, distance_func):
     return np.array(pairs)
     
 def _flip_adjacent_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
-    """
-    See docs for find_flux_sector, this helper method implements step 2) 
+    """See docs for find_flux_sector, this helper method implements step 2)
     which is that it looks for adjacent -1 fluxes and flips their edges
     """
     for edge_index, (p_a, p_b) in enumerate(l.edges.adjacent_plaquettes):
@@ -156,9 +157,7 @@ def _flip_adjacent_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
     return bonds, fluxes
 
 def _flip_isolated_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
-    """
-    See docs for find_flux_sector, this helper method implements step 3-5)
-    """
+    """See docs for find_flux_sector, this helper method implements step 3-5)"""
     indices_to_flip = np.where(fluxes == -1)[0]
     
     def pos(p): return l.plaquettes[p].center
@@ -182,8 +181,7 @@ def _flip_isolated_fluxes(l : Lattice, bonds : np.ndarray, fluxes : np.ndarray):
 
 @deprecated
 def fluxes_from_bonds(lattice: Lattice, ujk: np.ndarray, real = True) -> np.ndarray:
-    """
-    Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
+    """Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.
     The fluxes are defined on each plaquette as the the product of each bond in the direction,
     with the sign fliped otherwise.
 
@@ -217,16 +215,15 @@ def fluxes_from_bonds(lattice: Lattice, ujk: np.ndarray, real = True) -> np.ndar
 def find_flux_sector(lattice: Lattice, target_flux_sector : np.ndarray = None, 
                      initial_bond_guess : np.ndarray = None,
                     ):
-    """
-    Find a bond configuration that produces the given flux sector for the lattice l.
-    
+    """Find a bond configuration that produces the given flux sector for the lattice l.
+
     The high level method is:
         1) Figure out which fluxes need to flip using fluxes_to_flip = target_flux_sector / initial_flux_sector
         2) Look for any adjacent -1 fluxes in fluxes_to_flip that can be anhilated by just flipping 1 edge.
         3) Pair the remaining fluxes off into close-ish pairs
         4) Use A* to find a path between each pair.
         5) Flip all the edges along each path.
-    
+
     Where:
     A bond configuration is an assignment of +/-1 to each bond.
     A flux sector is an assignment of +/-1 to even plaquette and +/-i to odd plaquettes.
