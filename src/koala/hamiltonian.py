@@ -42,7 +42,7 @@ def majorana_hamiltonian(
     ujk: npt.NDArray,
     J: npt.NDArray[np.floating] = np.array([1.0, 1.0, 1.0])
 ) -> npt.NDArray[np.complexfloating]:
-    """Assign couplings ($A_{jk} \in \pm 2J$) to each bond in lattice `l` and construct the matrix. Indices refer
+    """Assign couplings ($A_{jk} in pm 2J$) to each bond in lattice `l` and construct the matrix. Indices refer
   to the vertex indices in the Lattice object. This is the quadratic Majorana Hamiltonian of eqn (13)
   in Kitaev's paper.
 

@@ -277,7 +277,7 @@ def _sorted_vertex_adjacent_edges(vertex_positions, edge_indices, edge_vectors):
 
         # is the chosen index is first or second in the list
         v_parities = []
-        for i, edge in enumerate(v_edges):
+        for edge in v_edges:
             par = 1 if (edge_indices[edge][0] == index) else -1
             v_parities.append(par)
         v_parities = np.array(v_parities)
@@ -350,7 +350,7 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
         if cond:
             # print(current_edge, current_direction, edge_dir_bundle)
             raise LatticeException(
-                'plaquette finder is getting stuck. This usually happens if the lattice has self edges or other unexpected properties'
+                "plaquette finder is getting stuck. This usually happens if the lattice has self edges or other unexpected properties"
             )
 
         plaquette_edges.append(current_edge)
@@ -391,7 +391,7 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     angs = np.arctan2(plaquette_vectors[:, 0], plaquette_vectors[:, 1])
     rel_angs = angs - np.roll(angs, 1)
     ang = np.sum((rel_angs + np.pi) % (2 * np.pi) - np.pi)
-    w_number = np.round(ang / (2 * np.pi)).astype('int')
+    w_number = np.round(ang / (2 * np.pi)).astype("int")
 
     if w_number != -1:
         valid_plaquette = False
@@ -476,7 +476,7 @@ def permute_vertices(lattice: Lattice,
 
 
 def cut_boundaries(lattice: Lattice,
-                   boundary_to_cut: list = [True, True]) -> Lattice:
+                   boundary_to_cut: list = (True, True)) -> Lattice:
     """Removes the x and/or y boundary edges of the lattice.
 
     Args:

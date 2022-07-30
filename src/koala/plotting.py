@@ -14,6 +14,8 @@ from . import graph_utils
 from .graph_utils import clockwise_edges_about, vertex_neighbours
 from .lattice import LatticeException
 from .voronization import Lattice, generate_point_array
+import functools
+import warnings
 
 #### New plotting interface ####
 
@@ -366,8 +368,6 @@ def plot_plaquette_indices(lattice, ax=None, **kwargs):
 ################################ Old plotting interface + internal stuff ################################
 #########################################################################################################
 
-import functools
-import warnings
 
 
 def deprecated(func):
@@ -465,9 +465,9 @@ def plot_lattice(
     lattice,
     ax=None,
     edge_labels=None,
-    edge_color_scheme=["r", "g", "b", "k"],
+    edge_color_scheme=("r", "g", "b", "k"),
     vertex_labels=None,
-    vertex_color_scheme=["r", "b", "k"],
+    vertex_color_scheme=("r", "b", "k"),
     edge_arrows=False,
     edge_index_labels=False,
     bond_signs=None,
@@ -715,7 +715,7 @@ def _lines_cross_any_cell_boundary(lines: np.ndarray) -> np.ndarray:
 
     t[~np.isfinite(t)] = 0.5 * (l == end)[~np.isfinite(t)]
 
-    other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
+    # other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
     cross = (0 < t) & (t <= 1)
     return cross
 

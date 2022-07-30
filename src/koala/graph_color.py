@@ -4,7 +4,8 @@
 ############################################################################
 #TODO:
 # add the code to fix a specic node to have a specific color
-# - refactor so that the two functions share the same main code, this can be done by reformulating the edge coloring in terms of an adjacency matrix of edges.
+# - refactor so that the two functions share the same main code, this can be done by
+# reformulating the edge coloring in terms of an adjacency matrix of edges.
 # - make sure that clauses for edges i,j are not being added twice as i,j and j,i
 # - test the code that breaks the permutation degeneracy
 
@@ -14,45 +15,44 @@ from pysat.card import *
 import itertools as it
 from .graph_utils import edge_neighbours
 from .lattice import Lattice
-""""
-Both routines in this file encode their problems in Conjunctive Normal Form (CNF) and then pass them to
-a SAT solver through pysat (called python-sat in pip).
+# """
+# Both routines in this file encode their problems in Conjunctive Normal Form (CNF) and then pass them to
+# a SAT solver through pysat (called python-sat in pip).
 
+# ## Encoding
+# Conjunctive normal form just means we have a bunch of clauses (i, j, ... k) where each integer represents
+# a boolean variable and they're all OR'd together. The clauses are then and together to make a boolean formula:
+# f(x_1, x_2, x_3... x_N) = (x_2 OR x_5) AND (-x_1) AND ... AND (x_5 OR -x_4 OR -x_3 OR -x_2 OR -x_1)
 
-## Encoding
-Conjunctive normal form just means we have a bunch of clauses (i, j, ... k) where each integer represents 
-a boolean variable and they're all OR'd together. The clauses are then and together to make a boolean formula:
-f(x_1, x_2, x_3... x_N) = (x_2 OR x_5) AND (-x_1) AND ... AND (x_5 OR -x_4 OR -x_3 OR -x_2 OR -x_1)
+# -x_i means NOT(x_i)
+# Encoded in python F would just be [(2, 5), (-1), (5, -4, -3, -2, -1)]
 
--x_i means NOT(x_i)
-Encoded in python F would just be [(2, 5), (-1), (5, -4, -3, -2, -1)]
+# The SAT solver tries to find a solution that assigs a True/False value to each x_i such that f(...) = True
 
-The SAT solver tries to find a solution that assigs a True/False value to each x_i such that f(...) = True
+# For both graph and edge coloring we define l_ij == True if vertex/edge i has color j and False otherwise.
+# This means we need to use n_colors * n_vertices + 1 integers (0 is not allowed because -0 = 0)
 
-For both graph and edge coloring we define l_ij == True if vertex/edge i has color j and False otherwise.
-This means we need to use n_colors * n_vertices + 1 integers (0 is not allowed because -0 = 0)
+# We then encode two kinds of constraints:
 
-We then encode two kinds of constraints:
+# ### At most one of the colors can be assigned to a vertex
+# `cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)``
+# where lits = [l_i1, l_i2, l_i3, ... l_i,n_colors], bound = 1 means exactly 1 of them must be true,
+# vpool is an object to make sure we don't reuse the same variable, and encoding chooses on of multiople ways to envode this constraint in CNF
 
-### At most one of the colors can be assigned to a vertex
-`cnf = CardEnc.equals(lits=lits, bound = 1, vpool = vpool, encoding=EncType.pairwise)``
-where lits = [l_i1, l_i2, l_i3, ... l_i,n_colors], bound = 1 means exactly 1 of them must be true, 
-vpool is an object to make sure we don't reuse the same variable, and encoding chooses on of multiople ways to envode this constraint in CNF
+# For instance for three colors [r,g,b], encoding=EncType.pairwise would spits out
+# r OR g OR b #ensures one of more is true
+# (-r OR -b) AND (-r OR -g) AND (-b OR -g) #ensures no pair is simultanenously true.
 
-For instance for three colors [r,g,b], encoding=EncType.pairwise would spits out
-r OR g OR b #ensures one of more is true
-(-r OR -b) AND (-r OR -g) AND (-b OR -g) #ensures no pair is simultanenously true. 
+# ### No two adjacent vertices can have the same color
+# For this one we want that for all edges that connect i,j:
+# NOT(l_i1 AND l_i1) AND NOT(l_i2 AND l_i2) AND NOT(l_i3 AND l_i3)
 
-### No two adjacent vertices can have the same color
-For this one we want that for all edges that connect i,j:
-NOT(l_i1 AND l_i1) AND NOT(l_i2 AND l_i2) AND NOT(l_i3 AND l_i3) 
+# We use NOT(l_i1 AND l_i1) = (-l_i1 OR -l_i1) to encode this in CNF.
 
-We use NOT(l_i1 AND l_i1) = (-l_i1 OR -l_i1) to encode this in CNF.
+# At the end we get back a solutions that looks like [1, -2, -3, -4, 5, 6...]
+# which means vertex 0 is red, vertex 1 is green etc
 
-At the end we get back a solutions that looks like [1, -2, -3, -4, 5, 6...]
-which means vertex 0 is red, vertex 1 is green etc
-
-"""
+# """
 
 
 def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):

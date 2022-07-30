@@ -1,7 +1,5 @@
 import itertools as it
 import numpy as np
-import scipy
-import scipy.interpolate
 
 from .graph_utils import vertex_neighbours, clockwise_about
 from .voronization import Lattice

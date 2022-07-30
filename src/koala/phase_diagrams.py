@@ -3,28 +3,28 @@ import matplotlib.tri as mtri
 from matplotlib.collections import LineCollection
 from time import time
 from mpire import WorkerPool
-"""
-symmetric = True
 
-if symmetric: sampling_points, triangulation = get_triangular_sampling_points(samples = 20)
-else: sampling_points, triangulation = get_non_symmetric_triangular_sampling_points(samples = 20)
+# symmetric = True
 
-lattice, coloring = eg.honeycomb_lattice(15, True)
-ujk = np.ones(lattice.n_edges)
+# if symmetric: sampling_points, triangulation = get_triangular_sampling_points(samples = 20)
+# else: sampling_points, triangulation = get_non_symmetric_triangular_sampling_points(samples = 20)
 
-def function(Js): return some data
+# lattice, coloring = eg.honeycomb_lattice(15, True)
+# ujk = np.ones(lattice.n_edges)
 
-extra_args = dict(lattice = lattice,
-                  coloring = coloring,
-                  ujk = ujk,
-                  e_threshold = 0.1,
-                  e_range = 0.5)
+# def function(Js): return some data
 
-number_in_range, gaps = compute_phase_diagram(sampling_points, function, extra_args, n_jobs = 10)
+# extra_args = dict(lattice = lattice,
+#                   coloring = coloring,
+#                   ujk = ujk,
+#                   e_threshold = 0.1,
+#                   e_range = 0.5)
 
-if symmetric: plot_phase_diagram_symmetric(lattice, ujk, triangulation, number_in_range, gaps)
-else: plot_phase_diagram(lattice, ujk, triangulation, number_in_range, gaps)
-"""
+# number_in_range, gaps = compute_phase_diagram(sampling_points, function, extra_args, n_jobs = 10)
+
+# if symmetric: plot_phase_diagram_symmetric(lattice, ujk, triangulation, number_in_range, gaps)
+# else: plot_phase_diagram(lattice, ujk, triangulation, number_in_range, gaps)
+
 
 
 def get_non_symmetric_triangular_sampling_points(samples=10):
@@ -32,7 +32,7 @@ def get_non_symmetric_triangular_sampling_points(samples=10):
     sampling_points, triangulation = pd.get_non_symmetric_triangular_sampling_points(samples = 20)
     data = f(sampling_points)
 
-    ax.triplot(triangulation, 'ko-', markersize = 1) #to plots the points where samples were taken
+    ax.triplot(triangulation, "ko-", markersize = 1) #to plots the points where samples were taken
     ax.tricontourf(triangulation, data) #to plot the data
     """
     # Create triangulation.
@@ -54,7 +54,7 @@ def get_non_symmetric_triangular_sampling_points(samples=10):
     theta = np.pi / 3
     T = np.array([[1, np.cos(theta)], [0, np.sin(theta)]])
 
-    tpoints = np.einsum('ij,kj -> ki', T, points)
+    tpoints = np.einsum("ij,kj -> ki", T, points)
     triangulation = mtri.Triangulation(*tpoints.T)
 
     return triple_points, triangulation
@@ -85,7 +85,7 @@ def get_triangular_sampling_points(samples=10):
     def rotation(t):
         return np.array([[np.cos(t), -np.sin(t)], [np.sin(t), np.cos(t)]])
 
-    reflection = np.array([[0, 1], [1, 0]])
+    # reflection = np.array([[0, 1], [1, 0]])
     centerp = np.array([0.5, np.tan(np.pi / 6) / 2])
     skew = np.array([[1, np.cos(np.pi / 3)], [0, np.sin(np.pi / 3)]])
 
@@ -96,12 +96,12 @@ def get_triangular_sampling_points(samples=10):
             lpoints = points[:, ::-1].copy() if reflect else points.copy()
 
             # Transform the right triangle into an equilateral one for plotting
-            lpoints = np.einsum('ij,kj -> ki', skew, lpoints)
+            lpoints = np.einsum("ij,kj -> ki", skew, lpoints)
 
             # Rotate about the center point
             lpoints -= centerp
             t = -2 * np.pi / 3 * i
-            lpoints = np.einsum('ij,kj -> ki', rotation(t), lpoints)
+            lpoints = np.einsum("ij,kj -> ki", rotation(t), lpoints)
             lpoints += centerp
 
             #save this triangulation
@@ -115,7 +115,7 @@ def plot_tri(ax, data, triangulations):
 
     for t in triangulations:
         ax.tricontourf(t, data, vmin=vmin, vmax=vmax)
-        # ax.triplot(t, 'ko-', markersize = 1)
+        # ax.triplot(t, "ko-", markersize = 1)
 
 
 def plot_triangle(ax, inner=True):
@@ -130,8 +130,8 @@ def plot_triangle(ax, inner=True):
 
     if inner:
         ax.add_collection(
-            LineCollection(sub_triangle_lines, color='k', linestyle='dotted'))
-    ax.add_collection(LineCollection(lines, color='k'))
+            LineCollection(sub_triangle_lines, color="k", linestyle="dotted"))
+    ax.add_collection(LineCollection(lines, color="k"))
 
 
 def compute_phase_diagram(sampling_points, function, extra_args, n_jobs=1):
@@ -147,6 +147,6 @@ def compute_phase_diagram(sampling_points, function, extra_args, n_jobs=1):
         data = pool.map(computation, sampling_points, progress_bar=True).T
 
     dt = time() - t0
-    print(f'That tooks {dt:.2f} seconds')
+    print(f"That tooks {dt:.2f} seconds")
 
     return data

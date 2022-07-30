@@ -1,8 +1,6 @@
 import numpy as np
-
 from koala.graph_utils import rotate
 from koala.lattice import Lattice, cut_boundaries
-from koala.voronization import generate_lattice
 from koala import flux_finder, graph_color, voronization
 
 
@@ -428,11 +426,10 @@ def tri_non_lattice(n_cells, return_coloring=False):
     unit_edges = np.array([[0, 1], [1, 2], [2, 0], [3, 2], [3, 0], [1, 3]])
 
     unit_crossing = np.array([[0, 0], [0, 0], [0, 0], [0, 0], [0, 1], [-1, 0]])
-    lattice = tile_unit_cell(unit_points, unit_edges, unit_crossing, [1.3, 1],
-                             n_cells)
+    lattice = tile_unit_cell(unit_points, unit_edges, unit_crossing, n_cells)
 
     try:
-        iterator = iter(n_cells)
+        _ = iter(n_cells)
     except TypeError:
         nx = n_cells
         ny = n_cells
@@ -493,7 +490,6 @@ def tile_unit_cell(
     unit_points: np.ndarray,
     unit_edges: np.ndarray,
     unit_crossing: np.ndarray,
-    unit_cell_dimensions: np.ndarray,
     n_xy,
 ) -> Lattice:
     """given a description of a unit cell, this tiles it to make a full lattice
@@ -503,7 +499,6 @@ def tile_unit_cell(
         unit_edges (np.ndarray): indices of edges in unit cell
         unit_crossing (np.ndarray): whether the edges cross to the next
             unit cell in x and y direction
-        unit_cell_dimensions (np.ndarray): size of unit cell
         n_xy (int or list): number of tilings you want. if this is
             iterable then assume it has the form [nx, ny]. If an int
             then we assume we want [n,n]
@@ -513,7 +508,7 @@ def tile_unit_cell(
     """
 
     try:
-        iterator = iter(n_xy)
+        iter(n_xy)
     except TypeError:
         nx = n_xy
         ny = n_xy
@@ -540,7 +535,7 @@ def tile_unit_cell(
     all_edges = np.zeros((n_cells * n_internal_edges, 2), dtype="int")
     all_crossings = np.zeros((n_cells * n_internal_edges, 2), dtype="int")
 
-    for n_position, xy_pos in enumerate(zip(x_shifts, y_shifts)):
+    for n_position, _ in enumerate(zip(x_shifts, y_shifts)):
         for n_edge, ec in enumerate(zip(unit_edges, unit_crossing)):
             edge, crossing = ec
             n_index = n_position * n_internal_edges + n_edge
@@ -599,7 +594,7 @@ def ground_state_ansatz(n):
 
 
 def make_amorphous(
-    L,
+    length: int,
     return_points=False,
     open_boundary_conditions=False,
     rng=None,
@@ -617,7 +612,7 @@ def make_amorphous(
     """
     if rng is None:
         rng = np.random.default_rng()
-    points = rng.uniform(size=(L**2, 2))
+    points = rng.uniform(size=(length**2, 2))
     lattice = voronization.generate_lattice(points,
                                             shift_vertices=shift_vertices)
     if open_boundary_conditions:

@@ -53,8 +53,6 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
             if INVALID in edge_plaq:
                 continue
 
-            lattice.plaquettes[edge_plaq[0]].center
-
             outisde_plaquette_present = [
                 x not in plaquettes_in for x in edge_plaq
             ]

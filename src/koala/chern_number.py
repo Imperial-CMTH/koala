@@ -1,6 +1,5 @@
 from koala.lattice import Lattice
 import numpy as np
-import scipy.linalg as la
 
 
 def crosshair_marker(lattice: Lattice, projector: np.ndarray,
@@ -24,10 +23,10 @@ def crosshair_marker(lattice: Lattice, projector: np.ndarray,
     theta_x_vec = np.diag(1 * (positions[:, 0] < crosshair_position[0]))
     theta_y_vec = np.diag(1 * (positions[:, 1] < crosshair_position[1]))
 
-    crosshair_marker = 4 * np.pi * np.diag(
+    c_marker = 4 * np.pi * np.diag(
         projector @ theta_x_vec @ projector @ theta_y_vec @ projector).imag
 
-    return crosshair_marker
+    return c_marker
 
 
 def chern_marker(lattice: Lattice, projector: np.ndarray):
@@ -46,7 +45,7 @@ def chern_marker(lattice: Lattice, projector: np.ndarray):
     X = np.diag(positions[:, 0])
     Y = np.diag(positions[:, 1])
 
-    chern_marker = 4 * np.pi * np.diag(
+    c_marker = 4 * np.pi * np.diag(
         projector @ X @ projector @ Y @ projector).imag
 
-    return chern_marker
+    return c_marker

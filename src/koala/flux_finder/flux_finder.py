@@ -1,6 +1,6 @@
 import numpy as np
 from ..lattice import INVALID, Lattice
-from .pathfinding import straight_line_length, periodic_straight_line_length, path_between_plaquettes
+from .pathfinding import straight_line_length, path_between_plaquettes
 import functools
 import warnings
 
@@ -47,11 +47,9 @@ def fluxes_from_ujk(lattice: Lattice, ujk: np.ndarray, real=True) -> np.ndarray:
     return fluxes
 
 
-def ujk_from_fluxes(
-    lattice: Lattice,
-    target_flux_sector: np.ndarray = None,
-    initial_ujk_guess: np.ndarray = None,
-):
+def ujk_from_fluxes(lattice: Lattice,
+                    target_flux_sector: np.ndarray = None,
+                    initial_ujk_guess: np.ndarray = None):
     """given a target (real) flux sector, find a set of u_jk bond operators that correspond to that flux sector
 
     Args:

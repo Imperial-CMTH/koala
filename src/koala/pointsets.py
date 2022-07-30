@@ -10,7 +10,6 @@ def generate_bluenoise(k, nx, ny, rng=None):
         rng = np.random.default_rng()
 
     r = 1
-    a = 1 / np.sqrt(2)
     coords = [(x, y) for x in range(nx) for y in range(ny)]
     cells = {coord: None for coord in coords}
 

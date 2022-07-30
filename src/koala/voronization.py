@@ -123,7 +123,7 @@ def generate_lattice(original_points: npt.NDArray[np.floating],
     outer_ridges = ridge_indices[(ridges_vertices_in_unit_cell == 0) & finite]
 
     if debug_plot:
-        fig, axes = plt.subplots(ncols=2, figsize=(20, 10))
+        _, axes = plt.subplots(ncols=2, figsize=(20, 10))
         axes[0].scatter(*points.T, s=0.1, color='k')
         plot_lines(axes[0], vor.vertices[inside_ridges])
         plot_lines(axes[0], vor.vertices[crossing_ridges], colors='r')
