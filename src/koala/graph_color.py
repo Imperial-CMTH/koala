@@ -89,7 +89,7 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
     vpool = IDPool(start_from=n_vertices * n_colors)
 
     #many different solvers can be used
-    with Solver(name='g3') as s:
+    with Solver(name="g3") as s:
         #constraint: nodes only have one color
         for i in range(n_vertices):
             lits = list(map(int, [
@@ -144,7 +144,7 @@ def edge_color(lattice: Lattice,
         np.ndarray: A label for every edge. if n_solutions or all_solutions are used, gives an array containing all the colorings.
     """
 
-    s = Solver(name='g3')
+    s = Solver(name="g3")
     adjacency = lattice.edges.indices
     n_edges = adjacency.shape[0]
     n_reserved_literals = n_colors * n_edges
@@ -156,7 +156,7 @@ def edge_color(lattice: Lattice,
     #the encoding process will introduce some dummy variables too so we'll make sure they don't overlap
     vpool = IDPool(start_from=n_reserved_literals)
 
-    with Solver(name='g3') as s:
+    with Solver(name="g3") as s:
         #the first constraint is that each edge had one color
         for i in range(n_edges):
             lits = [int(l[i, j]) for j in range(n_colors)]
