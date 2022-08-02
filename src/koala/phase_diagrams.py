@@ -26,7 +26,6 @@ from mpire import WorkerPool
 # else: plot_phase_diagram(lattice, ujk, triangulation, number_in_range, gaps)
 
 
-
 def get_non_symmetric_triangular_sampling_points(samples=10):
     """Usage:
     sampling_points, triangulation = pd.get_non_symmetric_triangular_sampling_points(samples = 20)

@@ -33,6 +33,7 @@ class Plaquette:
             the plaquettes that share an edge with this one, ordered in
             the same order as the plaquette edges
     """
+
     vertices: np.ndarray
     edges: np.ndarray
     directions: np.ndarray
@@ -62,12 +63,12 @@ class Edges:
     crossing: np.ndarray
     # adjacent_edges: np.ndarray    TODO - add this feature
 
-    #a reference to the parent lattice, has no type because Lattice isn't defined yet
+    # a reference to the parent lattice, has no type because Lattice isn't defined yet
     _parent: ...= field(default=None, repr=False)
 
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
-        self._parent.plaquettes  #access lattice.plaquettes to make them generate
+        self._parent.plaquettes  # access lattice.plaquettes to make them generate
         return self._parent._edges_adjacent_plaquettes
 
 
@@ -94,7 +95,7 @@ class Vertices:
 
     @cached_property
     def adjacent_plaquettes(self) -> np.ndarray:
-        self._parent.plaquettes  #access lattice.plaquettes to make them generate
+        self._parent.plaquettes  # access lattice.plaquettes to make them generate
         return self._parent._vertices_adjacent_plaquettes
 
 
@@ -132,9 +133,11 @@ class Lattice(object):
                 connects
             edge_crossing (npt.NDArray[np.integer] Shape (nedges, 2)):
                 Flags describing which boundaries of the system each
-                edge crosses in periodic boundary conditions.
-        Each entry in the final axis corresponds to a spatial dimension, 1(-1) denotes an edge crossing a boundary in the positive
-        (negative) direction along that dimension. 0 corresponds to no boundary crossing.
+                edge crosses in periodic boundary conditions. Each entry 
+                in the final axis corresponds to a spatial dimension, 1(-1) 
+                denotes an edge crossing a boundary in the positive (negative) 
+                direction along that dimension. 0 corresponds to no boundary 
+                crossing.
         """
 
         # calculate the vector corresponding to each edge
@@ -214,18 +217,20 @@ class Lattice(object):
             return False
         average_separation = 1 / np.sqrt(self.n_vertices)
         return all([
-            np.allclose(self.vertices.positions,
-                        other.vertices.positions,
-                        atol=average_separation / 100),
+            np.allclose(
+                self.vertices.positions,
+                other.vertices.positions,
+                atol=average_separation / 100,
+            ),
             np.all(self.edges.indices == other.edges.indices),
-            np.all(self.edges.crossing == other.edges.crossing)
+            np.all(self.edges.crossing == other.edges.crossing),
         ])
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __getstate__(self):
-        #define a minimal representation for the lattice
+        # define a minimal representation for the lattice
         for dtype in [np.uint8, np.uint16, np.uint32, np.uint64]:
             if self.n_vertices <= np.iinfo(dtype).max:
                 edges = self.edges.indices.astype(dtype)
@@ -246,8 +251,8 @@ class Lattice(object):
 
     def __setstate__(self, state):
         if isinstance(state, dict):
-            self.__dict__.update(state)  #For backwards compatibility
-        else:  #The new way to pickle just saves vertex positions, edge indices and edge crossing
+            self.__dict__.update(state)  # For backwards compatibility
+        else:  # The new way to pickle just saves vertex positions, edge indices and edge crossing
             self.__init__(*state)
 
 
@@ -335,8 +340,8 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
         current_edge = current_edge_choices[
             (np.where(current_edge_choices == current_edge)[0][0] + 1) %
             current_edge_choices.shape[0]]
-        current_direction = 1 if np.where(
-            edge_indices[current_edge] == current_vertex)[0][0] == 0 else -1
+        current_direction = (1 if np.where(
+            edge_indices[current_edge] == current_vertex)[0][0] == 0 else -1)
 
         # stop when you get back to where you started
         if current_edge == starting_edge and current_direction == starting_direction:
@@ -369,8 +374,8 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
 
     # this bit checks if the loop crosses a PBC boundary once only - if so then it is one of the two edges of a system crossing strip plaquette
     # which means that the system is in strip geometry. We discard the plaquette.
-    plaquette_crossings = plaquette_directions[:, None] * l.edges.crossing[
-        plaquette_edges]
+    plaquette_crossings = (plaquette_directions[:, None] *
+                           l.edges.crossing[plaquette_edges])
     overall_crossings = np.sum(plaquette_crossings, axis=0)
     if np.sum(overall_crossings != [0, 0]):
         # then this plaquette is invalid
@@ -397,12 +402,14 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
 
     n_sides = plaquette_edges.shape[0]
 
-    found_plaquette = Plaquette(vertices=plaquette_vertices,
-                                edges=plaquette_edges,
-                                directions=plaquette_directions,
-                                center=plaquette_center,
-                                n_sides=n_sides,
-                                adjacent_plaquettes=None)
+    found_plaquette = Plaquette(
+        vertices=plaquette_vertices,
+        edges=plaquette_edges,
+        directions=plaquette_directions,
+        center=plaquette_center,
+        n_sides=n_sides,
+        adjacent_plaquettes=None,
+    )
 
     return found_plaquette, valid_plaquette
 
@@ -446,16 +453,16 @@ def _find_all_plaquettes(l: Lattice):
 def permute_vertices(lattice: Lattice,
                      ordering: npt.NDArray[np.integer]) -> Lattice:
     """Create a new lattice with the vertex indices rearranged according to ordering,
-  such that new_l.vertices[i] = l.vertices[ordering[i]].
+    such that new_l.vertices[i] = l.vertices[ordering[i]].
 
-  Args:
-      l (Lattice): Original lattice to have vertices reordered
-      ordering (npt.NDArray[np.integer]): Permutation of vertex
-          ordering, i = ordering[i']
+    Args:
+        l (Lattice): Original lattice to have vertices reordered
+        ordering (npt.NDArray[np.integer]): Permutation of vertex
+            ordering, i = ordering[i']
 
-  Returns:
-      Lattice: New lattice object with permuted vertex indices
-  """
+    Returns:
+        Lattice: New lattice object with permuted vertex indices
+    """
     original_verts = lattice.vertices
     original_edges = lattice.edges
     nverts = original_verts.positions.shape[0]
@@ -464,18 +471,22 @@ def permute_vertices(lattice: Lattice,
     inverse_ordering[ordering] = np.arange(nverts).astype(
         int)  # inverse_ordering[i] = i'
 
-    new_edges = Edges(indices=inverse_ordering[original_edges.indices],
-                      vectors=original_edges.vectors,
-                      crossing=original_edges.crossing,
-                      _parent=None)
+    new_edges = Edges(
+        indices=inverse_ordering[original_edges.indices],
+        vectors=original_edges.vectors,
+        crossing=original_edges.crossing,
+        _parent=None,
+    )
     new_verts = original_verts.positions[ordering]
-    return Lattice(vertices=new_verts,
-                   edge_indices=new_edges.indices,
-                   edge_crossing=new_edges.crossing)
+    return Lattice(
+        vertices=new_verts,
+        edge_indices=new_edges.indices,
+        edge_crossing=new_edges.crossing,
+    )
 
 
-def cut_boundaries(lattice: Lattice,
-                   boundary_to_cut: list = (True, True)) -> Lattice:
+def cut_boundaries(
+    lattice: Lattice, boundary_to_cut: list = (True, True)) -> Lattice:
     """Removes the x and/or y boundary edges of the lattice.
 
     Args:
