@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from koala.pointsets import generate_bluenoise
+from koala.pointsets import bluenoise
 from koala.voronization import generate_lattice
 from koala.graph_color import edge_color
 from koala.plotting import plot_lattice, plot_vertex_indices, plot_degeneracy_breaking, plot_plaquettes, line_intersection
@@ -16,7 +16,7 @@ h = Lattice(
     )
 
 n = 10
-points = generate_bluenoise(30,n,n)
+points = bluenoise(30,n,n)
 voronoi_lattice = generate_lattice(points)
 
 test_lattices = [voronoi_lattice,h]

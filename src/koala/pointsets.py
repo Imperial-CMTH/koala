@@ -5,7 +5,7 @@
 import numpy as np
 
 
-def generate_bluenoise(k, nx, ny, rng=None):
+def bluenoise(k, nx, ny, rng=None):
     if rng is None:
         rng = np.random.default_rng()
 
@@ -52,7 +52,7 @@ def generate_bluenoise(k, nx, ny, rng=None):
     return np.array(samples) / np.array([nx, ny])
 
 
-def generate_hyperuniform(nx, ny, kickstrength=1e-3, rng=None):
+def hyperuniform(nx, ny, kickstrength=1e-3, rng=None):
     if rng is None:
         rng = np.random.default_rng()
     x = np.linspace(0, 1, nx)
@@ -75,7 +75,7 @@ def generate_hyperuniform(nx, ny, kickstrength=1e-3, rng=None):
         np.all(final_points > 0, axis=-1) & np.all(final_points < 1, axis=-1))]
 
 
-def generate_random(n, rng=None):
+def uniform(n, rng=None):
     if rng is None:
         rng = np.random.default_rng()
     points = rng.uniform(size=(n, 2))

@@ -187,7 +187,7 @@ def n_ladder(n_sites: int, wobble=False):
     y_1_positions = 0.3 * np.ones(n_sites)
     y_2_positions = 0.7 * np.ones(n_sites)
 
-    if wobble == True:
+    if wobble:
         y_1_positions += 0.1 * np.sin(x_positions * 2 * np.pi)
         y_2_positions += 0.1 * np.sin(x_positions * 2 * np.pi)
 

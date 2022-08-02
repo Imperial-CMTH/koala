@@ -1,4 +1,4 @@
-from koala.pointsets import generate_random
+from koala.pointsets import uniform
 from koala.voronization import generate_lattice
 from koala.graph_color import color_lattice
 from koala.hamiltonian import majorana_hamiltonian
@@ -10,7 +10,7 @@ from koala import chern_number as cn
 def test_chern_and_crosshair():
     # define the lattice system
     number_of_plaquettes = 50
-    points = generate_random(number_of_plaquettes)
+    points = uniform(number_of_plaquettes)
     lattice = generate_lattice(points)
 
     # color the lattice

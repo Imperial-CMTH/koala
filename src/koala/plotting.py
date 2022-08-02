@@ -63,7 +63,7 @@ def plot_vertices(
 def plot_edges(
     lattice: Lattice,
     labels: np.ndarray = 0,
-    color_scheme: np.ndarray = ["k", "r", "b"],
+    color_scheme: np.ndarray = ("k", "r", "b"),
     subset: np.ndarray = slice(None, None, None),
     directions: np.ndarray = None,
     ax=None,
@@ -139,7 +139,7 @@ def plot_edges(
 def plot_plaquettes(
         lattice: Lattice,
         labels: np.ndarray = 0,
-        color_scheme: np.ndarray = ["r", "b", "k"],
+        color_scheme: np.ndarray = ("r", "b", "k"),
         subset: np.ndarray = slice(None, None, None),
         ax=None,
         **kwargs,
@@ -166,11 +166,11 @@ def plot_plaquettes(
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
         lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes, kwargs)
 
-    indices = np.arange(lattice.n_plaquettes)[subset]
+    # indices = np.arange(lattice.n_plaquettes)[subset]
     plaquettes = lattice.plaquettes[subset]
 
     collections = []
-    for i, color, p in zip(indices, colors, plaquettes):
+    for color, p in zip(colors, plaquettes):
 
         # get the edge vectors going anticlockwise around the plaquette
         vectors = lattice.edges.vectors[p.edges] * p.directions[:, None]
@@ -236,8 +236,8 @@ def _plot_edge_arrows(ax,
     edges = unit_cell.transform(edges.reshape(-1, 2)).reshape(n_edges, 2, 2)
     linewidth = linecollection.get_linewidths()[
         0]  # currently don't support multiple linewidths
-    for color, (end, start), dir in zip(colors, edges, directions):
-        start, end = [start, end][::dir]
+    for color, (end, start), dire in zip(colors, edges, directions):
+        start, end = [start, end][::dire]
         center = 1 / 2 * (end + start)
         length = np.linalg.norm(end - start)
         head_length = arrow_head_length or min(0.2 * length,
@@ -278,7 +278,8 @@ def _broadcast_args(arg, subset, N, dtype=int):
     if arg.shape[0] == N:
         arg = arg[subset]
     elif arg.shape[0] == subset_size:
-        arg = arg
+        # arg = arg
+        pass
     else:
         raise ValueError(
             f"Argument shape {arg.shape} should be either lattice.n_* ({N}) or the size of the subset ({subset_size})"

@@ -82,7 +82,7 @@ def generate_lattice(original_points: npt.NDArray[np.floating],
     ridge_indices = np.array(vor.ridge_vertices)
 
     # shift the positions of the vertices to the center of the delaunay triangle they are in
-    if shift_vertices == True:
+    if shift_vertices:
         ridge_points = np.array(vor.ridge_points)
 
         # find the edges that touch each vertex

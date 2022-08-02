@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
-
 from koala import pointsets
 from koala import voronization
 from koala.lattice import cut_boundaries, LatticeException, INVALID
@@ -10,7 +9,7 @@ from koala.example_graphs import *
 
 def test_lattice_class():
     # generate a ton of weird graphs
-    points2 = pointsets.generate_bluenoise(30,3,3)
+    points2 = pointsets.bluenoise(30,3,3)
     weird_graphs = [
                 tri_square_pent(),
                 two_triangles(),

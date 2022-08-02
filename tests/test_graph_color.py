@@ -5,7 +5,7 @@
 
 import numpy as np
 import pytest
-from koala.pointsets import generate_random
+from koala.pointsets import uniform
 from koala.voronization import generate_lattice
 from koala.graph_color import vertex_color, edge_color, color_lattice
 from koala.graph_utils import edge_neighbours, clockwise_edges_about
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.filterwarnings("ignore:numpy")
 
 def test_vertex_coloring():
     for n in range(4, 50, 5):
-        points = generate_random(n)
+        points = uniform(n)
         g = generate_lattice(points)    
         solveable, solution = vertex_color(g.edges.indices, n_colors = 3)
         if solveable:
@@ -26,7 +26,7 @@ def test_vertex_coloring():
 
 def test_edge_coloring():
     for n in [4,10,30,50]:
-        points = generate_random(n)
+        points = uniform(n)
         lattice = generate_lattice(points)
         solveable, solution = edge_color(lattice, n_colors = 3)
         

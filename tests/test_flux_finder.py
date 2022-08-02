@@ -10,7 +10,7 @@ from koala.lattice import Lattice
 # make some lattices to test
 n = 15
 honeycomb, _ = example_graphs.honeycomb_lattice(n, return_coloring=True)
-random_points = pointsets.generate_random(n*n)
+random_points = pointsets.uniform(n*n)
 amorphous = voronization.generate_lattice(random_points, shift_vertices=True)
 
 def find_gnd_state(lattice:Lattice):

@@ -7,7 +7,7 @@ from koala.weaire_thorpe import vertices_to_triangles
 from koala.voronization import generate_lattice
 from koala.lattice import Lattice
 from koala.graph_utils import clockwise_edges_about
-from koala.pointsets import generate_bluenoise
+from koala.pointsets import bluenoise
 from koala.graph_color import edge_color
 from koala.plotting import plot_lattice
 
@@ -15,7 +15,7 @@ def test_smoketest_weaire_thorpe():
     """This test doesn't do any assertions, it just checks that the normal usage doesn't crash"""
     fig, ax = plt.subplots()
 
-    points =  generate_bluenoise(k = 100, nx = 5, ny = 5)
+    points =  bluenoise(k = 100, nx = 5, ny = 5)
     g = generate_lattice(points)
 
     ordered_edge_indices = clockwise_edges_about(vertex_index = 0, g=g)
@@ -68,7 +68,7 @@ def test_all():
 
     #generate points
     n = 15
-    points =  generate_bluenoise(k = 100, nx = n, ny = n)
+    points =  bluenoise(k = 100, nx = n, ny = n)
 
     #generate graph
     g = generate_lattice(points)

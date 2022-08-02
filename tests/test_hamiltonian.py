@@ -2,13 +2,13 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from koala.pointsets import generate_random
+from koala.pointsets import uniform
 from koala.voronization import generate_lattice
 from koala.graph_color import color_lattice
 from koala.hamiltonian import *
 
 n = 10
-points = generate_random(n*n)
+points = uniform(n*n)
 lattice = generate_lattice(points)
 coloring = color_lattice(lattice)
 
