@@ -42,10 +42,10 @@ def chern_marker(lattice: Lattice, projector: np.ndarray):
     """
 
     positions = lattice.vertices.positions
-    X = np.diag(positions[:, 0])
-    Y = np.diag(positions[:, 1])
+    x = np.diag(positions[:, 0])
+    y = np.diag(positions[:, 1])
 
     c_marker = 4 * np.pi * np.diag(
-        projector @ X @ projector @ Y @ projector).imag
+        projector @ x @ projector @ y @ projector).imag
 
     return c_marker

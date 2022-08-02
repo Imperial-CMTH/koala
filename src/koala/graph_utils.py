@@ -111,7 +111,7 @@ def vertex_neighbours(lattice, vertex_index):
     # print(f"{start_or_end = }, {vertex_indices = }")
     #vertex_indices = edges[edges != vertex_i]
     # print(vertex_indices.shape, edge_indices.shape)
-    assert (vertex_indices.shape == edge_indices.shape)
+    assert vertex_indices.shape == edge_indices.shape
     return vertex_indices, edge_indices
 
 

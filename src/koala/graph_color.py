@@ -15,6 +15,8 @@ from pysat.card import *
 import itertools as it
 from .graph_utils import edge_neighbours
 from .lattice import Lattice
+from .graph_utils import clockwise_edges_about
+
 # """
 # Both routines in this file encode their problems in Conjunctive Normal Form (CNF) and then pass them to
 # a SAT solver through pysat (called python-sat in pip).
@@ -123,7 +125,6 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
             return solveable, s.get_core()
 
 
-from .graph_utils import clockwise_edges_about
 
 
 def edge_color(lattice: Lattice,
@@ -152,8 +153,9 @@ def edge_color(lattice: Lattice,
     #define the integer literals we will use
     l = np.arange(n_reserved_literals, dtype=int).reshape(n_edges, n_colors) + 1
 
-    #we need to allocate n_edges*n_colors to represent our main variables
-    #the encoding process will introduce some dummy variables too so we'll make sure they don't overlap
+    # we need to allocate n_edges*n_colors to represent our main variables
+    # the encoding process will introduce some dummy variables too so we'll make
+    # sure they don't overlap
     vpool = IDPool(start_from=n_reserved_literals)
 
     with Solver(name="g3") as s:
