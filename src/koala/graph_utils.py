@@ -81,12 +81,71 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     return edges_in
 
 
-# FIXME: change function signature to take lattice object instead of adjacency list
+def remove_vertices(lattice: Lattice, indices: np.ndarray):
+    """Generates a new lattice formed by deleting a subset of vertices from the input lattice
+
+    Args:
+        lattice (Lattice): The input latice
+        indices (np.ndarray): N array of indices of vertices you want to remove
+
+    Returns:
+        Lattice: A new lattice formed from the remaining parts of the input lattice after deletion
+    """
+
+    # figure out which edges are set for removal
+    set_for_removal = np.full(lattice.n_vertices, False)
+    set_for_removal[indices] = True
+
+    # we have to relabel the edge index values after the vertices are removed
+    subtraction = np.cumsum(set_for_removal)
+    new_index = np.arange(lattice.n_vertices) - subtraction
+    new_index[indices] = -1
+    new_adjacency = new_index[lattice.edges.indices]
+
+    # remove edges that connect to a deleted verted
+    edges_to_remove = np.where(new_adjacency == -1)[0]
+    new_vertices = lattice.vertices.positions[~set_for_removal]
+    new_adjacency = np.delete(new_adjacency, edges_to_remove, axis=0)
+    new_crossing = np.delete(lattice.edges.crossing, edges_to_remove, axis=0)
+
+    # finally make and return the new lattice
+    return Lattice(new_vertices, new_adjacency, new_crossing)
+
+
+def remove_trailing_edges(lattice: Lattice) -> Lattice:
+    """Trims the trailing edges off a lattice, trailing edges 
+    are defined as any edge that does not form part of a plaquette 
+    - usually on the boundary of the system after we have used
+    cut boundaries to enforce closed boundaries
+
+    Args:
+        lattice (Lattice): The lattice to be trimmed
+
+    Returns:
+        Lattice: A new lattice with no trailing edges
+    """
+
+    # lattice = lattice
+    number_of_connections = np.array(
+        [len(a) for a in lattice.vertices.adjacent_edges])
+    dangling_vertices = np.argwhere(number_of_connections == 1).flatten()
+
+    while (True):
+        if len(dangling_vertices) == 0:
+            break
+
+        lattice = remove_vertices(lattice, dangling_vertices)
+        number_of_connections = np.array(
+            [len(a) for a in lattice.vertices.adjacent_edges])
+        dangling_vertices = np.argwhere(number_of_connections == 1).flatten()
+    return (lattice)
+
+
 def vertex_neighbours(lattice, vertex_index):
     """Return the neighbouring nodes of a point
 
     Args:
-        vertex_index: int the index into vertices of the node we want the neighbours of
+        lattice (Lattice): a lattice object specifying the system
         adjacency: (M, 2) A list of pairs of vertices representing edges
     Returns:
         vertex_indices: (k), the indices into vertices of the neighbours
