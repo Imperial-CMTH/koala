@@ -1,4 +1,3 @@
-from copyreg import pickle
 import numpy as np
 import pickle as pkl
 

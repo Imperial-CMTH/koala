@@ -125,8 +125,6 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
             return solveable, s.get_core()
 
 
-
-
 def edge_color(lattice: Lattice,
                n_colors: int = 3,
                all_solutions=False,
