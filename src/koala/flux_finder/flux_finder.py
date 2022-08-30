@@ -54,7 +54,7 @@ def ujk_from_fluxes(lattice: Lattice,
 
     Args:
         lattice (Lattice): the lattice
-        target_flux_sector (np.ndarray, optional): the target value for flux through every plaquette. Must be real and correspond to the product of ujks around the plaquette. Defaults to None.
+        target_flux_sector (np.ndarray, optional): the target value for flux through every plaquette. Must be real and correspond to the product of ujks around the plaquette. Defaults to the ground state (all fluxes = -1).
         initial_bond_guess (np.ndarray, optional): a guess for the starting values of the bonds, if none then we assume all ujk = 1. Defaults to None.
 
     Raises:
@@ -66,7 +66,7 @@ def ujk_from_fluxes(lattice: Lattice,
     """
 
     if target_flux_sector is None:
-        target_flux_sector = np.ones(lattice.n_plaquettes, dtype=np.int8)
+        target_flux_sector = np.full(lattice.n_plaquettes, -1, dtype=np.int8)
     if initial_ujk_guess is None:
         initial_ujk_guess = np.ones(lattice.n_edges, dtype=np.int8)
     initial_ujk_guess, target_flux_sector = initial_ujk_guess.copy(
