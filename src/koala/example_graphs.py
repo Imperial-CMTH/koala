@@ -652,3 +652,25 @@ def concave_plaquette():
     lat = Lattice(vertices, edges, edge_crossing)
 
     return lat
+
+
+def higher_coordination_number_example(x:int) -> Lattice:
+    """creates an example graph with a point that is <x> coordinated
+
+    Args:
+        x (int): Coordination number of central point
+
+    Returns:
+        Lattice: A lattice with that coordination number
+    """
+
+    l1 = single_plaquette(x)
+
+    new_vertices = np.concatenate([l1.vertices.positions, np.array([[0.5,0.5],] ) ])
+
+    extra_edges =  np.concatenate( [np.arange(x)[:,np.newaxis], np.array([x]*x)[:,np.newaxis]], axis = 1)
+    new_edges = np.concatenate([l1.edges.indices,extra_edges]  )
+    new_crossing = 0*new_edges
+
+    l2 = Lattice(new_vertices, new_edges, new_crossing)
+    return l2

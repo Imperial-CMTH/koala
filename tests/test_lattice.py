@@ -1,11 +1,10 @@
 import numpy as np
 import pytest
-from matplotlib import pyplot as plt
 from koala import pointsets
 from koala import voronization
-from koala.lattice import cut_boundaries, LatticeException, INVALID
+from koala.lattice import cut_boundaries, LatticeException
 from koala.example_graphs import *
-
+from koala.example_graphs import single_plaquette
 
 def test_lattice_class():
     # generate a ton of weird graphs
@@ -68,3 +67,9 @@ def test_cache_order():
     
     g = tri_square_pent()
     g.vertices.adjacent_plaquettes
+
+
+def test_higher_coordination_number():
+    for x in range(3,10):
+        l2 = higher_coordination_number_example(x)
+        assert len(l2.plaquettes) == x

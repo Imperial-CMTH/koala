@@ -88,6 +88,7 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
+    coordination_numbers:np.ndarray
     # adjacent_vertices: np.ndarray    TODO - add this feature
 
     # a reference to the parent lattice, has no type because the Lattice class isn't defined yet
@@ -151,6 +152,7 @@ class Lattice(object):
         self.vertices = Vertices(
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
+            coordination_numbers = np.bincount(np.sort(edge_indices.flatten())),
             _parent=self,
         )
 
@@ -181,8 +183,9 @@ class Lattice(object):
             row[index] = value
 
         # arrays that hold neighbouring plaquettes for edges and vertices
+        max_coord = np.max(self.vertices.coordination_numbers)
         edges_plaquettes = np.full((self.n_edges, 2), INVALID)
-        vertices_plaquettes = np.full((self.n_vertices, 3), INVALID)
+        vertices_plaquettes = np.full((self.n_vertices, max_coord), INVALID)
 
         # set the values
         for n, plaquette in enumerate(_plaquettes):
@@ -324,7 +327,6 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     current_edge = starting_edge
     current_vertex = start_vertex
     current_direction = starting_direction
-    # print(current_vertex, current_edge ,edge_indices[current_edge], current_direction)
 
     plaquette_edges = [starting_edge]
     plaquette_vertices = [start_vertex]
@@ -366,11 +368,11 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     plaquette_vertices = np.array(plaquette_vertices)
     plaquette_directions = np.array(plaquette_directions)
 
-    # check --- not sure if this is necessary --- check
+    # TODO check --- not sure if this is necessary --- check
     # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
     # this means the plaquette is not legit!
-    if len(np.unique(plaquette_edges)) != len(plaquette_edges):
-        valid_plaquette = False
+    # if len(np.unique(plaquette_edges)) != len(plaquette_edges):
+    #     valid_plaquette = False
 
     # this bit checks if the loop crosses a PBC boundary once only - if so then it is one of the two edges of a system crossing strip plaquette
     # which means that the system is in strip geometry. We discard the plaquette.
