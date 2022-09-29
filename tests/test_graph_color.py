@@ -10,7 +10,7 @@ from koala.voronization import generate_lattice
 from koala.graph_color import vertex_color, edge_color, color_lattice
 from koala.graph_utils import edge_neighbours, clockwise_edges_about
 
-pytestmark = pytest.mark.filterwarnings("ignore:numpy")
+pytestmark = pytest.mark.filterwarnings('ignore:numpy')
 
 def test_vertex_coloring():
     for n in range(4, 50, 5):

@@ -62,4 +62,4 @@ def test_dual():
     ]
 
     for lat in weird_graphs:
-        d = make_dual(lat)
+        make_dual(lat)
