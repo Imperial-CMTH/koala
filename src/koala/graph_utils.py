@@ -5,8 +5,31 @@
 import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
-import itertools
 
+def make_dual(lattice: Lattice)-> Lattice:
+    """Given a lattice, generate the dual lattice
+
+    Args:
+        lattice (Lattice): Input lattice
+
+    Returns:
+        Lattice: The dual lattice
+    """
+    # set vertices of dual lattice at centers of initial lattice
+    dual_verts = np.array([p.center for p in lattice.plaquettes ])
+
+    # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
+    dual_edges = lattice.edges.adjacent_plaquettes
+    rows_to_remove = np.where(np.any(dual_edges == INVALID, axis=1))[0]
+    cleaned_edges = np.delete(dual_edges, rows_to_remove,axis=0)
+
+    # crossing is sorted out by checking whether the edges cross over half the system
+    # this breaks for small system size - there must be a better solution
+    dual_crossing = np.round(dual_verts[cleaned_edges[:,0]] - dual_verts[cleaned_edges[:,1]])
+
+    # make the lattice
+    dual = Lattice(dual_verts, cleaned_edges , dual_crossing)
+    return dual
 
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
@@ -160,10 +183,7 @@ def vertex_neighbours(lattice, vertex_index):
     # print(f"{edges = }, {edge_indices = }")
 
     #the next two lines replaces the simpler vertex_indices = edges[edges != vertex_i] because the allow points to neighbour themselves
-    start_or_end = (
-        edges != vertex_index
-    )[:,
-      1]  #this is true if vertex_index starts the edge and false if it ends it
+    start_or_end = (edges != vertex_index)[:,1]  #this is true if vertex_index starts the edge and false if it ends it
     vertex_indices = np.take_along_axis(
         edges, start_or_end[:, None].astype(int),
         axis=1).flatten()  #this gets the index of the other end of each edge

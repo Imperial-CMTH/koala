@@ -2,9 +2,11 @@ import numpy as np
 import pickle as pkl
 
 from koala.plotting import plot_vertex_indices, plot_degeneracy_breaking, plot_lattice
-from koala.example_graphs import tri_square_pent
-from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges
-from koala.voronization import Lattice
+from koala import example_graphs as eg
+from koala.pointsets import uniform
+from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges, make_dual
+from koala.lattice import Lattice
+from koala.voronization import generate_lattice
 
 
 g = Lattice(
@@ -29,7 +31,7 @@ def test_clockwise_edges_about():
 
 
 def test_adjacent_plaquettes_function():
-    l = tri_square_pent()
+    l = eg.tri_square_pent()
     
     p, e = adjacent_plaquettes(l, 1)
 
@@ -44,3 +46,20 @@ def test_trailing_edges():
     assert l_out.n_edges == 13
     assert l_out.n_vertices == 11
     assert l_out.n_plaquettes == 3
+
+def test_dual():
+    points = uniform(30)
+    weird_graphs = [
+                eg.tri_square_pent(),
+                eg.two_triangles(),
+                eg.tutte_graph(),
+                eg.n_ladder(6,True),
+                eg.bridge_graph(),
+                generate_lattice(points),
+                eg.cut_boundaries(generate_lattice(points), [False,True]),
+                eg.cut_boundaries(generate_lattice(points), [True,True]),
+                eg.honeycomb_lattice(12)
+    ]
+
+    for lat in weird_graphs:
+        d = make_dual(lat)
