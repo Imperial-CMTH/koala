@@ -113,7 +113,8 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
         solveable = s.solve()
         if solveable:
             if all_solutions:
-                solutions = np.array(list(s.enum_models())).reshape((-1, n_vertices, n_colors)).argmax(axis=-1)
+                solutions = np.array(list(s.enum_models())).reshape(
+                    (-1, n_vertices, n_colors)).argmax(axis=-1)
                 return solveable, solutions
             else:
                 solution = np.array(s.get_model()).reshape(
@@ -186,8 +187,8 @@ def edge_color(lattice: Lattice,
             elif n_solutions is not None:
                 models = it.islice(s.enum_models(), n_solutions)
                 solutions = np.array(
-                    np.array(list(models)).reshape((-1, n_edges,
-                                                   n_colors)).argmax(axis=-1))
+                    np.array(list(models)).reshape(
+                        (-1, n_edges, n_colors)).argmax(axis=-1))
                 return solveable, solutions
 
             else:

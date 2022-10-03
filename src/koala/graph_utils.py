@@ -6,7 +6,8 @@ import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
 
-def make_dual(lattice: Lattice)-> Lattice:
+
+def make_dual(lattice: Lattice) -> Lattice:
     """Given a lattice, generate the dual lattice
 
     Args:
@@ -16,20 +17,22 @@ def make_dual(lattice: Lattice)-> Lattice:
         Lattice: The dual lattice
     """
     # set vertices of dual lattice at centers of initial lattice
-    dual_verts = np.array([p.center for p in lattice.plaquettes ])
+    dual_verts = np.array([p.center for p in lattice.plaquettes])
 
     # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
     dual_edges = lattice.edges.adjacent_plaquettes
     rows_to_remove = np.where(np.any(dual_edges == INVALID, axis=1))[0]
-    cleaned_edges = np.delete(dual_edges, rows_to_remove,axis=0)
+    cleaned_edges = np.delete(dual_edges, rows_to_remove, axis=0)
 
     # crossing is sorted out by checking whether the edges cross over half the system
     # this breaks for small system size - there must be a better solution
-    dual_crossing = np.round(dual_verts[cleaned_edges[:,0]] - dual_verts[cleaned_edges[:,1]])
+    dual_crossing = np.round(dual_verts[cleaned_edges[:, 0]] -
+                             dual_verts[cleaned_edges[:, 1]])
 
     # make the lattice
-    dual = Lattice(dual_verts, cleaned_edges , dual_crossing)
+    dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
     return dual
+
 
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
@@ -104,7 +107,9 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     return edges_in
 
 
-def remove_vertices(lattice: Lattice, indices: np.ndarray, return_edge_removal = False):
+def remove_vertices(lattice: Lattice,
+                    indices: np.ndarray,
+                    return_edge_removal=False):
     """Generates a new lattice formed by deleting a subset of vertices from the input lattice
 
     Args:
@@ -134,7 +139,8 @@ def remove_vertices(lattice: Lattice, indices: np.ndarray, return_edge_removal =
 
     # finally make and return the new lattice
     if return_edge_removal:
-        return Lattice(new_vertices, new_adjacency, new_crossing), edges_to_remove 
+        return Lattice(new_vertices, new_adjacency,
+                       new_crossing), edges_to_remove
     else:
         return Lattice(new_vertices, new_adjacency, new_crossing)
 
@@ -187,7 +193,10 @@ def vertex_neighbours(lattice, vertex_index):
     # print(f"{edges = }, {edge_indices = }")
 
     #the next two lines replaces the simpler vertex_indices = edges[edges != vertex_i] because the allow points to neighbour themselves
-    start_or_end = (edges != vertex_index)[:,1]  #this is true if vertex_index starts the edge and false if it ends it
+    start_or_end = (
+        edges != vertex_index
+    )[:,
+      1]  #this is true if vertex_index starts the edge and false if it ends it
     vertex_indices = np.take_along_axis(
         edges, start_or_end[:, None].astype(int),
         axis=1).flatten()  #this gets the index of the other end of each edge
@@ -322,4 +331,3 @@ def rotate(vector, angle):
     rm = np.array([[np.cos(angle), -np.sin(angle)],
                    [np.sin(angle), np.cos(angle)]])
     return rm @ vector
-

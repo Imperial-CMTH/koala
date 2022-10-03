@@ -88,7 +88,7 @@ class Vertices:
 
     positions: np.ndarray
     adjacent_edges: np.ndarray
-    coordination_numbers:np.ndarray
+    coordination_numbers: np.ndarray
     # adjacent_vertices: np.ndarray    TODO - add this feature
 
     # a reference to the parent lattice, has no type because the Lattice class isn't defined yet
@@ -152,7 +152,7 @@ class Lattice(object):
         self.vertices = Vertices(
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
-            coordination_numbers = np.bincount(np.sort(edge_indices.flatten())),
+            coordination_numbers=np.bincount(np.sort(edge_indices.flatten())),
             _parent=self,
         )
 
