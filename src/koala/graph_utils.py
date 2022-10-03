@@ -104,12 +104,13 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     return edges_in
 
 
-def remove_vertices(lattice: Lattice, indices: np.ndarray):
+def remove_vertices(lattice: Lattice, indices: np.ndarray, return_edge_removal = False):
     """Generates a new lattice formed by deleting a subset of vertices from the input lattice
 
     Args:
         lattice (Lattice): The input latice
         indices (np.ndarray): N array of indices of vertices you want to remove
+        return_edge_removal (Bool): If true, returns a list of indices of all the edges that were removed
 
     Returns:
         Lattice: A new lattice formed from the remaining parts of the input lattice after deletion
@@ -125,14 +126,17 @@ def remove_vertices(lattice: Lattice, indices: np.ndarray):
     new_index[indices] = -1
     new_adjacency = new_index[lattice.edges.indices]
 
-    # remove edges that connect to a deleted verted
+    # remove edges that connect to a deleted vertex
     edges_to_remove = np.where(new_adjacency == -1)[0]
     new_vertices = lattice.vertices.positions[~set_for_removal]
     new_adjacency = np.delete(new_adjacency, edges_to_remove, axis=0)
     new_crossing = np.delete(lattice.edges.crossing, edges_to_remove, axis=0)
 
     # finally make and return the new lattice
-    return Lattice(new_vertices, new_adjacency, new_crossing)
+    if return_edge_removal:
+        return Lattice(new_vertices, new_adjacency, new_crossing), edges_to_remove 
+    else:
+        return Lattice(new_vertices, new_adjacency, new_crossing)
 
 
 def remove_trailing_edges(lattice: Lattice) -> Lattice:
