@@ -4,7 +4,7 @@ import pickle as pkl
 from koala.plotting import plot_vertex_indices, plot_degeneracy_breaking, plot_lattice
 from koala import example_graphs as eg
 from koala.pointsets import uniform
-from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges, make_dual
+from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges, make_dual, vertices_to_polygon
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
 
@@ -63,3 +63,16 @@ def test_dual():
 
     for lat in weird_graphs:
         make_dual(lat)
+
+def test_vertices_to_polygon():
+    points = uniform(30)
+    lattice = generate_lattice(points)
+
+    sets = [
+        np.random.randint(lattice.n_vertices),
+        np.arange(np.random.randint(lattice.n_vertices)//2),
+        np.arange(lattice.n_vertices)
+    ]
+
+    for s in sets:
+        vertices_to_polygon(lattice, s)

@@ -331,3 +331,103 @@ def rotate(vector, angle):
     rm = np.array([[np.cos(angle), -np.sin(angle)],
                    [np.sin(angle), np.cos(angle)]])
     return rm @ vector
+
+
+def vertices_to_polygon(lattice: Lattice, indices) -> Lattice:
+    """Repace a set of vertices in a lattice with polygons of thri-coordinated points (wrapper for _vertex_to_polygon)
+
+    Args:
+        lattice (Lattice): input lattice
+        indices (_type_): either an index for the point to be replaced, or a list of indices of points to be replaced
+
+    Returns:
+        Lattice: the new lattice with replaced points
+    """
+
+    try:
+        iter(indices)
+    except TypeError:
+        return _vertex_to_polygon(lattice, indices)
+
+    running_lattice = _vertex_to_polygon(lattice, indices[0])
+    relabeling = np.arange(lattice.n_vertices)
+
+    relabeling = relabeling - 1 * (np.arange(lattice.n_vertices) >= indices[0])
+
+    for index in indices[1:]:
+
+        vertex_to_target = relabeling[index]
+        outward_edges = lattice.vertices.adjacent_edges[index]
+        vector_distances = np.sqrt(
+            np.sum(lattice.edges.vectors[outward_edges]**2, axis=1))
+        desired_distance = np.min(vector_distances) / 3
+        running_lattice = _vertex_to_polygon(running_lattice, vertex_to_target,
+                                             desired_distance)
+
+        relabeling = relabeling - 1 * (np.arange(lattice.n_vertices) >= index)
+
+    return running_lattice
+
+
+def _vertex_to_polygon(lattice: Lattice,
+                       vertex_index: int,
+                       desired_distance=None) -> Lattice:
+    """ Replaces a vertex in a lattice with a polygon where every point is three-coordinated (backend function for vertices_to_polygon)
+
+    Args:
+        lattice (Lattice): input lattice
+        vertex_index (int): index of vertex to be created
+        desired_distance (float, optional): 'radius' of the polygon around the original point, If true then use 1/3 of the smallest edge connecting in . Defaults to None.
+
+    Returns:
+        Lattice: The new output lattice with a replaced vertex
+    """
+    # the edges coming from the point we are removing
+    outward_edges = lattice.vertices.adjacent_edges[vertex_index]
+
+    # direction from the point
+    directions = 1 - 2 * np.where(
+        lattice.edges.indices[outward_edges] == vertex_index)[1]
+
+    # find the vertex that each edge in outward_edges connects to
+    outward_vertices = lattice.edges.indices[outward_edges][np.where(
+        lattice.edges.indices[outward_edges] != vertex_index)]
+
+    # find position of new vertices
+    vector_distances = np.sqrt(
+        np.sum(lattice.edges.vectors[outward_edges]**2, axis=1))
+    if desired_distance is None:
+        desired_distance = np.min(vector_distances) / 3
+    normalised_vectors = lattice.edges.vectors[
+        outward_edges] / vector_distances[:, np.newaxis]
+
+    vert_pos = desired_distance * normalised_vectors * directions[:, np.
+                                                                  newaxis] + lattice.vertices.positions[
+                                                                      vertex_index]
+    new_vertex_positions = vert_pos % 1
+    # new_vertex_pbc_shifted = vert_pos//1
+
+    edges_to_add_outward = np.concatenate(
+        [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
+         outward_vertices[:, np.newaxis]],
+        axis=1)
+    edges_to_add_around = np.concatenate(
+        [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
+         np.roll(lattice.n_vertices + np.arange(len(outward_edges)),
+                 1)[:, np.newaxis]],
+        axis=1)
+    edges_to_add = np.concatenate([edges_to_add_outward, edges_to_add_around])
+
+    # add the new vertices to the lattice
+    new_vertices = np.concatenate(
+        [lattice.vertices.positions, new_vertex_positions])
+    new_edges = np.concatenate([lattice.edges.indices, edges_to_add])
+
+    new_vectors = new_vertices[edges_to_add[:,
+                                            0]] - new_vertices[edges_to_add[:,
+                                                                            1]]
+    crossing_to_add = np.round(new_vectors)
+    new_crossing = np.concatenate([lattice.edges.crossing, crossing_to_add])
+
+    return remove_vertices(Lattice(new_vertices, new_edges, new_crossing),
+                           vertex_index)
