@@ -25,9 +25,14 @@ def make_dual(lattice: Lattice) -> Lattice:
     cleaned_edges = np.delete(dual_edges, rows_to_remove, axis=0)
 
     # crossing is sorted out by checking whether the edges cross over half the system
-    # this breaks for small system size - there must be a better solution
+    # TODO - this breaks for small system size - there must be a better solution
     dual_crossing = np.round(dual_verts[cleaned_edges[:, 0]] -
                              dual_verts[cleaned_edges[:, 1]])
+
+    # TODO - currently we just check if it broke and raise an error -- this isnt perfect and something will have to be fixed in the future
+    duplicate_edge_crossing = np.concatenate([cleaned_edges,dual_crossing], axis= 1)
+    if len(np.unique(duplicate_edge_crossing, axis = 0)) != len(cleaned_edges):
+        raise Exception('Dual is not currently designed to deal with lattices so small, put more points in the lattice or cut boundaries')
 
     # make the lattice
     dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
