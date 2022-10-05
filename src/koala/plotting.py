@@ -208,7 +208,7 @@ def plot_plaquettes(
 
 
 def plot_dual(lattice, subset=slice(None, None), **kwargs):
-    """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
+    """Given a lattice, plot the edges in its dual or a subset of them, other args are passed through to plot_edges.
 
     Args:
         lattice (Lattice): The lattice to use.
@@ -220,8 +220,8 @@ def plot_dual(lattice, subset=slice(None, None), **kwargs):
         Lattice: The dual lattice represented as a second Lattice
         object.
     """
-    st_as_lattice = graph_utils.make_dual(lattice, subset)
-    plot_edges(st_as_lattice, **kwargs)
+    st_as_lattice = graph_utils.make_dual(lattice)
+    plot_edges(st_as_lattice, **kwargs, subset = subset)
     return st_as_lattice
 
 
