@@ -371,8 +371,8 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     # TODO check --- not sure if this is necessary --- check
     # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
     # this means the plaquette is not legit!
-    # if len(np.unique(plaquette_edges)) != len(plaquette_edges):
-    #     valid_plaquette = False
+    if len(np.unique(plaquette_edges)) != len(plaquette_edges):
+        valid_plaquette = False
 
     # this bit checks if the loop crosses a PBC boundary once only - if so then it is one of the two edges of a system crossing strip plaquette
     # which means that the system is in strip geometry. We discard the plaquette.
