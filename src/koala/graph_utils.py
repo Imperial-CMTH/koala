@@ -387,6 +387,7 @@ def _vertex_to_polygon(lattice: Lattice,
     Returns:
         Lattice: The new output lattice with a replaced vertex
     """
+
     # the edges coming from the point we are removing
     outward_edges = lattice.vertices.adjacent_edges[vertex_index]
 
@@ -410,17 +411,23 @@ def _vertex_to_polygon(lattice: Lattice,
                                                                   newaxis] + lattice.vertices.positions[
                                                                       vertex_index]
     new_vertex_positions = vert_pos % 1
-    # new_vertex_pbc_shifted = vert_pos//1
 
     edges_to_add_outward = np.concatenate(
         [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
          outward_vertices[:, np.newaxis]],
         axis=1)
+
+    
     edges_to_add_around = np.concatenate(
         [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
          np.roll(lattice.n_vertices + np.arange(len(outward_edges)),
                  1)[:, np.newaxis]],
         axis=1)
+    
+    # stop edge doubling if the veryex has coordination 2
+    if edges_to_add_around.shape[0] < 3:
+        edges_to_add_around = edges_to_add_around[0][np.newaxis,:]
+
     edges_to_add = np.concatenate([edges_to_add_outward, edges_to_add_around])
 
     # add the new vertices to the lattice
@@ -428,8 +435,7 @@ def _vertex_to_polygon(lattice: Lattice,
         [lattice.vertices.positions, new_vertex_positions])
     new_edges = np.concatenate([lattice.edges.indices, edges_to_add])
 
-    new_vectors = new_vertices[edges_to_add[:,
-                                            0]] - new_vertices[edges_to_add[:,
+    new_vectors = new_vertices[edges_to_add[:,0]] - new_vertices[edges_to_add[:,
                                                                             1]]
     crossing_to_add = np.round(new_vectors)
     new_crossing = np.concatenate([lattice.edges.crossing, crossing_to_add])
