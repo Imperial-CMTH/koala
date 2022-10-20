@@ -682,6 +682,11 @@ def higher_coordination_number_example(x: int) -> Lattice:
 
 
 def star_lattice_sheared():
+    """returns a star lattice, with a complete colouring and ujk for the ground state
+
+    Returns:
+        tuple: The lattice, the colouring and the ujk values
+    """
     vertices = np.array([
         [0.15470027, 0.42264985],
         [0.42264948, 0.15470074],
@@ -717,4 +722,7 @@ def star_lattice_sheared():
 
     lattice = Lattice(vertices, edges, crossing)
 
-    return lattice
+    coloring = np.array([1, 0, 2, 1, 0, 1, 2, 0, 2])
+    ujk_ground = np.array([1,1,1,1,-1,-1,-1,1,1])
+
+    return lattice, coloring, ujk_ground
