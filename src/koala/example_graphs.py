@@ -679,3 +679,42 @@ def higher_coordination_number_example(x: int) -> Lattice:
 
     l2 = Lattice(new_vertices, new_edges, new_crossing)
     return l2
+
+
+def star_lattice_sheared():
+    vertices = np.array([
+        [0.15470027, 0.42264985],
+        [0.42264948, 0.15470074],
+        [0.42264948, 0.42264985],
+        [0.57735013, 0.57735015],
+        [0.57735013, 0.84529926],
+        [0.84529935, 0.57735015]
+    ])
+
+    edges = np.array([
+        [0,1],
+        [1,2],
+        [2,0],
+        [2,3],
+        [3,4],
+        [4,5],
+        [5,3],
+        [5,0],
+        [4,1]
+    ])
+
+    crossing = np.array([
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0],
+        [1,0],
+        [0,1]
+    ])
+
+    lattice = Lattice(vertices, edges, crossing)
+
+    return lattice
