@@ -40,13 +40,13 @@ def k_hamiltonian_generator(lattice: Lattice, coloring: np.ndarray,
     return k_hamiltonian
 
 
-def analyse_hk(Hk, k_num: int, return_all_results=False) -> tuple:
+def analyse_hk(Hk, k_num, return_all_results=False) -> tuple:
     """Given a k-dependent Hamiltonian, this code samples over k-space to find the energy of the ground state and tells you the gap size
 
     Args:
         Hk (function): K-dependent Hamiltonian
         k_num (int): number of k states in the x and y direction that
-            you want to sample
+            you want to sample, can be a list for x and y separately or an integer for both
         return_all_results (Bool): If true, return the energies over all
             of phase space
 
@@ -54,10 +54,16 @@ def analyse_hk(Hk, k_num: int, return_all_results=False) -> tuple:
         tuple: the ground state energy per site, gap size
     """
 
-    k_values = np.arange(k_num) * 2 * np.pi / k_num
-    KX, KY = np.meshgrid(k_values, k_values)
-    kx = KX.flatten()
-    ky = KY.flatten()
+    if hasattr(k_num, "__len__"):
+        k_values_x = np.arange(k_num[0]) * 2 * np.pi / k_num[0]
+        k_values_y = np.arange(k_num[1]) * 2 * np.pi / k_num[1]
+        kx_grid, ky_grid = np.meshgrid(k_values_x, k_values_y)
+    else:
+        k_values = np.arange(k_num) * 2 * np.pi / k_num
+        kx_grid, ky_grid = np.meshgrid(k_values, k_values)
+
+    kx = kx_grid.flatten()
+    ky = ky_grid.flatten()
     k_list = np.array([[x, y] for x, y in zip(kx, ky)])
     k_number = k_list.shape[0]
     n_states = Hk(np.array([0, 0])).shape[0]
