@@ -61,7 +61,7 @@ class Edges:
     indices: np.ndarray
     vectors: np.ndarray
     crossing: np.ndarray
-    # adjacent_edges: np.ndarray    TODO - add this feature
+    adjacent_edges: np.ndarray
 
     # a reference to the parent lattice, has no type because Lattice isn't defined yet
     _parent: ...= field(default=None, repr=False)
@@ -149,6 +149,8 @@ class Lattice(object):
         vertex_adjacent_edges = _sorted_vertex_adjacent_edges(
             vertices, edge_indices, edge_vectors)
 
+        edge_adjacent_edges = _edge_neighbours(edge_indices)
+
         self.vertices = Vertices(
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
@@ -160,6 +162,7 @@ class Lattice(object):
             indices=edge_indices,
             vectors=edge_vectors,
             crossing=edge_crossing,
+            adjacent_edges=edge_adjacent_edges,
             _parent=self,
         )
 
@@ -257,6 +260,29 @@ class Lattice(object):
             self.__dict__.update(state)  # For backwards compatibility
         else:  # The new way to pickle just saves vertex positions, edge indices and edge crossing
             self.__init__(*state)
+
+
+def _edge_neighbours(edge_indices):
+    """Gives an array where the ith entry labels the edges that share a vertex witht he i'th edge
+
+    Args:
+        edge_indices (np.ndarray[int] (nedges, 2)): Indices of points
+            connected by each edge.
+
+    Returns:
+        list[int] (nedges, nedges_per_edge): a list containing the neighbouring edges for every edge
+    """
+
+    edge_adjacent_edges = []
+    for n in range(edge_indices.shape[0]):
+        edge = edge_indices[n]
+        v1 = edge[0]
+        v2 = edge[1]
+        mask = np.any(v1 == edge_indices, axis=-1) | np.any(
+            v2 == edge_indices, axis=-1)
+        mask[n] = False  #not a neighbour of itself
+        edge_adjacent_edges.append(np.where(mask)[0])
+    return edge_adjacent_edges
 
 
 def _sorted_vertex_adjacent_edges(vertex_positions, edge_indices, edge_vectors):
@@ -473,17 +499,11 @@ def permute_vertices(lattice: Lattice,
     inverse_ordering[ordering] = np.arange(nverts).astype(
         int)  # inverse_ordering[i] = i'
 
-    new_edges = Edges(
-        indices=inverse_ordering[original_edges.indices],
-        vectors=original_edges.vectors,
-        crossing=original_edges.crossing,
-        _parent=None,
-    )
     new_verts = original_verts.positions[ordering]
     return Lattice(
         vertices=new_verts,
-        edge_indices=new_edges.indices,
-        edge_crossing=new_edges.crossing,
+        edge_indices=inverse_ordering[original_edges.indices],
+        edge_crossing=original_edges.crossing,
     )
 
 
