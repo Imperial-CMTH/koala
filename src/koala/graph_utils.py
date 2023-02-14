@@ -39,6 +39,8 @@ def make_dual(lattice: Lattice) -> Lattice:
     return dual
 
 
+
+# TODO - This doesnt work for very small system sizes, would be worth trying to understand why
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
     The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used
@@ -338,6 +340,7 @@ def rotate(vector, angle):
     return rm @ vector
 
 
+# TODO - this could be much, MUCH faster
 def vertices_to_polygon(lattice: Lattice, indices) -> Lattice:
     """Repace a set of vertices in a lattice with polygons of thri-coordinated points (wrapper for _vertex_to_polygon)
 
