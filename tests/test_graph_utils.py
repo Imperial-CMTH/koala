@@ -4,7 +4,7 @@ import pickle as pkl
 from koala.plotting import plot_vertex_indices, plot_degeneracy_breaking, plot_lattice
 from koala import example_graphs as eg
 from koala.pointsets import uniform
-from koala.graph_utils import vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges, make_dual, vertices_to_polygon, dimerise
+from koala.graph_utils import lloyd_relaxation, vertex_neighbours, clockwise_edges_about, adjacent_plaquettes,remove_trailing_edges, make_dual, vertices_to_polygon, dimerise
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
 
@@ -76,4 +76,15 @@ def test_vertices_to_polygon():
 
     for s in sets:
         vertices_to_polygon(lattice, s)
-        dimerise(lattice)
+        
+
+
+def test_dimerisation():
+    points = uniform(30)
+    lattice = generate_lattice(points)
+    dimerise(lattice)
+
+def test_lloyds():
+    points = uniform(30)
+    lattice = generate_lattice(points)
+    lloyd_relaxation(lattice)

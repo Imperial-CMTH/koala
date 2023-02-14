@@ -9,7 +9,7 @@ from koala.lattice import Lattice
 from pysat.solvers import Solver
 from pysat.card import IDPool, CardEnc, EncType
 import itertools as it
-
+from .voronization import generate_lattice
 
 def make_dual(lattice: Lattice) -> Lattice:
     """Given a lattice, generate the dual lattice
@@ -501,3 +501,18 @@ def dimerise(lattice: Lattice, n_solutions=1):
         else:
             raise ValueError("No dimerisation exists for this lattice.")
 
+def lloyd_relaxation(lattice:Lattice , n_steps: int = 5):
+    """Performs n_steps iterations of Lloyd's algorithm, which serves to make an amorphous lattice somewhat more regular,
+    with more normalised bond lengths. Generally, around 5 iterations is optimal for a decent convergence.
+
+    Args:
+        lattice (Lattice): The lattice we start with
+        n_steps (int): How many steps the algorithm should take to relax the lattice
+
+    Returns:
+        Lattice: The relaxed lattice
+    """
+    for x in range(n_steps):
+        new_centers = np.array([p.center for p in lattice.plaquettes])
+        lattice = generate_lattice(new_centers)
+    return lattice
