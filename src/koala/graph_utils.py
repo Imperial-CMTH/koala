@@ -5,6 +5,10 @@
 import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
+from koala.lattice import Lattice
+from pysat.solvers import Solver
+from pysat.card import IDPool, CardEnc, EncType
+import itertools as it
 
 
 def make_dual(lattice: Lattice) -> Lattice:
@@ -29,15 +33,18 @@ def make_dual(lattice: Lattice) -> Lattice:
     dual_crossing = np.round(dual_verts[cleaned_edges[:, 0]] -
                              dual_verts[cleaned_edges[:, 1]])
 
-    # TODO - currently we just check if it broke and raise an error -- this isnt perfect and something will have to be fixed in the future
-    duplicate_edge_crossing = np.concatenate([cleaned_edges,dual_crossing], axis= 1)
-    if len(np.unique(duplicate_edge_crossing, axis = 0)) != len(cleaned_edges):
-        raise Exception('Dual is not currently designed to deal with lattices so small, put more points in the lattice or cut boundaries')
+    # TODO - currently we just check if it broke and raise an error -- this isnt
+    # perfect and something will have to be fixed in the future
+    duplicate_edge_crossing = np.concatenate([cleaned_edges, dual_crossing],
+                                             axis=1)
+    if len(np.unique(duplicate_edge_crossing, axis=0)) != len(cleaned_edges):
+        raise Exception(
+            "Dual is not currently designed to deal with lattices so small,\
+                put more points in the lattice or cut boundaries")
 
     # make the lattice
     dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
     return dual
-
 
 
 # TODO - This doesnt work for very small system sizes, would be worth trying to understand why
@@ -420,16 +427,15 @@ def _vertex_to_polygon(lattice: Lattice,
          outward_vertices[:, np.newaxis]],
         axis=1)
 
-    
     edges_to_add_around = np.concatenate(
         [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
          np.roll(lattice.n_vertices + np.arange(len(outward_edges)),
                  1)[:, np.newaxis]],
         axis=1)
-    
+
     # stop edge doubling if the veryex has coordination 2
     if edges_to_add_around.shape[0] < 3:
-        edges_to_add_around = edges_to_add_around[0][np.newaxis,:]
+        edges_to_add_around = edges_to_add_around[0][np.newaxis, :]
 
     edges_to_add = np.concatenate([edges_to_add_outward, edges_to_add_around])
 
@@ -438,10 +444,60 @@ def _vertex_to_polygon(lattice: Lattice,
         [lattice.vertices.positions, new_vertex_positions])
     new_edges = np.concatenate([lattice.edges.indices, edges_to_add])
 
-    new_vectors = new_vertices[edges_to_add[:,0]] - new_vertices[edges_to_add[:,
+    new_vectors = new_vertices[edges_to_add[:,
+                                            0]] - new_vertices[edges_to_add[:,
                                                                             1]]
     crossing_to_add = np.round(new_vectors)
     new_crossing = np.concatenate([lattice.edges.crossing, crossing_to_add])
 
     return remove_vertices(Lattice(new_vertices, new_edges, new_crossing),
                            vertex_index)
+
+
+def dimerise(lattice: Lattice, n_solutions=1):
+    """Given a lattice, this finds one or many valid dimerisations of this lattice, 
+    using SAT solvers. Output is given by a list of 0 or 1 for each edge, indicating 
+    whether that edge forms a dimer or not.
+
+    Args:
+        lattice (Lattice): input lattice
+        n_solutions (int, optional): How many solutions you want to output. Defaults to 1.
+
+    Raises:
+        ValueError: If the lattice has no valid dimers
+
+    Returns:
+        np.ndarray : An array of size (n_solutions, n_edges) indicating which bonds are in the dimerisation. 
+    """
+
+    n_reserved_literals = lattice.n_edges
+    vpool = IDPool(start_from=n_reserved_literals)
+
+    with Solver(name="g3") as s:
+
+        for i in range(lattice.n_vertices):
+            # the only constraint is that every vertex touches exactly one dimer
+            lits = [int(u) for u in lattice.vertices.adjacent_edges[i] + 1]
+            cnf = CardEnc.equals(lits=lits,
+                                 bound=1,
+                                 vpool=vpool,
+                                 encoding=EncType.pairwise)
+            s.append_formula(cnf)
+
+        # solve the SAT problem and return the solutions
+        solveable = s.solve()
+
+        if solveable:
+            if n_solutions == 1:
+                model = it.islice(s.enum_models(), 1)
+                solutions = np.sign(np.array(list(model))[0])
+                return (solutions + 1) // 2
+
+            if n_solutions is not None:
+                models = it.islice(s.enum_models(), n_solutions)
+                solutions = np.sign(np.array(list(models)))
+                return (solutions + 1) // 2
+
+        else:
+            raise ValueError("No dimerisation exists for this lattice.")
+
