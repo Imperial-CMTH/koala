@@ -221,7 +221,7 @@ def plot_dual(lattice, subset=slice(None, None), **kwargs):
         object.
     """
     st_as_lattice = graph_utils.make_dual(lattice)
-    plot_edges(st_as_lattice, **kwargs, subset = subset)
+    plot_edges(st_as_lattice, **kwargs, subset=subset)
     return st_as_lattice
 
 

@@ -278,8 +278,8 @@ def _edge_neighbours(edge_indices):
         edge = edge_indices[n]
         v1 = edge[0]
         v2 = edge[1]
-        mask = np.any(v1 == edge_indices, axis=-1) | np.any(
-            v2 == edge_indices, axis=-1)
+        mask = np.any(v1 == edge_indices, axis=-1) | np.any(v2 == edge_indices,
+                                                            axis=-1)
         mask[n] = False  #not a neighbour of itself
         edge_adjacent_edges.append(np.where(mask)[0])
     return edge_adjacent_edges
@@ -416,13 +416,17 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     points = l.vertices.positions[plaquette_vertices[0]] + plaquette_sums
 
     # find the polygon centroid - rather than the average of the vertices
-    px = points[:,0]; py = points[:,1]
-    signed_area = 0.5*np.sum(  px*np.roll(py, -1) - np.roll(px, -1)*py )
-    cx = np.sum( (px + np.roll(px, -1))* (px*np.roll(py, -1) - np.roll(px, -1)*py)  ) / (6*signed_area)
-    cy = np.sum( (py + np.roll(py, -1))* (px*np.roll(py, -1) - np.roll(px, -1)*py)  ) / (6*signed_area)
+    px = points[:, 0]
+    py = points[:, 1]
+    signed_area = 0.5 * np.sum(px * np.roll(py, -1) - np.roll(px, -1) * py)
+    cx = np.sum(
+        (px + np.roll(px, -1)) *
+        (px * np.roll(py, -1) - np.roll(px, -1) * py)) / (6 * signed_area)
+    cy = np.sum(
+        (py + np.roll(py, -1)) *
+        (px * np.roll(py, -1) - np.roll(px, -1) * py)) / (6 * signed_area)
     plaquette_center = np.array([cx, cy])
     # plaquette_center = np.sum(points, 0) / (points.shape[0]) % 1
-
 
     # now we check if the plaquette is acually the boundary of the lattice - this happens when
     # we are in open boundaries, do this by checking the winding number using the outer angles
