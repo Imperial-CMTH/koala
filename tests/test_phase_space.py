@@ -6,7 +6,7 @@ from koala.graph_color import color_lattice
 from matplotlib import cm
 from koala.flux_finder import fluxes_from_bonds,fluxes_to_labels
 from numpy import linalg as la
-from koala.hamiltonian import generate_majorana_hamiltonian
+from koala.hamiltonian import majorana_hamiltonian
 
 
 def test_phase_and_regular_energies():
@@ -14,7 +14,7 @@ def test_phase_and_regular_energies():
     # generate the lattice and fluxes
     system_size = 2
 
-    lattice = generate_hex_square_oct(system_size)
+    lattice = hex_square_oct_lattice(system_size)
     coloring = color_lattice(lattice)
     j_vals = np.array([1,1,1])
     ujk = np.ones(lattice.n_edges)
@@ -22,14 +22,14 @@ def test_phase_and_regular_energies():
     flip_selection = slice(4,23,6)
     ujk[flip_selection] = -1
     # generate the Hamiltonian and solve
-    h_big = generate_majorana_hamiltonian(lattice,coloring, ujk, j_vals)
+    h_big = majorana_hamiltonian(lattice,coloring, ujk, j_vals)
     energies1 = la.eigvalsh(h_big)
 
 
     # create the phase space quantum system
 
     # generate a minimal lattice unit cell
-    lattice = generate_hex_square_oct(1)
+    lattice = hex_square_oct_lattice(1)
     coloring = color_lattice(lattice)
     ujk = np.ones(lattice.n_edges)
     j_vals = np.array([1,1,1])
@@ -58,7 +58,7 @@ def test_phase_and_regular_energies():
 
 def test_phase_space_analysers():
     system_size = 5
-    lattice = generate_hex_square_oct(1)
+    lattice = hex_square_oct_lattice(1)
     coloring = color_lattice(lattice)
     ujk = np.ones(lattice.n_edges)
     j_vals = np.array([1,1,1])

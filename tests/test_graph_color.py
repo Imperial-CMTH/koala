@@ -5,16 +5,16 @@
 
 import numpy as np
 import pytest
-from koala.pointsets import generate_random
+from koala.pointsets import uniform
 from koala.voronization import generate_lattice
 from koala.graph_color import vertex_color, edge_color, color_lattice
 from koala.graph_utils import edge_neighbours, clockwise_edges_about
 
-pytestmark = pytest.mark.filterwarnings("ignore:numpy")
+pytestmark = pytest.mark.filterwarnings('ignore:numpy')
 
 def test_vertex_coloring():
     for n in range(4, 50, 5):
-        points = generate_random(n)
+        points = uniform(n)
         g = generate_lattice(points)    
         solveable, solution = vertex_color(g.edges.indices, n_colors = 3)
         if solveable:
@@ -26,7 +26,7 @@ def test_vertex_coloring():
 
 def test_edge_coloring():
     for n in [4,10,30,50]:
-        points = generate_random(n)
+        points = uniform(n)
         lattice = generate_lattice(points)
         solveable, solution = edge_color(lattice, n_colors = 3)
         
@@ -43,10 +43,10 @@ def test_unsolveable():
     pass
 
 def test_color_lattice():
-    from koala.example_graphs import two_tri, tri_square_pent, tutte_graph
-    graphs = [two_tri(), tri_square_pent(), tutte_graph()]
+    from koala.example_graphs import two_triangles, tri_square_pent, tutte_graph
+    graphs = [two_triangles(), tri_square_pent(), tutte_graph()]
     for g in graphs:
-        fixed = enumerate(clockwise_edges_about(vertex_i = 0, g=g))
+        fixed = enumerate(clockwise_edges_about(vertex_index = 0, g=g))
         solveable, solution = edge_color(g, n_colors = 3, fixed = fixed)
         if solveable:
             solution2 = color_lattice(g)

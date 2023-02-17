@@ -14,7 +14,7 @@ def test_small_multigraph():
     g = generate_lattice(points)
     assert(np.all(np.bincount(g.edges.indices.flatten()) == 3))
 
-    fixed = list(enumerate(clockwise_edges_about(vertex_i = 0, g=g)))
+    fixed = list(enumerate(clockwise_edges_about(vertex_index = 0, g=g)))
     solveable, solutions = edge_color(g, n_colors = 3, fixed = fixed, all_solutions = True)
     assert(solveable)
     assert(solutions.shape[0] == 2)

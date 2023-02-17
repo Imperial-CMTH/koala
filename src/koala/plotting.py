@@ -14,17 +14,19 @@ from . import graph_utils
 from .graph_utils import clockwise_edges_about, vertex_neighbours
 from .lattice import LatticeException
 from .voronization import Lattice, generate_point_array
+import functools
+import warnings
 
 #### New plotting interface ####
 
 
 def plot_vertices(
-    lattice: Lattice,
-    labels: np.ndarray = 0,
-    color_scheme: np.ndarray = "black",
-    subset: np.ndarray = slice(None, None, None),
-    ax=None,
-    **kwargs,
+        lattice: Lattice,
+        labels: np.ndarray = 0,
+        color_scheme: np.ndarray = "black",
+        subset: np.ndarray = slice(None, None, None),
+        ax=None,
+        **kwargs,
 ):
     """Plot the vertices of a lattice.
     This uses matplotlib.pyplot.scatter under the hood and you may
@@ -32,20 +34,20 @@ def plot_vertices(
     You can use this to, for instance, plot some of the vertices as
      triangles and some as squares.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        ax: The axis to plot on, defaults to plt.gca()
     """
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
-        lattice, ax, labels, color_scheme, subset, lattice.n_vertices, kwargs
-    )
+        lattice, ax, labels, color_scheme, subset, lattice.n_vertices, kwargs)
 
     args = dict(
         x=lattice.vertices.positions[subset, 0],
@@ -61,55 +63,50 @@ def plot_vertices(
 def plot_edges(
     lattice: Lattice,
     labels: np.ndarray = 0,
-    color_scheme: np.ndarray = ["k", "r", "b"],
+    color_scheme: np.ndarray = ("k", "r", "b"),
     subset: np.ndarray = slice(None, None, None),
     directions: np.ndarray = None,
     ax=None,
     arrow_head_length=None,
     **kwargs,
 ):
-    """
-    Plot the edges of a lattice with optional arrows.
+    """Plot the edges of a lattice with optional arrows.
     This uses matplotlib.collections.LineColection under the hood and you may
     pass in any keyword to be passed along to it.
     Note that arrays for alpha or linestyle don't currently work since they would have to be tiled correctly, and are not currently.
 
     If directions is not none, arrows are plotted from the first vertex to the second unless direction[i] == -1
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param directions: An array of arrow directions +/-1, defaults to None.
-    :type directions: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        directions (np.ndarray, optional): An array of arrow directions
+            +/-1, defaults to None.
+        ax: The axis to plot on, defaults to plt.gca()
     """
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
-        lattice, ax, labels, color_scheme, subset, lattice.n_edges, kwargs
-    )
+        lattice, ax, labels, color_scheme, subset, lattice.n_edges, kwargs)
 
     edge_colors = np.tile(colors, 9)
     edge_vertices = lattice.vertices.positions[lattice.edges.indices[subset]]
     edge_vertices[:, 0, :] -= lattice.edges.crossing[subset]
 
-    unit_cell_vectors = generate_point_array(np.array([0, 0]), padding=1)[
-        :, None, None, :
-    ]  # shape (9, 2) -> (9, 1, 1, 2)
-    replicated_edges = (
-        edge_vertices[None, ...] + unit_cell_vectors
-    )  # shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
+    unit_cell_vectors = generate_point_array(np.array(
+        [0, 0]), padding=1)[:, None, None, :]  # shape (9, 2) -> (9, 1, 1, 2)
+    replicated_edges = (edge_vertices[None, ...] + unit_cell_vectors
+                       )  # shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
     replicated_edges = replicated_edges.reshape(
-        (-1, 2, 2)
-    )  # shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
+        (-1, 2, 2))  # shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
 
     vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(
-        replicated_edges
-    )
+        replicated_edges)
     # print(edge_colors.shape, replicated_edges.shape, vis.shape)
     lc = LineCollection(
         replicated_edges[vis, ...],
@@ -121,7 +118,10 @@ def plot_edges(
     ax.add_collection(lc)
 
     if directions is not None:
-        directions = _broadcast_args(directions, subset, lattice.n_edges, dtype=int)
+        directions = _broadcast_args(directions,
+                                     subset,
+                                     lattice.n_edges,
+                                     dtype=int)
         directions = np.tile(directions, 9)
         _plot_edge_arrows(
             ax,
@@ -137,47 +137,47 @@ def plot_edges(
 
 
 def plot_plaquettes(
-    lattice: Lattice,
-    labels: np.ndarray = 0,
-    color_scheme: np.ndarray = ["r", "b", "k"],
-    subset: np.ndarray = slice(None, None, None),
-    ax=None,
-    **kwargs,
+        lattice: Lattice,
+        labels: np.ndarray = 0,
+        color_scheme: np.ndarray = ("r", "b", "k"),
+        subset: np.ndarray = slice(None, None, None),
+        ax=None,
+        **kwargs,
 ):
-    """
-    Plot the plaquettes of a lattice.
+    """Plot the plaquettes of a lattice.
     This uses matplotlib.collections.PolyColection under the hood and you may
     pass in any keyword to be passed along to it.
     Note that currently the calls are done per plaquette so you can't for instance have multiple alpha values.
     Adding a color argument overides the color_scheme and labels.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param labels: int or array of ints specifying the colors, defaults to 0. May be the same size as the vertices or of the subset.
-    :type labels: np.ndarray, optional
-    :param color_scheme: List or array of colors, defaults to ['black', ]
-    :type color_scheme: np.ndarray, optional
-    :param subset: An array of indices, boolean array or slice that selects which elements to plot, defaults to plotting all.
-    :type subset: np.ndarray, optional
-    :param ax: The axis to plot on, defaults to plt.gca()
-    :type subset: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        labels (np.ndarray, optional): int or array of ints specifying
+            the colors, defaults to 0. May be the same size as the
+            vertices or of the subset.
+        color_scheme (np.ndarray, optional): List or array of colors,
+            defaults to ['black', ]
+        subset (axis, optional): An array of indices, boolean array or
+            slice that selects which elements to plot, defaults to
+            plotting all.
+        ax: The axis to plot on, defaults to plt.gca()
     """
 
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
-        lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes, kwargs
-    )
+        lattice, ax, labels, color_scheme, subset, lattice.n_plaquettes, kwargs)
 
-    indices = np.arange(lattice.n_plaquettes)[subset]
+    # indices = np.arange(lattice.n_plaquettes)[subset]
     plaquettes = lattice.plaquettes[subset]
 
     collections = []
-    for i, color, p in zip(indices, colors, plaquettes):
+    for color, p in zip(colors, plaquettes):
 
         # get the edge vectors going anticlockwise around the plaquette
         vectors = lattice.edges.vectors[p.edges] * p.directions[:, None]
 
         # use those to construct the points around the plaquette ignoring PBC
-        points = lattice.vertices.positions[p.vertices[0]] + np.cumsum(vectors, axis=0)
+        points = lattice.vertices.positions[p.vertices[0]] + np.cumsum(vectors,
+                                                                       axis=0)
 
         # represent the line segments of p with (start_point, end_point) tuples
         lines = np.array(list(zip(points, np.roll(points, -1, axis=0))))
@@ -208,36 +208,40 @@ def plot_plaquettes(
 
 
 def plot_dual(lattice, subset=slice(None, None), **kwargs):
-    """Given a lattice, plot the edges in it's dual or a subset of them, other args are passed through to plot_edges.
+    """Given a lattice, plot the edges in its dual or a subset of them, other args are passed through to plot_edges.
 
-    :param lattice: The lattice to use.
-    :type lattice: Lattice
-    :param subset: a subset of edges to plot, defaults to all.
-    :type subset: slice, boolean array or indices, optional
-    :param ax: the ax to plot to, defaults to None
-    :type ax: axis, optional
+    Args:
+        lattice (Lattice): The lattice to use.
+        subset (slice, boolean array or indices, optional): a subset of
+            edges to plot, defaults to all.
+        ax (axis, optional): the ax to plot to, defaults to None
 
-    :return: The dual lattice represented as a second Lattice object.
-    :rtype: Lattice
+    Returns:
+        Lattice: The dual lattice represented as a second Lattice
+        object.
     """
-    st_as_lattice = graph_utils.make_dual(lattice, subset)
-    plot_edges(st_as_lattice, **kwargs)
+    st_as_lattice = graph_utils.make_dual(lattice)
+    plot_edges(st_as_lattice, **kwargs, subset = subset)
     return st_as_lattice
 
 
-def _plot_edge_arrows(
-    ax, colors, edges, directions, linecollection, unit_cell, arrow_head_length=None
-):
+def _plot_edge_arrows(ax,
+                      colors,
+                      edges,
+                      directions,
+                      linecollection,
+                      unit_cell,
+                      arrow_head_length=None):
     n_edges = edges.shape[0]
     edges = unit_cell.transform(edges.reshape(-1, 2)).reshape(n_edges, 2, 2)
     linewidth = linecollection.get_linewidths()[
-        0
-    ]  # currently don't support multiple linewidths
-    for color, (end, start), dir in zip(colors, edges, directions):
-        start, end = [start, end][::dir]
+        0]  # currently don't support multiple linewidths
+    for color, (end, start), dire in zip(colors, edges, directions):
+        start, end = [start, end][::dire]
         center = 1 / 2 * (end + start)
         length = np.linalg.norm(end - start)
-        head_length = arrow_head_length or min(0.2 * length, 0.02 * linewidth / 1.5)
+        head_length = arrow_head_length or min(0.2 * length,
+                                               0.02 * linewidth / 1.5)
         direction = head_length * (start - end) / length
         arrow_start = center - direction
         ax.arrow(
@@ -274,7 +278,8 @@ def _broadcast_args(arg, subset, N, dtype=int):
     if arg.shape[0] == N:
         arg = arg[subset]
     elif arg.shape[0] == subset_size:
-        arg = arg
+        # arg = arg
+        pass
     else:
         raise ValueError(
             f"Argument shape {arg.shape} should be either lattice.n_* ({N}) or the size of the subset ({subset_size})"
@@ -284,22 +289,23 @@ def _broadcast_args(arg, subset, N, dtype=int):
 
 
 def _scale_nicely(lattice, ax):
-    square = np.array(
-        [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(1, 1), (0, 1)], [(0, 1), (0, 0)]]
-    )
-    transformed_square = lattice.unit_cell.transform(square.reshape(-2, 2)).reshape(
-        4, 2, 2
-    )
-    lx, hx = np.min(transformed_square[..., 0]), np.max(transformed_square[..., 0])
-    ly, hy = np.min(transformed_square[..., 1]), np.max(transformed_square[..., 1])
+    square = np.array([[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(1, 1), (0, 1)],
+                       [(0, 1), (0, 0)]])
+    transformed_square = lattice.unit_cell.transform(square.reshape(-2,
+                                                                    2)).reshape(
+                                                                        4, 2, 2)
+    lx, hx = np.min(transformed_square[..., 0]), np.max(transformed_square[...,
+                                                                           0])
+    ly, hy = np.min(transformed_square[..., 1]), np.max(transformed_square[...,
+                                                                           1])
     extent = max((hx - lx) / 2, (hy - ly) / 2)
     mid_x, mid_y = (hx + lx) / 2, (hy + ly) / 2
-    ax.set(xlim=(mid_x - extent, mid_x + extent), ylim=(mid_y - extent, mid_y + extent))
+    ax.set(xlim=(mid_x - extent, mid_x + extent),
+           ylim=(mid_y - extent, mid_y + extent))
 
 
 def _process_plot_args(lattice, ax, labels, color_scheme, subset, N, kwargs):
-    """
-    Deals with housekeeping operations common to all plotting functions.
+    """Deals with housekeeping operations common to all plotting functions.
     Specifically:
         Broadcast single values to be the size of the lattice.
         Allow labels to refer to either the whole lattice or the subset.
@@ -332,49 +338,43 @@ def _process_plot_args(lattice, ax, labels, color_scheme, subset, N, kwargs):
 #### Functions to plot index labels of the vertices ####
 
 
-def plot_vertex_indices(g, ax=None, offset=0.01, **kwargs):
-    """
-    Plot the indices of the vertices on a graph
-    """
+def plot_vertex_indices(lattice, ax=None, offset=0.01, **kwargs):
+    """Plot the indices of the vertices on a graph"""
     if ax is None:
         ax = plt.gca()
-    for i, v in enumerate(g.vertices.positions):
+    for i, v in enumerate(lattice.vertices.positions):
         ax.text(*(v + offset), f"{i}", **kwargs)
 
 
 # TODO: Make this work with edges that cross the boundaries
-def plot_edge_indices(g, ax=None, offset=0.01):
-    """
-    Plot the indices of the edges on a graph
-    """
+def plot_edge_indices(lattice, ax=None, offset=0.01):
+    """Plot the indices of the edges on a graph"""
     if ax is None:
         ax = plt.gca()
-    for i, e in enumerate(g.edges.indices):
-        midpoint = g.vertices.positions[e].mean(axis=0)
-        if not np.any(g.edges.crossing[i]) != 0:
+    for i, e in enumerate(lattice.edges.indices):
+        midpoint = lattice.vertices.positions[e].mean(axis=0)
+        if not np.any(lattice.edges.crossing[i]) != 0:
             ax.text(*(midpoint + offset), f"{i}", color="g")
 
 
-def plot_plaquette_indices(l, ax=None, **kwargs):
-    """
-    Plot the indices of the vertices on a graph
-    """
+def plot_plaquette_indices(lattice, ax=None, **kwargs):
+    """Plot the indices of the vertices on a graph"""
     if ax is None:
         ax = plt.gca()
-    for i, p in enumerate(l.plaquettes):
+    for i, p in enumerate(lattice.plaquettes):
         ax.text(*p.center, f"{i}", **kwargs)
 
 
-############### Old plotting interface + internal stuff ##############################
-
-import functools
-import warnings
+#########################################################################################################
+################################ Old plotting interface + internal stuff ################################
+#########################################################################################################
 
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    when the function is used.
+    """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -430,10 +430,14 @@ def _lines_cross_unit_cell(lines: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: out[i] == 1 if line[i] is fully inside the unit cell
 
-    :param lines: : Represents lines by pairs of points
-    :type lines: np.ndarray shape (n_lines, 2, 2)
-    :return: cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell
-    :rtype: np.ndarray shape (n_lines,)
+    Args:
+        lines (np.ndarray shape (n_lines, 2, 2)): : Represents lines by
+            pairs of points
+
+    Returns:
+        np.ndarray shape (n_lines,): cross[i] is true is the
+        corresponding line crossed any of the 4 boundaries of the unit
+        cell
     """
     start, end = (
         lines[:, 0, None, :],
@@ -451,12 +455,8 @@ def _lines_cross_unit_cell(lines: np.ndarray) -> np.ndarray:
     # flip the last axis of start and end so that we use the t that made the x coord cross to compute the y coord
     # t.shape (n_lines, 0/1, x/y) start[..., ::-1].shape (n_lines, 1, y,x)
     other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
-    cross = (
-        (0 < t)
-        & (t <= 1)
-        & (0 < other_coord_value_at_t)
-        & (other_coord_value_at_t <= 1)
-    )
+    cross = ((0 < t) & (t <= 1) & (0 < other_coord_value_at_t) &
+             (other_coord_value_at_t <= 1))
     return np.any(cross, axis=(1, 2))
 
 
@@ -465,9 +465,9 @@ def plot_lattice(
     lattice,
     ax=None,
     edge_labels=None,
-    edge_color_scheme=["r", "g", "b", "k"],
+    edge_color_scheme=("r", "g", "b", "k"),
     vertex_labels=None,
-    vertex_color_scheme=["r", "b", "k"],
+    vertex_color_scheme=("r", "b", "k"),
     edge_arrows=False,
     edge_index_labels=False,
     bond_signs=None,
@@ -504,26 +504,21 @@ def plot_lattice(
     if edge_labels is not None:
         edge_colors = np.tile(edge_color_scheme[edge_labels], 9)
     else:
-        edge_colors = np.full(
-            fill_value=edge_color_scheme[-1], shape=adjacency.shape[0] * 9
-        )
+        edge_colors = np.full(fill_value=edge_color_scheme[-1],
+                              shape=adjacency.shape[0] * 9)
 
     edge_vertices = vertices.positions[adjacency]
     edge_vertices[:, 0, :] -= adjacency_crossing
 
-    unit_cell_vectors = generate_point_array(np.array([0, 0]), padding=1)[
-        :, None, None, :
-    ]  # shape (9, 2) -> (9, 1, 1, 2)
-    replicated_edges = (
-        edge_vertices[None, ...] + unit_cell_vectors
-    )  # shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
+    unit_cell_vectors = generate_point_array(np.array(
+        [0, 0]), padding=1)[:, None, None, :]  # shape (9, 2) -> (9, 1, 1, 2)
+    replicated_edges = (edge_vertices[None, ...] + unit_cell_vectors
+                       )  # shape (n_edges, 2, 2) -> (9, n_edges, 2, 2)
     replicated_edges = replicated_edges.reshape(
-        (-1, 2, 2)
-    )  # shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
+        (-1, 2, 2))  # shape (9, n_edges, 2, 2) -> (9*n_edges, 2, 2)
 
     vis = _lines_cross_unit_cell(replicated_edges) | _line_fully_in_unit_cell(
-        replicated_edges
-    )
+        replicated_edges)
     lc = LineCollection(replicated_edges[vis, ...], colors=edge_colors[vis])
     ax.add_collection(lc)
 
@@ -532,9 +527,8 @@ def plot_lattice(
         if isinstance(edge_arrows, bool):
             edge_arrows = np.full(fill_value=edge_arrows, shape=lattice.n_edges)
         if isinstance(edge_index_labels, bool):
-            edge_index_labels = np.full(
-                fill_value=edge_index_labels, shape=lattice.n_edges
-            )
+            edge_index_labels = np.full(fill_value=edge_index_labels,
+                                        shape=lattice.n_edges)
         if bond_signs is None:
             bond_signs = np.ones(lattice.n_edges, dtype=int)
 
@@ -543,10 +537,10 @@ def plot_lattice(
         bond_signs = np.tile(bond_signs, 9)
 
         for i, color, (start, end), bond_sign in zip(
-            original_edge_indices[vis],
-            edge_colors[vis],
-            replicated_edges[vis, ...],
-            bond_signs[vis],
+                original_edge_indices[vis],
+                edge_colors[vis],
+                replicated_edges[vis, ...],
+                bond_signs[vis],
         ):
             start, end = [start, end][::bond_sign]
             center = 1 / 2 * (end + start)
@@ -602,7 +596,8 @@ cdict = {
     "blue": [(0.0, 0.0, 1.0), (1.0, 0.0, 1.0)],
 }
 
-white2green = matplotlib.colors.LinearSegmentedColormap("my_colormap2", cdict, 256)
+white2green = matplotlib.colors.LinearSegmentedColormap("my_colormap2", cdict,
+                                                        256)
 
 
 def plot_scalar(
@@ -643,16 +638,17 @@ def plot_scalar(
     def to_points(xv, yv):
         return np.array([xv, yv]).transpose((1, 2, 0))
 
-    s = scipy.interpolate.griddata(
-        g.vertices.positions, scalar, to_points(xv, yv), method=method, rescale=True
-    )
+    s = scipy.interpolate.griddata(g.vertices.positions,
+                                   scalar,
+                                   to_points(xv, yv),
+                                   method=method,
+                                   rescale=True)
     ax.pcolormesh(xv, yv, s, cmap=cmap, vmin=vmin, vmax=vmax)
     return xv, yv, s
 
 
 def plot_degeneracy_breaking(vertex_i, g, ax=None):
-    """
-    Companion function to graph_utils.clockwise_edges_about,
+    """Companion function to graph_utils.clockwise_edges_about,
     plots the edges on an axis with labelled angles and the positive x axis as a dotted line
     """
     if ax is None:
@@ -671,7 +667,8 @@ def plot_degeneracy_breaking(vertex_i, g, ax=None):
     # color the edges in a clockwise fashion
     ordered_edge_indices = clockwise_edges_about(vertex_i, g)
 
-    highlight_edge_neighbours = np.array([3 for i in range(g.edges.indices.shape[0])])
+    highlight_edge_neighbours = np.array(
+        [3 for i in range(g.edges.indices.shape[0])])
     highlight_edge_neighbours[ordered_edge_indices] = [0, 1, 2]
 
     ax.hlines(
@@ -692,17 +689,20 @@ def plot_degeneracy_breaking(vertex_i, g, ax=None):
 
 
 def _lines_cross_any_cell_boundary(lines: np.ndarray) -> np.ndarray:
-    """
-    Used in plot_plaquettes to determine which plaquettes need to be plotted multiple times.
+    """Used in plot_plaquettes to determine which plaquettes need to be plotted multiple times.
     Similar to the above, but tells you if the line cross y=0,1 and x=0,1 at any point rather than just the unit cell.
 
-    :param lines: : Represents lines by pairs of points
-    :type lines: np.ndarray shape (n_lines, 2, 2)
-    :param which: If True output information about which lines were crossed, defaults to False
-    :type which: bool, optional
-    :return: If which is false, cross[i] is true is the corresponding line crossed any of the 4 boundaries of the unit cell,
+    Args:
+        lines (np.ndarray shape (n_lines, 2, 2)): : Represents lines by
+            pairs of points
+        which (bool, optional): If True output information about which
+            lines were crossed, defaults to False
+
+    Returns:
+        np.ndarray shape (n_lines,) or (n_lines, 2, 2) if which is True:
+        If which is false, cross[i] is true is the corresponding line
+        crossed any of the 4 boundaries of the unit cell,
     if which is true, cross[i] = ((x=0, y=0), (x=1, y=1)) where each entry if true if line[i] crossed the corresponding boundary.
-    :rtype: np.ndarray shape (n_lines,) or (n_lines, 2, 2) if which is True
     """
     start, end = (
         lines[:, 0, None, :],
@@ -715,7 +715,7 @@ def _lines_cross_any_cell_boundary(lines: np.ndarray) -> np.ndarray:
 
     t[~np.isfinite(t)] = 0.5 * (l == end)[~np.isfinite(t)]
 
-    other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
+    # other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
     cross = (0 < t) & (t <= 1)
     return cross
 
@@ -731,20 +731,21 @@ def cross_product_2d(a, b):
 
 
 def line_intersection(lines, lines2, abs_tolerance=1e-14, full_output=False):
-    """
-    Generic Line to line intersection function
+    """Generic Line to line intersection function
 
-    :param lines: The first set of lines, with shape [n_lines, 2, 2] where lines[i, 0, :] is the first point of the ith line
-    :type line: np.ndarray
+    Args:
+        lines: The first set of lines, with shape [n_lines, 2, 2] where
+            lines[i, 0, :] is the first point of the ith line
+        line (np.ndarray)
+        lines2: The second set of lines to intersect with. Shape
+            [n_lines2, 2, 2]
+        line2 (np.ndarray)
+        abs_tolerance (float): The absolute floating point tolerance to
+            use for the parallel and colinear special cases.
 
-    :param lines2: The second set of lines to intersect with. Shape [n_lines2, 2, 2]
-    :type line2: np.ndarray
-
-    :param abs_tolerance: The absolute floating point tolerance to use for the parallel and colinear special cases.
-    :type abs_tolerance: float
-
-    :return: intersection, boolean array shape [n_lines, n_lines2]
-    :rtype: np.ndarray
+    Returns:
+        np.ndarray: intersection, boolean array shape [n_lines,
+        n_lines2]
     """
 
     s1 = lines[:, 0, :][:, None]
@@ -757,8 +758,7 @@ def line_intersection(lines, lines2, abs_tolerance=1e-14, full_output=False):
 
     d2_cross_d1 = cross_product_2d(d2, d1)  # 0 if lines are parallel
     displacement_cross_d1 = cross_product_2d(
-        (s1 - s2), d1
-    )  # when parallel this is 0 if lines are also colinear
+        (s1 - s2), d1)  # when parallel this is 0 if lines are also colinear
 
     with np.errstate(divide="ignore", invalid="ignore"):
 
@@ -772,12 +772,12 @@ def line_intersection(lines, lines2, abs_tolerance=1e-14, full_output=False):
 
     # add some floating point tolerance
     are_parallel = np.abs(d2_cross_d1) < abs_tolerance
-    are_colinear = are_parallel & (np.abs(displacement_cross_d1) < abs_tolerance)
+    are_colinear = are_parallel & (np.abs(displacement_cross_d1) <
+                                   abs_tolerance)
 
     t_in_range = (0 <= t1) & (t1 <= 1) & (0 <= t2) & (t2 <= 1)
-    t_star_in_range = ((-1 <= t_star1) & (t_star1 <= 1)) | (
-        (-1 <= t_star2) & (t_star2 <= 1)
-    )
+    t_star_in_range = ((-1 <= t_star1) & (t_star1 <= 1)) | ((-1 <= t_star2) &
+                                                            (t_star2 <= 1))
 
     intersect = np.select(
         condlist=[~are_parallel, ~are_colinear, are_colinear],

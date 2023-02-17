@@ -1,5 +1,5 @@
 import numpy as np
-from koala.example_graphs import generate_honeycomb
+from koala.example_graphs import honeycomb_lattice
 
 
 def is_trivalent(lattice):
@@ -19,8 +19,8 @@ def color_honeycomb_lattice(lattice):
  
 def test_honeycomb():
     N = 10
-    honeycomb = generate_honeycomb(N, return_coloring=False)
-    honeycomb, coloring = generate_honeycomb(N, return_coloring=True)
+    honeycomb = honeycomb_lattice(N, return_coloring=False)
+    honeycomb, coloring = honeycomb_lattice(N, return_coloring=True)
 
     #all vertices have coordination number 3
     assert(is_trivalent(honeycomb)) 
