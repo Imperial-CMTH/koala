@@ -54,7 +54,7 @@ def analyse_hk(Hk, k_num, return_all_results=False) -> tuple:
         tuple: the ground state energy per site, gap size
     """
 
-    if hasattr(k_num, "__len__"):
+    if hasattr(k_num, '__len__'):
         k_values_x = np.arange(k_num[0]) * 2 * np.pi / k_num[0]
         k_values_y = np.arange(k_num[1]) * 2 * np.pi / k_num[1]
         kx_grid, ky_grid = np.meshgrid(k_values_x, k_values_y)

@@ -139,7 +139,7 @@ def de_brujin_grid(number_of_lines: int,
 
     # remove all the the lattice outside a boundary - get rid of the star otside bit
     vertex_radii = np.sqrt(np.sum((dual.vertices.positions - 0.5)**2, axis=1))
-    radius = scaling * (number_of_lines-1) / 2
+    radius = scaling * (number_of_lines - 1) / 2
     remove = np.where(vertex_radii > radius)[0]
     dual_clipped = remove_trailing_edges(remove_vertices(dual, remove))
 
