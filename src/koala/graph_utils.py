@@ -346,43 +346,92 @@ def rotate(vector, angle):
                    [np.sin(angle), np.cos(angle)]])
     return rm @ vector
 
+def vertices_to_polygon(lattice:Lattice, vertices:np.ndarray = None) -> Lattice:
 
-# TODO - this could be much, MUCH faster
-def vertices_to_polygon(lattice: Lattice, indices) -> Lattice:
-    """Repace a set of vertices in a lattice with polygons of thri-coordinated points (wrapper for _vertex_to_polygon)
+    if vertices is None:
+        vertices = np.arange(lattice.n_vertices)
+    # check if vertices is not iterable
+    if not hasattr(vertices, '__iter__'):
+        vertices = [vertices]
 
-    Args:
-        lattice (Lattice): input lattice
-        indices (_type_): either an index for the point to be replaced, or a list of indices of points to be replaced
+    new_positions = []
+    vertices_shifted = []
 
-    Returns:
-        Lattice: the new lattice with replaced points
-    """
+    # these will be the remapped edges and crossings of the new lattice
+    original_edges = np.full([lattice.n_edges, 2], None)
+    original_crossing = lattice.edges.crossing.copy()
+    
+    # these will be the new edges and crossings of the new lattice
+    added_edges = []
+    added_crossing = []
 
-    try:
-        iter(indices)
-    except TypeError:
-        return _vertex_to_polygon(lattice, indices)
+    running_total = 0
+    # find the new positions of the vertices
+    for n  in range(lattice.n_vertices):
 
-    running_lattice = _vertex_to_polygon(lattice, indices[0])
-    relabeling = np.arange(lattice.n_vertices)
+        # if the vertex is in the list of vertices to be turned into polygons
+        if n in vertices:
 
-    relabeling = relabeling - 1 * (np.arange(lattice.n_vertices) >= indices[0])
+            # find the edges+vertices that are adjacent to this vertex
+            edges_from = lattice.vertices.adjacent_edges[n]
+            other_vertices = lattice.edges.indices[edges_from]
+            first_or_second = np.where(other_vertices != n)[1]
 
-    for index in indices[1:]:
+            # create new vertex positions
+            vectors = -(1 - 2*first_or_second[:, np.newaxis])*lattice.edges.vectors[edges_from]
+            new_set = lattice.vertices.positions[n] + vectors/3
 
-        vertex_to_target = relabeling[index]
-        outward_edges = lattice.vertices.adjacent_edges[index]
-        vector_distances = np.sqrt(
-            np.sum(lattice.edges.vectors[outward_edges]**2, axis=1))
-        desired_distance = np.min(vector_distances) / 3
-        running_lattice = _vertex_to_polygon(running_lattice, vertex_to_target,
-                                             desired_distance)
+            # check if the new vertex positions are in the unit cell, if not, shift them
+            shifted = (new_set//1).astype("int")
+            new_set = new_set%1
 
-        relabeling = relabeling - 1 * (np.arange(lattice.n_vertices) >= index)
+            # now add the polygon edges
+            around_polygon = np.array([[x, (x+1)%len(new_set)] for x in range(len(new_set))]) + running_total
+            crossing_around = np.zeros_like(around_polygon)
 
-    return running_lattice
+            #  iterate over the new vertices
+            for u in range(len(new_set)):
+                
+                current_index = running_total + u
+                
+                # shift the crossings if the vertices were shifted
+                if np.any(shifted[u]):
+                    original_crossing[edges_from[u]] += shifted[u]*(1 - 2*first_or_second[u])
 
+                    crossing_around[u] -= shifted[u]
+                    crossing_around[(u-1)%len(new_set)] += shifted[u]
+
+                new_positions.append(new_set[u])
+                vertices_shifted.append(shifted[u])
+                added_edges.append(around_polygon[u])
+                added_crossing.append(crossing_around[u])
+
+                original_edges[edges_from[u],1-first_or_second[u]] = current_index
+            
+            running_total += len(new_set)
+
+        # else just keep on as normal
+        else:
+            # trivially add the vertex
+            new_positions.append( lattice.vertices.positions[n] )
+            vertices_shifted.append( np.zeros(2) )
+
+            # add the edges that touch this vertex
+            edges_from = lattice.vertices.adjacent_edges[n]
+            other_vertices = lattice.edges.indices[edges_from]
+            first_or_second = np.where(other_vertices != n)[1]
+            original_edges[edges_from,1-first_or_second] = running_total
+
+            running_total += 1
+    
+    added_edges = np.array(added_edges)
+    added_crossing = np.array(added_crossing)
+
+    vertices = np.array(new_positions)
+    edges = np.concatenate([original_edges, added_edges])
+    crossing = np.concatenate([original_crossing, added_crossing])
+
+    return Lattice(vertices, edges.astype("int"), crossing.astype("int"))
 
 def _vertex_to_polygon(lattice: Lattice,
                        vertex_index: int,
@@ -409,7 +458,7 @@ def _vertex_to_polygon(lattice: Lattice,
     outward_vertices = lattice.edges.indices[outward_edges][np.where(
         lattice.edges.indices[outward_edges] != vertex_index)]
 
-    # find position of new vertices
+    
     vector_distances = np.sqrt(
         np.sum(lattice.edges.vectors[outward_edges]**2, axis=1))
     if desired_distance is None:
