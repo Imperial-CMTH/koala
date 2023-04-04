@@ -11,6 +11,7 @@ from pysat.card import IDPool, CardEnc, EncType
 import itertools as it
 from .voronization import generate_lattice
 
+
 def make_dual(lattice: Lattice) -> Lattice:
     """Given a lattice, generate the dual lattice
 
@@ -346,7 +347,18 @@ def rotate(vector, angle):
                    [np.sin(angle), np.cos(angle)]])
     return rm @ vector
 
-def vertices_to_polygon(lattice:Lattice, vertices:np.ndarray = None) -> Lattice:
+
+def vertices_to_polygon(lattice: Lattice,
+                        vertices: np.ndarray = None) -> Lattice:
+    """Takes a lattice and turns the vertices in the list vertices into polygons. If vertices is None, all vertices with more than 2 edges will be turned into polygons.
+
+    Args:
+        lattice (Lattice): input lattice
+        indices (np.ndarray): either an index for the point to be replaced, or a list of indices of points to be replaced
+
+    Returns:
+        Lattice: the new lattice with replaced points
+    """
 
     if vertices is None:
         vertices = np.arange(lattice.n_vertices)
@@ -360,17 +372,17 @@ def vertices_to_polygon(lattice:Lattice, vertices:np.ndarray = None) -> Lattice:
     # these will be the remapped edges and crossings of the new lattice
     original_edges = np.full([lattice.n_edges, 2], None)
     original_crossing = lattice.edges.crossing.copy()
-    
+
     # these will be the new edges and crossings of the new lattice
     added_edges = []
     added_crossing = []
 
     running_total = 0
     # find the new positions of the vertices
-    for n  in range(lattice.n_vertices):
+    for n in range(lattice.n_vertices):
 
         # if the vertex is in the list of vertices to be turned into polygons
-        if n in vertices:
+        if n in vertices and len(lattice.vertices.adjacent_edges[n]) > 2:
 
             # find the edges+vertices that are adjacent to this vertex
             edges_from = lattice.vertices.adjacent_edges[n]
@@ -378,52 +390,57 @@ def vertices_to_polygon(lattice:Lattice, vertices:np.ndarray = None) -> Lattice:
             first_or_second = np.where(other_vertices != n)[1]
 
             # create new vertex positions
-            vectors = -(1 - 2*first_or_second[:, np.newaxis])*lattice.edges.vectors[edges_from]
-            new_set = lattice.vertices.positions[n] + vectors/3
+            vectors = -(1 - 2 * first_or_second[:, np.newaxis]
+                       ) * lattice.edges.vectors[edges_from]
+            new_set = lattice.vertices.positions[n] + vectors / 3
 
             # check if the new vertex positions are in the unit cell, if not, shift them
-            shifted = (new_set//1).astype("int")
-            new_set = new_set%1
+            shifted = (new_set // 1).astype("int")
+            new_set = new_set % 1
 
             # now add the polygon edges
-            around_polygon = np.array([[x, (x+1)%len(new_set)] for x in range(len(new_set))]) + running_total
+            around_polygon = np.array([
+                [x, (x + 1) % len(new_set)] for x in range(len(new_set))
+            ]) + running_total
             crossing_around = np.zeros_like(around_polygon)
 
             #  iterate over the new vertices
             for u in range(len(new_set)):
-                
+
                 current_index = running_total + u
-                
+
                 # shift the crossings if the vertices were shifted
                 if np.any(shifted[u]):
-                    original_crossing[edges_from[u]] += shifted[u]*(1 - 2*first_or_second[u])
+                    original_crossing[edges_from[u]] += shifted[u] * (
+                        1 - 2 * first_or_second[u])
 
                     crossing_around[u] -= shifted[u]
-                    crossing_around[(u-1)%len(new_set)] += shifted[u]
+                    crossing_around[(u - 1) % len(new_set)] += shifted[u]
 
                 new_positions.append(new_set[u])
                 vertices_shifted.append(shifted[u])
                 added_edges.append(around_polygon[u])
                 added_crossing.append(crossing_around[u])
 
-                original_edges[edges_from[u],1-first_or_second[u]] = current_index
-            
+                original_edges[edges_from[u],
+                               1 - first_or_second[u]] = current_index
+
             running_total += len(new_set)
 
         # else just keep on as normal
         else:
             # trivially add the vertex
-            new_positions.append( lattice.vertices.positions[n] )
-            vertices_shifted.append( np.zeros(2) )
+            new_positions.append(lattice.vertices.positions[n])
+            vertices_shifted.append(np.zeros(2))
 
             # add the edges that touch this vertex
             edges_from = lattice.vertices.adjacent_edges[n]
             other_vertices = lattice.edges.indices[edges_from]
             first_or_second = np.where(other_vertices != n)[1]
-            original_edges[edges_from,1-first_or_second] = running_total
+            original_edges[edges_from, 1 - first_or_second] = running_total
 
             running_total += 1
-    
+
     added_edges = np.array(added_edges)
     added_crossing = np.array(added_crossing)
 
@@ -432,76 +449,6 @@ def vertices_to_polygon(lattice:Lattice, vertices:np.ndarray = None) -> Lattice:
     crossing = np.concatenate([original_crossing, added_crossing])
 
     return Lattice(vertices, edges.astype("int"), crossing.astype("int"))
-
-def _vertex_to_polygon(lattice: Lattice,
-                       vertex_index: int,
-                       desired_distance=None) -> Lattice:
-    """ Replaces a vertex in a lattice with a polygon where every point is three-coordinated (backend function for vertices_to_polygon)
-
-    Args:
-        lattice (Lattice): input lattice
-        vertex_index (int): index of vertex to be created
-        desired_distance (float, optional): 'radius' of the polygon around the original point, If true then use 1/3 of the smallest edge connecting in . Defaults to None.
-
-    Returns:
-        Lattice: The new output lattice with a replaced vertex
-    """
-
-    # the edges coming from the point we are removing
-    outward_edges = lattice.vertices.adjacent_edges[vertex_index]
-
-    # direction from the point
-    directions = 1 - 2 * np.where(
-        lattice.edges.indices[outward_edges] == vertex_index)[1]
-
-    # find the vertex that each edge in outward_edges connects to
-    outward_vertices = lattice.edges.indices[outward_edges][np.where(
-        lattice.edges.indices[outward_edges] != vertex_index)]
-
-    
-    vector_distances = np.sqrt(
-        np.sum(lattice.edges.vectors[outward_edges]**2, axis=1))
-    if desired_distance is None:
-        desired_distance = np.min(vector_distances) / 3
-    normalised_vectors = lattice.edges.vectors[
-        outward_edges] / vector_distances[:, np.newaxis]
-
-    vert_pos = desired_distance * normalised_vectors * directions[:, np.
-                                                                  newaxis] + lattice.vertices.positions[
-                                                                      vertex_index]
-    new_vertex_positions = vert_pos % 1
-
-    edges_to_add_outward = np.concatenate(
-        [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
-         outward_vertices[:, np.newaxis]],
-        axis=1)
-
-    edges_to_add_around = np.concatenate(
-        [(lattice.n_vertices + np.arange(len(outward_edges)))[:, np.newaxis],
-         np.roll(lattice.n_vertices + np.arange(len(outward_edges)),
-                 1)[:, np.newaxis]],
-        axis=1)
-
-    # stop edge doubling if the veryex has coordination 2
-    if edges_to_add_around.shape[0] < 3:
-        edges_to_add_around = edges_to_add_around[0][np.newaxis, :]
-
-    edges_to_add = np.concatenate([edges_to_add_outward, edges_to_add_around])
-
-    # add the new vertices to the lattice
-    new_vertices = np.concatenate(
-        [lattice.vertices.positions, new_vertex_positions])
-    new_edges = np.concatenate([lattice.edges.indices, edges_to_add])
-
-    new_vectors = new_vertices[edges_to_add[:,
-                                            0]] - new_vertices[edges_to_add[:,
-                                                                            1]]
-    crossing_to_add = np.round(new_vectors)
-    new_crossing = np.concatenate([lattice.edges.crossing, crossing_to_add])
-
-    return remove_vertices(Lattice(new_vertices, new_edges, new_crossing),
-                           vertex_index)
-
 
 def dimerise(lattice: Lattice, n_solutions=1):
     """Given a lattice, this finds one or many valid dimerisations of this lattice, 
@@ -550,7 +497,8 @@ def dimerise(lattice: Lattice, n_solutions=1):
         else:
             raise ValueError("No dimerisation exists for this lattice.")
 
-def lloyd_relaxation(lattice:Lattice , n_steps: int = 5):
+
+def lloyd_relaxation(lattice: Lattice, n_steps: int = 5):
     """Performs n_steps iterations of Lloyd's algorithm, which serves to make an amorphous lattice somewhat more regular,
     with more normalised bond lengths. Generally, around 5 iterations is optimal for a decent convergence.
 
