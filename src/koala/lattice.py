@@ -3,6 +3,7 @@ import numpy.typing as npt
 from dataclasses import dataclass, field
 from functools import cached_property
 import matplotlib.transforms
+import scipy.sparse.csgraph as csgraph
 
 INVALID = np.iinfo(int).max
 
@@ -260,6 +261,28 @@ class Lattice(object):
             self.__dict__.update(state)  # For backwards compatibility
         else:  # The new way to pickle just saves vertex positions, edge indices and edge crossing
             self.__init__(*state)
+
+    @property
+    def adjacency_matrix(self):
+        """Return the adjacency matrix of the lattice
+
+        Returns:
+            np.ndarray[bool] (n_vertices, n_vertices): The adjacency matrix
+        """
+        adj = np.zeros((self.n_vertices, self.n_vertices), dtype=np.bool)
+        adj[self.edges.indices[:, 0], self.edges.indices[:, 1]] = True
+        adj[self.edges.indices[:, 1], self.edges.indices[:, 0]] = True
+        return adj
+
+    @property
+    def as_csgraph(self):
+        """Return the lattice as a scipy.sparse.csgraph
+
+        Returns:
+            scipy.sparse.csgraph: The lattice as a graph
+        """
+        
+        return csgraph.csgraph_from_dense(self.adjacency_matrix)
 
 
 def _edge_neighbours(edge_indices):
