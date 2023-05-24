@@ -24,6 +24,19 @@ def penrose_tiling(number_of_db_lines: int) -> Lattice:
 
     return lattice
 
+def random_offsets(number_of_bundles:int):
+    """Generate random offsets for the de brujin grid
+
+    Args:
+        number_of_bundles (int): how many bundles are used, 5 generates Penrose tiling
+
+    Returns:
+        np.array: the offsets for each bundle
+    """
+    grid_offsets = np.random.random(number_of_bundles) - 0.5
+    grid_offsets = grid_offsets - (np.sum(grid_offsets) - 1) / number_of_bundles
+    grid_offsets = (grid_offsets + 0.5) % 1 - 0.5
+    return grid_offsets
 
 def de_brujin_grid(number_of_lines: int,
                    number_of_bundles=5,
@@ -41,7 +54,10 @@ def de_brujin_grid(number_of_lines: int,
         Lattice: The generated quasiperiodic tiling
     """
     if grid_offsets is None:
-        grid_offsets = np.full(number_of_lines, 0.2)
+        grid_offsets = np.full(number_of_bundles, 0.2)
+    elif isinstance(grid_offsets, (float,int)):
+        grid_offsets = np.full(number_of_bundles, grid_offsets)
+
 
     # find the angles and directions of each line bundle
     angles = np.arange(number_of_bundles) * (
@@ -135,13 +151,13 @@ def de_brujin_grid(number_of_lines: int,
     lattice = Lattice(scaled_verts, all_edges, all_edges * 0)
 
     # make the dual lattice
-    dual = make_dual(lattice)
+    dual = make_dual(lattice, True)
 
     # remove all the the lattice outside a boundary - get rid of the star otside bit
-    vertex_radii = np.sqrt(np.sum((dual.vertices.positions - 0.5)**2, axis=1))
-    radius = scaling * (number_of_lines - 1) / 2
-    remove = np.where(vertex_radii > radius)[0]
-    dual_clipped = remove_trailing_edges(remove_vertices(dual, remove))
+    # vertex_radii = np.sqrt(np.sum((dual.vertices.positions - 0.5)**2, axis=1))
+    # radius = scaling * (number_of_lines - 1) / 2
+    # remove = np.where(vertex_radii > radius)[0]
+    # dual_clipped = remove_trailing_edges(remove_vertices(dual, remove))
 
     # new_gradients = scaling*gradients
     # new_normals = scaling*normals
@@ -157,6 +173,12 @@ def de_brujin_grid(number_of_lines: int,
         x = np.sum(index * np.cos(angles))
         y = np.sum(index * np.sin(angles))
         return np.array([x, y])
+
+    # remove all the the lattice outside the pentagon
+    all_indices = np.apply_along_axis(find_pent_index, 1, dual.vertices.positions)
+    mask = np.any((all_indices < 0) + (all_indices >= number_of_lines),1)
+    remove = np.where(mask)
+    dual_clipped = remove_trailing_edges(remove_vertices(dual, remove))
 
     new_points = np.zeros_like(dual_clipped.vertices.positions)
     for n, point in enumerate(dual_clipped.vertices.positions):
