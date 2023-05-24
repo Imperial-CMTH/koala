@@ -703,3 +703,35 @@ def star_lattice_sheared():
     ujk_ground = np.array([1, 1, 1, 1, -1, -1, -1, 1, 1])
 
     return lattice, coloring, ujk_ground
+
+def square_lattice(nx: int, ny: int):
+    """Generates a square lattice with nx x ny vertices.
+
+    Args:
+        nx (int): Number of vertices in x direction.
+        ny (int): Number of vertices in y direction.
+
+    Returns:
+        Lattice: A square lattice with nx x ny vertices.
+    """
+
+    vertices_array = np.arange(nx * ny).reshape((nx, ny))
+    px = np.linspace(0, 1, nx, endpoint=False) + 0.5 / nx
+    py = np.linspace(0, 1, ny, endpoint=False) + 0.5 / ny
+
+    positions = np.array(np.meshgrid(px, py)).T.reshape(-1, 2)
+
+    edges_x = np.vstack([np.roll(vertices_array, 1,0).ravel(), vertices_array.ravel()]).T
+    edges_y = np.vstack([np.roll(vertices_array, 1,1).ravel(), vertices_array.ravel()]).T
+    
+    x_shifted = np.zeros_like(vertices_array)
+    x_shifted[0,:] = 1
+    y_shifted = np.zeros_like(vertices_array)
+    y_shifted[:,0] = 1
+    crossing_x  = np.array([ x_shifted.ravel(), np.zeros_like(vertices_array).ravel()]).T
+    crossing_y  = np.array([ np.zeros_like(vertices_array).ravel(), y_shifted.ravel()]).T
+
+    edges = np.vstack([edges_x, edges_y])
+    crossing = np.vstack([crossing_x, crossing_y])
+
+    return Lattice(positions, edges, crossing)
