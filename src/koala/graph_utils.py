@@ -12,7 +12,7 @@ import itertools as it
 from .voronization import generate_lattice
 
 
-def make_dual(lattice: Lattice) -> Lattice:
+def make_dual(lattice: Lattice, use_point_averages = False) -> Lattice:
     """Given a lattice, generate the dual lattice
 
     Args:
@@ -22,7 +22,12 @@ def make_dual(lattice: Lattice) -> Lattice:
         Lattice: The dual lattice
     """
     # set vertices of dual lattice at centers of initial lattice
-    dual_verts = np.array([p.center for p in lattice.plaquettes])
+    if use_point_averages:
+        dual_verts = np.array([
+            np.average(np.array([lattice.vertices.positions[v] for v in p.vertices]), axis = 0) for p in lattice.plaquettes
+        ])
+    else:
+        dual_verts = np.array([p.center for p in lattice.plaquettes])
 
     # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
     dual_edges = lattice.edges.adjacent_plaquettes
