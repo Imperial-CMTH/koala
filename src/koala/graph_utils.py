@@ -518,3 +518,23 @@ def lloyd_relaxation(lattice: Lattice, n_steps: int = 5):
         new_centers = np.array([p.center for p in lattice.plaquettes])
         lattice = generate_lattice(new_centers)
     return lattice
+
+def reorder_vertices(lattice:Lattice, permutation: np.ndarray):
+    """Reorder the vertices of a lattice.
+    
+    lattice: Lattice object
+    permutation: array of integers specifying the new order
+    
+    returns: new Lattice
+    """
+    pos = lattice.vertices.positions
+    edges = lattice.edges.indices
+    crossing = lattice.edges.crossing
+    
+    invperm = np.argsort(permutation)
+
+    new_pos = pos[invperm]
+    new_edges = permutation[edges]
+
+    new_lattice = Lattice(new_pos, new_edges, crossing)
+    return new_lattice
