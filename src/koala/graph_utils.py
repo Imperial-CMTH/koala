@@ -25,9 +25,9 @@ def make_dual(lattice: Lattice, use_point_averages = False) -> Lattice:
     if use_point_averages:
         dual_verts = np.array([
             np.average(np.array([lattice.vertices.positions[v] for v in p.vertices]), axis = 0) for p in lattice.plaquettes
-        ])
+        ])%1
     else:
-        dual_verts = np.array([p.center for p in lattice.plaquettes])
+        dual_verts = np.array([p.center for p in lattice.plaquettes])%1
 
     # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
     dual_edges = lattice.edges.adjacent_plaquettes
