@@ -19,6 +19,7 @@ import warnings
 
 #### New plotting interface ####
 
+colourblind_friendly_scheme = ['#E7414E', '#5BB03E', '#4B64AC']
 
 def plot_vertices(
         lattice: Lattice,
@@ -63,7 +64,7 @@ def plot_vertices(
 def plot_edges(
     lattice: Lattice,
     labels: np.ndarray = 0,
-    color_scheme: np.ndarray = ("k", "r", "b"),
+    color_scheme: np.ndarray = colourblind_friendly_scheme,
     subset: np.ndarray = slice(None, None, None),
     directions: np.ndarray = None,
     ax=None,
@@ -139,7 +140,7 @@ def plot_edges(
 def plot_plaquettes(
         lattice: Lattice,
         labels: np.ndarray = 0,
-        color_scheme: np.ndarray = ("r", "b", "k"),
+        color_scheme: np.ndarray = colourblind_friendly_scheme,
         subset: np.ndarray = slice(None, None, None),
         ax=None,
         **kwargs,
