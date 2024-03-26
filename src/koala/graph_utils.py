@@ -516,7 +516,7 @@ def lloyd_relaxation(lattice: Lattice, n_steps: int = 5):
     """
     for x in range(n_steps):
         new_centers = np.array([p.center for p in lattice.plaquettes])
-        lattice = generate_lattice(new_centers)
+        lattice = generate_lattice(new_centers, False)
     return lattice
 
 def reorder_vertices(lattice:Lattice, permutation: np.ndarray):
