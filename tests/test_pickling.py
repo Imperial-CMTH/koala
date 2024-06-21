@@ -1,7 +1,7 @@
 from koala import example_graphs as eg
 import pickle
 from pathlib import Path
-from koala.lattice import cut_boundaries
+from koala.graph_utils import cut_boundaries
 test_data_dir = Path(__file__).parent / "data"
 
 def test_backwards_compatability():

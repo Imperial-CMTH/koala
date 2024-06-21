@@ -542,34 +542,3 @@ def permute_vertices(lattice: Lattice,
     )
 
 
-def cut_boundaries(
-    lattice: Lattice, boundary_to_cut: list = (True, True)) -> Lattice:
-    """Removes the x and/or y boundary edges of the lattice.
-
-    Args:
-        l (Lattice): The lattice to cut.
-        boundary_to_cut (list[Bool], optional): whether to cut the x or
-            y boundaries, defaults to [True,True]
-
-    Returns:
-        Lattice: A new lattice with boundaries cut.
-    """
-    vertices = lattice.vertices.positions
-    edges = lattice.edges.indices
-    crossing = lattice.edges.crossing
-
-    x_external = crossing[:, 0] != 0
-    y_external = crossing[:, 1] != 0
-
-    condx = 1 - x_external * boundary_to_cut[0]
-    condy = 1 - y_external * boundary_to_cut[1]
-
-    cond = condx * condy
-
-    internal_edge_ind = np.nonzero(cond)[0]
-    new_edges = edges[internal_edge_ind]
-    new_crossing = crossing[internal_edge_ind]
-
-    lattice_out = Lattice(vertices, new_edges, new_crossing)
-
-    return lattice_out

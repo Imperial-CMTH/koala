@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 from koala import pointsets
 from koala import voronization
-from koala.lattice import cut_boundaries, LatticeException
+from koala.graph_utils import cut_boundaries
+from koala.lattice import Lattice, LatticeException
 from koala.example_graphs import *
 from koala.example_graphs import single_plaquette
 

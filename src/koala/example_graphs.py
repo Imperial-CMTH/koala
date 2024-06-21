@@ -1,6 +1,6 @@
 import numpy as np
-from koala.graph_utils import rotate, tile_unit_cell
-from koala.lattice import Lattice, cut_boundaries
+from koala.graph_utils import rotate, tile_unit_cell, cut_boundaries
+from koala.lattice import Lattice
 from koala import flux_finder, graph_color, voronization
 
 
