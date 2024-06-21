@@ -3,7 +3,7 @@
 #                                                                          #
 ############################################################################
 import numpy as np
-from .lattice import Lattice, INVALID
+from .lattice import Lattice, INVALID, _sorted_vertex_adjacent_edges
 from typing import Tuple
 from pysat.solvers import Solver
 from copy import copy
@@ -12,48 +12,9 @@ import itertools as it
 from .voronization import generate_lattice
 
 
-def make_dual(lattice: Lattice, use_point_averages = False) -> Lattice:
-    """Given a lattice, generate the dual lattice
-
-    Args:
-        lattice (Lattice): Input lattice
-
-    Returns:
-        Lattice: The dual lattice
-    """
-    # set vertices of dual lattice at centers of initial lattice
-    if use_point_averages:
-        dual_verts = np.array([
-            np.average(np.array([lattice.vertices.positions[v] for v in p.vertices]), axis = 0) for p in lattice.plaquettes
-        ])%1
-    else:
-        dual_verts = np.array([p.center for p in lattice.plaquettes])%1
-
-    # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
-    dual_edges = lattice.edges.adjacent_plaquettes
-    rows_to_remove = np.where(np.any(dual_edges == INVALID, axis=1))[0]
-    cleaned_edges = np.delete(dual_edges, rows_to_remove, axis=0)
-
-    # crossing is sorted out by checking whether the edges cross over half the system
-    # TODO - this breaks for small system size - there must be a better solution
-    dual_crossing = np.round(dual_verts[cleaned_edges[:, 0]] -
-                             dual_verts[cleaned_edges[:, 1]])
-
-    # TODO - currently we just check if it broke and raise an error -- this isnt
-    # perfect and something will have to be fixed in the future
-    duplicate_edge_crossing = np.concatenate([cleaned_edges, dual_crossing],
-                                             axis=1)
-    if len(np.unique(duplicate_edge_crossing, axis=0)) != len(cleaned_edges):
-        raise Exception(
-            "Dual is not currently designed to deal with lattices so small,\
-                put more points in the lattice or cut boundaries")
-
-    # make the lattice
-    dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
-    return dual
-
 
 # TODO - This doesnt work for very small system sizes, would be worth trying to understand why
+# fix this by using dual!
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
     The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used
@@ -611,12 +572,13 @@ def tile_unit_cell(unit_points: np.ndarray,
         return Lattice(new_points, new_edges, new_crossing)
     return new_points, new_edges, new_crossing
 
-
-def untile_unit_cell(unit_points: np.ndarray,
-                    unit_edges: np.ndarray,
-                    unit_crossing: np.ndarray,
-                    n_xy: np.ndarray,
-                    return_lattice = False) -> tuple:
+def untile_unit_cell(
+    unit_points: np.ndarray,
+    unit_edges: np.ndarray,
+    unit_crossing: np.ndarray,
+    n_xy: np.ndarray,
+    return_lattice=False,
+) -> tuple:
     """
     Given a lattice formed by tiling, untile to return to the smaller repeating unit cell.
 
@@ -629,46 +591,51 @@ def untile_unit_cell(unit_points: np.ndarray,
     Returns:
         tuple: untiled points, edges, crossing
     """
-    
+
     # calculate what sectors each vertex is in
-    vertex_sectors = unit_points*n_xy // (1)
-    vertices_to_remove = np.argwhere(np.any(vertex_sectors != 0, axis = 1)).flatten()
+    vertex_sectors = unit_points * n_xy // (1)
+    vertices_to_remove = np.argwhere(np.any(vertex_sectors != 0, axis=1)).flatten()
 
     # remove all edges that dont even touch the original unit cell
     edge_sectors = vertex_sectors[unit_edges]
-    keep_edges = np.all(edge_sectors[:,0,:] == 0, axis = (1))
+    keep_edges = np.all(edge_sectors[:, 0, :] == 0, axis=(1))
     edges_trimmed = unit_edges[keep_edges]
     crossing_trimmed = unit_crossing[keep_edges]
     edge_sectors = edge_sectors[keep_edges]
 
-    sector_diff = - edge_sectors[:,1,:]
-    sector_diff = ((sector_diff+1) % n_xy )-1
-    
+    sector_diff = -edge_sectors[:, 1, :]
+    sector_diff = ((sector_diff + 1) % n_xy) - 1
+
     # if the edge crosses the boundary, we need to flip the sector diff for some reason
     # idk but it works :)
-    crossing_trimmed[crossing_trimmed==0] = 1
-    crossing_trimmed = - sector_diff*crossing_trimmed
-    
+    edges_with_crossing = crossing_trimmed != 0
+    crossing_trimmed = (
+        -sector_diff * (1 - edges_with_crossing)
+        + crossing_trimmed * edges_with_crossing
+    )
 
     # make a list of what every vertex is remapped to
-    vertex_remapped_positions = (unit_points*n_xy%1) / n_xy
-    vertex_remap_indices = np.zeros(unit_points.shape[0], dtype = int)
+    vertex_remapped_positions = (unit_points * n_xy % 1) / n_xy
+    vertex_remap_indices = np.zeros(unit_points.shape[0], dtype=int)
     for i in range(unit_points.shape[0]):
         r = unit_points - vertex_remapped_positions[i]
-        vertex_remap_indices[i] = np.argmin(np.sum(r**2, axis = 1))
+        vertex_remap_indices[i] = np.argmin(np.sum(r**2, axis=1))
 
     # remap the edges
     edges_trimmed = vertex_remap_indices[edges_trimmed]
 
     # expand vertices
-    enlarged_points = unit_points*n_xy
+    enlarged_points = unit_points * n_xy
 
     # remove duplicate vertices
-    enlarged_points, edges_trimmed, crossing_trimmed = _remove_vertices_backend(enlarged_points, edges_trimmed, crossing_trimmed,vertices_to_remove)
+    enlarged_points, edges_trimmed, crossing_trimmed = _remove_vertices_backend(
+        enlarged_points, edges_trimmed, crossing_trimmed, vertices_to_remove
+    )
 
     if return_lattice:
         return Lattice(enlarged_points, edges_trimmed, crossing_trimmed)
     return enlarged_points, edges_trimmed, crossing_trimmed
+
 
 def shift_vertex(lattice_data, chosen_vertex, shift_vector):
     """
@@ -704,3 +671,120 @@ def shift_vertex(lattice_data, chosen_vertex, shift_vector):
         new_crossing[neighbour_edges] -= signs[:, None] * (new_sector)
 
     return new_positions, new_edges, new_crossing
+
+
+def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattice:
+    """
+    Creates the dual lattice from the given lattice.
+
+    Args:
+        lattice (Lattice): The input lattice.
+        use_point_averages (bool, optional): Flag indicating whether to use point averages for dual vertices.
+            If True, the dual vertices will be set at the centers of the initial lattice using point averages.
+            If False, the dual vertices will be set at the center of mass of plaquettes. Defaults to False.
+        reg_steps (int, optional): The number of regularization steps to perform.
+            Each regularization step moves the vertices to the center of mass of their neighbors.
+            This prevents nonplanar graphs from being created.
+            Defaults to 5, set to 0 to disable regularization.
+
+    Returns:
+        Lattice: The dual lattice.
+
+    Raises:
+        Exception: If there are duplicate edges in the dual lattice.
+
+    """
+    graph_is_small = lattice.n_vertices <= 60
+    boundaries_are_crossed = np.any(lattice.edges.crossing != 0, axis=0)
+    
+
+    if not np.all(boundaries_are_crossed):
+        reg_steps = 0
+
+    if graph_is_small and np.any(boundaries_are_crossed):
+        n = 2
+        if lattice.n_vertices <= 20:
+            n = 3
+        n_xy = [n, n]
+        lattice = tile_unit_cell(
+            lattice.vertices.positions,
+            lattice.edges.indices,
+            lattice.edges.crossing,
+            n_xy,
+        )
+
+    # set vertices of dual lattice at centers of initial lattice
+    if use_point_averages:
+        dual_verts = np.zeros((lattice.n_plaquettes, 2))
+        for i, p in enumerate(lattice.plaquettes):
+            plaquette_vectors = lattice.edges.vectors[p.edges] * p.directions[:, None]
+            plaquette_sums = np.cumsum(plaquette_vectors, 0)
+            points = lattice.vertices.positions[p.vertices[0]] + plaquette_sums
+            dual_verts[i] = np.mean(points, axis=0) % 1
+    else:
+        dual_verts = np.array([p.center for p in lattice.plaquettes]) % 1
+
+    # make edges, taking care to remove any edges that connect to the outer boundary of the lattice
+    dual_edges = lattice.edges.adjacent_plaquettes
+    rows_to_keep = np.where(np.all(dual_edges != INVALID, axis=1))[0]
+    cleaned_edges = dual_edges[rows_to_keep]
+
+    # crossing is sorted out by checking whether the edges cross over half the system
+    dual_crossing = np.round(
+        dual_verts[cleaned_edges[:, 0]] - dual_verts[cleaned_edges[:, 1]]
+    )
+
+    # if we have any duplicate edges, we have a problem
+    combined_edge_crossing = np.concatenate([cleaned_edges, dual_crossing], axis=1)
+    unique_rows, counts = np.unique(combined_edge_crossing, axis=0, return_counts=True)
+    if np.any(counts > 1):
+        print(counts)
+        print(unique_rows[counts > 1])
+        raise Exception("Duplicate edges in dual lattice, this should not happen")
+
+    # this can sometimes make nonplanar graphs, which we need to
+    # fix by moving vertices to the center of mass of their neighbours.
+
+    # find vectors and neighbors
+
+    for x in range(reg_steps):
+        dual_vectors = (
+            dual_verts[cleaned_edges][:, 1]
+            - dual_verts[cleaned_edges][:, 0]
+            + dual_crossing
+        )
+        neighbors = _sorted_vertex_adjacent_edges(
+            dual_verts, cleaned_edges, dual_vectors
+        )
+        # find the shift for each vertex based on its neighbours
+        vertex_shifts = np.zeros((dual_verts.shape[0], 2))
+        for e, neigh in enumerate(neighbors):
+            neighbour_points = cleaned_edges[neigh]
+            direction_positions = np.where(neighbour_points == e)
+            direction = 1 - 2 * direction_positions[1]
+            vectors = dual_vectors[neigh] * direction[:, None]
+            vertex_shifts[e] = np.mean(vectors, axis=0)
+
+        # move the vertices
+        lattice_data = (
+            dual_verts,
+            cleaned_edges,
+            dual_crossing,
+            neighbors,
+        )
+        for v, shift in enumerate(vertex_shifts):
+            v_pos, e_ind, c_val = shift_vertex(lattice_data, v, shift)
+            lattice_data = (v_pos, e_ind, c_val, neighbors)
+
+        dual_verts, cleaned_edges, dual_crossing = (v_pos, e_ind, c_val)
+
+    # untile if we tiled the graph
+    if graph_is_small and np.any(boundaries_are_crossed):
+        dual_verts, cleaned_edges, dual_crossing = untile_unit_cell(
+            dual_verts, cleaned_edges, dual_crossing, n_xy
+        )
+
+    # make the lattice
+    dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
+
+    return dual
