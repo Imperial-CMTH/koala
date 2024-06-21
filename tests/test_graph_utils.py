@@ -16,7 +16,8 @@ from koala.graph_utils import (
     remove_vertices,
     tile_unit_cell,
     untile_unit_cell,
-    shift_vertex
+    shift_vertex,
+    dimer_collapse
 )
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
@@ -29,6 +30,18 @@ g = Lattice(
 )
 points = uniform(30)
 lattice = generate_lattice(points)
+
+weird_graphs = [
+    eg.tri_square_pent(),
+    eg.two_triangles(),
+    eg.tutte_graph(),
+    eg.n_ladder(6, True),
+    eg.bridge_graph(),
+    generate_lattice(points),
+    eg.cut_boundaries(generate_lattice(points), [False, True]),
+    eg.cut_boundaries(generate_lattice(points), [True, True]),
+    eg.honeycomb_lattice(12),
+]
 
 
 def test_remove_vertices():
@@ -69,18 +82,6 @@ def test_trailing_edges():
 
 
 def test_dual():
-    weird_graphs = [
-        eg.tri_square_pent(),
-        eg.two_triangles(),
-        eg.tutte_graph(),
-        eg.n_ladder(6, True),
-        eg.bridge_graph(),
-        generate_lattice(points),
-        eg.cut_boundaries(generate_lattice(points), [False, True]),
-        eg.cut_boundaries(generate_lattice(points), [True, True]),
-        eg.honeycomb_lattice(12),
-    ]
-
     for lat in weird_graphs:
         make_dual(lat)
 
@@ -142,3 +143,15 @@ def test_shift_vertex():
     shift_vertex(lat_data, 0, [0.1, 0.1])
     shift_vertex(lat_data, 1, [0.1, 0.1])
     shift_vertex(lat_data, 1, [0.9, 0.9])
+
+def test_collapse_dimer():
+    for lat in weird_graphs:
+        
+        boundaries_are_crossed = np.any(lat.edges.crossing != 0, axis=0)
+        if not np.all(boundaries_are_crossed):
+            continue
+        
+        dimer = dimerise(lat)
+        dimer_collapse(lat, dimer)
+
+test_collapse_dimer()

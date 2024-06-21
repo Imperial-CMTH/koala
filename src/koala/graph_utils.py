@@ -788,3 +788,41 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
     dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
 
     return dual
+
+def dimer_collapse(lattice: Lattice, dimer: np.ndarray) -> Lattice:
+    """
+    Given a lattice and a list of edges (can be a dimerisation),
+    collapse all chosen edges to form a new lattice.
+
+    Args:
+        lattice (Lattice): the input lattice
+        dimer (np.ndarray): the edges to be collapsed
+
+    Returns:
+        Lattice: the new lattice
+    """
+
+    boundaries_are_crossed = np.any(lattice.edges.crossing != 0, axis=0)
+    if not np.all(boundaries_are_crossed):
+        raise ValueError(
+            "This function only works for lattices with periodic boundaries."
+        )
+
+    # create the dual lattice
+    dual = make_dual(lattice)
+
+    # remove the edges that are in the dimerisation
+    fixed_edges = dual.edges.indices[np.where(dimer == 0)[0]]
+    dual_crossing = dual.edges.crossing[np.where(dimer == 0)[0]]
+    dual_removed = Lattice(dual.vertices.positions, fixed_edges, dual_crossing)
+
+    # check for vertices with coordination number 2 and remove them
+    while 2 in dual_removed.vertices.coordination_numbers:
+        dual_removed = remove_vertices(
+            dual_removed, np.where(dual_removed.vertices.coordination_numbers == 2)
+        )
+
+    # dual again to get the new lattice
+    four_connected = make_dual(dual_removed)
+
+    return four_connected
