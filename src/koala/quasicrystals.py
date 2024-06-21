@@ -125,10 +125,10 @@ def de_brujin_grid(number_of_lines: int,
 
     for b in range(number_of_bundles):
 
-        for l in range(number_of_lines):
+        for l_num in range(number_of_lines):
             insertion_point = np.nonzero(all_edges == -1)[0][0]
             vi = np.where(
-                (all_line_intersections == l) * (all_bundle_intersections == b))
+                (all_line_intersections == l_num) * (all_bundle_intersections == b))
             vertex_number = vi[0]
 
             nu_values = all_line_positions[vi]
