@@ -154,4 +154,3 @@ def test_collapse_dimer():
         dimer = dimerise(lat)
         dimer_collapse(lat, dimer)
 
-test_collapse_dimer()
