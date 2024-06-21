@@ -5,8 +5,8 @@
 import numpy as np
 from .lattice import Lattice, INVALID
 from typing import Tuple
-from koala.lattice import Lattice
 from pysat.solvers import Solver
+from copy import copy
 from pysat.card import IDPool, CardEnc, EncType
 import itertools as it
 from .voronization import generate_lattice
@@ -669,3 +669,38 @@ def untile_unit_cell(unit_points: np.ndarray,
     if return_lattice:
         return Lattice(enlarged_points, edges_trimmed, crossing_trimmed)
     return enlarged_points, edges_trimmed, crossing_trimmed
+
+def shift_vertex(lattice_data, chosen_vertex, shift_vector):
+    """
+    Shifts the position of a chosen vertex in a lattice by a given shift vector, taking into account the periodic boundary conditions.
+
+    Parameters:
+    - lattice_data (tuple): A tuple containing the lattice data, including positions, edges, crossing, and adjacent_edges.
+    - chosen_vertex (int): The index of the vertex to be shifted.
+    - shift_vector (numpy.ndarray): The vector by which the vertex position should be shifted.
+
+    Returns:
+    - new_positions (numpy.ndarray): The updated positions of all vertices in the lattice.
+    - new_edges (numpy.ndarray): The updated edges of the lattice.
+    - new_crossing (numpy.ndarray): The updated crossing information of the lattice.
+    """
+    # copy inputs to avoid modifying the original data
+    positions, edges, crossing, adjacent_edges = lattice_data
+    new_positions = copy(positions)
+    new_edges = copy(edges)
+    new_crossing = copy(crossing)
+
+    # move the chosen vertex
+    vertex_position = new_positions[chosen_vertex]
+    new_position = vertex_position + shift_vector
+    new_sector = (new_position // 1).astype(int)
+    new_positions[chosen_vertex] = new_position % 1
+
+    # if the new position is outside the unit cell, update the crossing information
+    if np.any(new_sector != 0):
+        neighbour_edges = adjacent_edges[chosen_vertex]
+        adjacent_indices = new_edges[neighbour_edges]
+        signs = 1 - 2 * np.where(adjacent_indices == chosen_vertex)[1]
+        new_crossing[neighbour_edges] -= signs[:, None] * (new_sector)
+
+    return new_positions, new_edges, new_crossing

@@ -16,6 +16,7 @@ from koala.graph_utils import (
     remove_vertices,
     tile_unit_cell,
     untile_unit_cell,
+    shift_vertex
 )
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
@@ -129,3 +130,15 @@ def test_tile_unit_cell():
     assert np.allclose(l2_original[0], lattice.vertices.positions)
     assert np.allclose(l3_original[0], lattice.vertices.positions)
 
+
+def test_shift_vertex():
+    lat_data = (
+        lattice.vertices.positions,
+        lattice.edges.indices,
+        lattice.edges.crossing,
+        lattice.vertices.adjacent_edges
+    )
+
+    shift_vertex(lat_data, 0, [0.1, 0.1])
+    shift_vertex(lat_data, 1, [0.1, 0.1])
+    shift_vertex(lat_data, 1, [0.9, 0.9])
