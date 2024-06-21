@@ -126,6 +126,31 @@ def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
 
     return edges_in
 
+# backend for remove vertices, operates only on the minimal data required
+def _remove_vertices_backend(positions, edges, crossing, indices: np.ndarray,
+                    return_edge_removal=False):
+
+    # figure out which edges are set for removal
+    set_for_removal = np.full(positions.shape[0], False)
+    set_for_removal[indices] = True
+
+    # we have to relabel the edge index values after the vertices are removed
+    subtraction = np.cumsum(set_for_removal)
+    new_index = np.arange(positions.shape[0]) - subtraction
+    new_index[indices] = -1
+    new_adjacency = new_index[edges]
+
+    # remove edges that connect to a deleted vertex
+    edges_to_remove = np.where(new_adjacency == -1)[0]
+    new_vertices = positions[~set_for_removal]
+    new_adjacency = np.delete(new_adjacency, edges_to_remove, axis=0)
+    new_crossing = np.delete(crossing, edges_to_remove, axis=0)
+
+    # finally make and return the new lattice
+    if return_edge_removal:
+        return new_vertices, new_adjacency, new_crossing, edges_to_remove
+    else:
+        return new_vertices, new_adjacency, new_crossing
 
 def remove_vertices(lattice: Lattice,
                     indices: np.ndarray,
@@ -140,28 +165,26 @@ def remove_vertices(lattice: Lattice,
     Returns:
         Lattice: A new lattice formed from the remaining parts of the input lattice after deletion
     """
-
-    # figure out which edges are set for removal
-    set_for_removal = np.full(lattice.n_vertices, False)
-    set_for_removal[indices] = True
-
-    # we have to relabel the edge index values after the vertices are removed
-    subtraction = np.cumsum(set_for_removal)
-    new_index = np.arange(lattice.n_vertices) - subtraction
-    new_index[indices] = -1
-    new_adjacency = new_index[lattice.edges.indices]
-
-    # remove edges that connect to a deleted vertex
-    edges_to_remove = np.where(new_adjacency == -1)[0]
-    new_vertices = lattice.vertices.positions[~set_for_removal]
-    new_adjacency = np.delete(new_adjacency, edges_to_remove, axis=0)
-    new_crossing = np.delete(lattice.edges.crossing, edges_to_remove, axis=0)
-
-    # finally make and return the new lattice
+    positions = lattice.vertices.positions
+    edges = lattice.edges.indices
+    crossing = lattice.edges.crossing
     if return_edge_removal:
+        new_vertices, new_adjacency, new_crossing, edges_to_remove =_remove_vertices_backend(
+            positions, 
+            edges, 
+            crossing, 
+            indices,
+            return_edge_removal)
+    
         return Lattice(new_vertices, new_adjacency,
                        new_crossing), edges_to_remove
     else:
+        new_vertices, new_adjacency, new_crossing = _remove_vertices_backend(
+            positions, 
+            edges, 
+            crossing, 
+            indices,
+            return_edge_removal)
         return Lattice(new_vertices, new_adjacency, new_crossing)
 
 
@@ -538,3 +561,111 @@ def reorder_vertices(lattice:Lattice, permutation: np.ndarray):
 
     new_lattice = Lattice(new_pos, new_edges, crossing)
     return new_lattice
+
+def tile_unit_cell(unit_points: np.ndarray,
+                   unit_edges: np.ndarray,
+                   unit_crossing: np.ndarray,
+                   n_xy: list,
+                   return_lattice = True) -> Lattice:
+    """
+    Tile a unit cell of a lattice to form a larger repeating lattice.
+    Does not change the order of vertices or edges.
+
+    Args:
+        unit_points (np.ndarray): points of the unit cell
+        unit_edges (np.ndarray): edges of the unit cell
+        unit_crossing (np.ndarray): crossing of the unit cell
+        n_xy (list): number of unit cells in x and y direction
+
+    Returns:
+        Lattice: the tiled lattice
+    """
+    
+    total_cells = np.prod(n_xy)
+    x_shift = np.arange(n_xy[0])
+    y_shift = np.arange(n_xy[1])
+    x_shift, y_shift = np.meshgrid(x_shift, y_shift)
+
+    shifts = np.array([x_shift.flatten(),y_shift.flatten()]).T.astype(int)
+    def _sector_to_number(sector, n_xy): return sector[0]%n_xy[0] + (sector[1]%n_xy[1])*n_xy[0]
+    
+    # make nx x ny copies of the unit cell
+    new_points = (unit_points[:,None] + shifts[None,:,:]).reshape(-1,2)/n_xy
+    new_edges = np.kron(unit_edges*total_cells, np.ones((total_cells,1))).astype(int)
+    new_crossing = np.kron(unit_crossing, np.ones((total_cells,1))).astype(int)
+    
+    # for each edge, calculate the sector change and rewire the edge plus the crossing
+    for n, (edge, crossing) in enumerate(zip(new_edges, new_crossing)):
+        
+        sector_number = n % total_cells
+        sector = shifts[sector_number]
+        next_sector = sector + crossing
+
+        next_sector_number = _sector_to_number(next_sector, n_xy)
+        sector_change = [sector_number,next_sector_number]
+
+        new_edges[n] = edge + sector_change % total_cells
+        new_crossing[n] =  next_sector // n_xy        
+
+    if return_lattice:
+        return Lattice(new_points, new_edges, new_crossing)
+    return new_points, new_edges, new_crossing
+
+
+def untile_unit_cell(unit_points: np.ndarray,
+                    unit_edges: np.ndarray,
+                    unit_crossing: np.ndarray,
+                    n_xy: np.ndarray,
+                    return_lattice = False) -> tuple:
+    """
+    Given a lattice formed by tiling, untile to return to the smaller repeating unit cell.
+
+    Args:
+        unit_points (np.ndarray): points of the unit cell
+        unit_edges (np.ndarray): edges of the unit cell
+        unit_crossing (np.ndarray): crossing of the unit cell
+        n_xy (np.ndarray): number of unit cells in x and y direction
+
+    Returns:
+        tuple: untiled points, edges, crossing
+    """
+    
+    # calculate what sectors each vertex is in
+    vertex_sectors = unit_points*n_xy // (1)
+    vertices_to_remove = np.argwhere(np.any(vertex_sectors != 0, axis = 1)).flatten()
+
+    # remove all edges that dont even touch the original unit cell
+    edge_sectors = vertex_sectors[unit_edges]
+    keep_edges = np.all(edge_sectors[:,0,:] == 0, axis = (1))
+    edges_trimmed = unit_edges[keep_edges]
+    crossing_trimmed = unit_crossing[keep_edges]
+    edge_sectors = edge_sectors[keep_edges]
+
+    sector_diff = - edge_sectors[:,1,:]
+    sector_diff = ((sector_diff+1) % n_xy )-1
+    
+    # if the edge crosses the boundary, we need to flip the sector diff for some reason
+    # idk but it works :)
+    crossing_trimmed[crossing_trimmed==0] = 1
+    crossing_trimmed = - sector_diff*crossing_trimmed
+    
+
+    # make a list of what every vertex is remapped to
+    vertex_remapped_positions = (unit_points*n_xy%1) / n_xy
+    vertex_remap_indices = np.zeros(unit_points.shape[0], dtype = int)
+    for i in range(unit_points.shape[0]):
+        r = unit_points - vertex_remapped_positions[i]
+        vertex_remap_indices[i] = np.argmin(np.sum(r**2, axis = 1))
+
+    # remap the edges
+    edges_trimmed = vertex_remap_indices[edges_trimmed]
+
+    # expand vertices
+    enlarged_points = unit_points*n_xy
+
+    # remove duplicate vertices
+    enlarged_points, edges_trimmed, crossing_trimmed = _remove_vertices_backend(enlarged_points, edges_trimmed, crossing_trimmed,vertices_to_remove)
+
+    if return_lattice:
+        return Lattice(enlarged_points, edges_trimmed, crossing_trimmed)
+    return enlarged_points, edges_trimmed, crossing_trimmed

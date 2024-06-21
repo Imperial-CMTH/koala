@@ -1,5 +1,5 @@
 import numpy as np
-from koala.graph_utils import rotate
+from koala.graph_utils import rotate, tile_unit_cell
 from koala.lattice import Lattice, cut_boundaries
 from koala import flux_finder, graph_color, voronization
 
@@ -484,69 +484,6 @@ def _crossing(n_x, n_y, n, shift):
 
     return [shift[0] * x_looped, shift[1] * y_looped]
 
-
-def tile_unit_cell(
-    unit_points: np.ndarray,
-    unit_edges: np.ndarray,
-    unit_crossing: np.ndarray,
-    n_xy,
-) -> Lattice:
-    """given a description of a unit cell, this tiles it to make a full lattice
-
-    Args:
-        unit_points (np.ndarray): coordinates of points in the unit cell
-        unit_edges (np.ndarray): indices of edges in unit cell
-        unit_crossing (np.ndarray): whether the edges cross to the next
-            unit cell in x and y direction
-        n_xy (int or list): number of tilings you want. if this is
-            iterable then assume it has the form [nx, ny]. If an int
-            then we assume we want [n,n]
-
-    Returns:
-        Lattice: the final lattice
-    """
-
-    try:
-        iter(n_xy)
-    except TypeError:
-        nx = n_xy
-        ny = n_xy
-    else:
-        nx = n_xy[0]
-        ny = n_xy[1]
-
-    x_steps = np.arange(nx)
-    y_steps = np.arange(ny)
-    x_shifts, y_shifts = np.meshgrid(x_steps, y_steps)
-    x_shifts = x_shifts.flatten()
-    y_shifts = y_shifts.flatten()
-
-    n_cells = nx * ny
-
-    all_sites = np.concatenate(
-        [unit_points + np.array([h, v]) for h, v in zip(x_shifts, y_shifts)])
-
-    all_sites[:, 0] = all_sites[:, 0] / nx
-    all_sites[:, 1] = all_sites[:, 1] / ny
-
-    n_internal_edges = unit_edges.shape[0]
-    n_internal_sites = unit_points.shape[0]
-    all_edges = np.zeros((n_cells * n_internal_edges, 2), dtype="int")
-    all_crossings = np.zeros((n_cells * n_internal_edges, 2), dtype="int")
-
-    for n_position, _ in enumerate(zip(x_shifts, y_shifts)):
-        for n_edge, ec in enumerate(zip(unit_edges, unit_crossing)):
-            edge, crossing = ec
-            n_index = n_position * n_internal_edges + n_edge
-
-            all_edges[n_index] = [
-                edge[0] + n_position * n_internal_sites,
-                edge[1] + n_internal_sites *
-                _next_cell_number(nx, ny, n_position, crossing),
-            ]
-            all_crossings[n_index] = _crossing(nx, ny, n_position, crossing)
-
-    return Lattice(all_sites, all_edges, all_crossings)
 
 
 def single_plaquette(n_sides: int) -> Lattice:
