@@ -64,7 +64,7 @@ def plot_vertices(
 def plot_edges(
     lattice: Lattice,
     labels: np.ndarray = 0,
-    color_scheme: np.ndarray = colourblind_friendly_scheme,
+    color_scheme: np.ndarray = None,
     subset: np.ndarray = slice(None, None, None),
     directions: np.ndarray = None,
     ax=None,
@@ -92,6 +92,14 @@ def plot_edges(
             +/-1, defaults to None.
         ax: The axis to plot on, defaults to plt.gca()
     """
+    
+    if color_scheme is None and labels is None:
+        color_scheme = ["k"]
+    elif color_scheme is None:
+        color_scheme = colourblind_friendly_scheme
+    elif labels is None:
+        labels = 0
+
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
         lattice, ax, labels, color_scheme, subset, lattice.n_edges, kwargs)
 
