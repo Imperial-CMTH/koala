@@ -236,7 +236,7 @@ def fluxes_from_bonds(lattice: Lattice,
         if not real and p.n_sides % 2 == 1:
             sign = sign * 1j
 
-        fluxes[i] = sign * np.product(bond_signs * p.directions)
+        fluxes[i] = sign * np.prod(bond_signs * p.directions)
 
     return fluxes
 

@@ -13,7 +13,7 @@ from .voronization import generate_lattice
 
 
 
-# TODO - This doesnt work for very small system sizes, would be worth trying to understand why
+# TODO - This doesnt work for very small system sizes, 
 # fix this by using dual!
 def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
     """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
@@ -270,7 +270,7 @@ def clockwise_edges_about(vertex_index: int, g: Lattice) -> np.ndarray:
 
 
 def get_edge_vectors(vertex_index: int, edge_indices: np.ndarray,
-                     l: Lattice) -> np.ndarray:
+                     lattice: Lattice) -> np.ndarray:
     """Get the vector starting from vertex_index along edge_i, taking into account boundary conditions
     Args:
         vertex_index(int): the index of the vertex
@@ -283,7 +283,7 @@ def get_edge_vectors(vertex_index: int, edge_indices: np.ndarray,
     #this is a bit nontrivial, g.adjacency_crossing tells us if the edge crossed into another unit cell but
     #it is directional, hence we need to check for each edge if vertex_index was the first of second vertex stored
     #the next few lines do that so we can add g.edges.indices_crossing with the right sign
-    edges = l.edges.indices[edge_indices]
+    edges = lattice.edges.indices[edge_indices]
     start_or_end = (
         edges != vertex_index
     )[:,
@@ -294,9 +294,9 @@ def get_edge_vectors(vertex_index: int, edge_indices: np.ndarray,
     offset_sign = (2 * start_or_end - 1)  #now it's +/-1
 
     #get the vectors along the edges
-    return l.vertices.positions[other_vertex_indices] - l.vertices.positions[
+    return lattice.vertices.positions[other_vertex_indices] - lattice.vertices.positions[
         vertex_index][
-            None, :] + offset_sign[:, None] * l.edges.crossing[edge_indices]
+            None, :] + offset_sign[:, None] * lattice.edges.crossing[edge_indices]
 
 
 def adjacent_plaquettes(lattice: Lattice,
@@ -744,9 +744,7 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
 
     # this can sometimes make nonplanar graphs, which we need to
     # fix by moving vertices to the center of mass of their neighbours.
-
-    # find vectors and neighbors
-
+    # TODO - make this a separate function
     for x in range(reg_steps):
         dual_vectors = (
             dual_verts[cleaned_edges][:, 1]
