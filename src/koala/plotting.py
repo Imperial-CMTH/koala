@@ -63,7 +63,7 @@ def plot_vertices(
 
 def plot_edges(
     lattice: Lattice,
-    labels: np.ndarray = 0,
+    labels: np.ndarray = None,
     color_scheme: np.ndarray = None,
     subset: np.ndarray = slice(None, None, None),
     directions: np.ndarray = None,
@@ -95,6 +95,7 @@ def plot_edges(
     
     if color_scheme is None and labels is None:
         color_scheme = ["k"]
+        labels = 0
     elif color_scheme is None:
         color_scheme = colourblind_friendly_scheme
     elif labels is None:
