@@ -65,7 +65,7 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
     Args:
         adjacency (np.ndarray, (... ,2)): A list of pairs of vertex indices representing edges.
         n_colors (int): The maximum number of colors we can use.
-        all_solutions (bool, optional): If True, ooutputs a list of all possible solutions for the coloring. Defaults to False.
+        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the coloring. Defaults to False.
 
     Returns:
         np.ndarray: An integer label for each vertex.
@@ -94,11 +94,7 @@ def vertex_color(adjacency: np.ndarray, n_colors: int = 4, all_solutions=False):
     with Solver(name="g3") as s:
         #constraint: nodes only have one color
         for i in range(n_vertices):
-            lits = list(map(int, [
-                l[i, 0],
-                l[i, 1],
-                l[i, 2],
-            ]))
+            lits = [int(l[i, j]) for j in range(n_colors)]
             cnf = CardEnc.equals(lits=lits,
                                  bound=1,
                                  vpool=vpool,

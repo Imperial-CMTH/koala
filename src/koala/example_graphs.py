@@ -656,6 +656,10 @@ def square_lattice(nx: int, ny: int):
     px = np.linspace(0, 1, nx, endpoint=False) + 0.5 / nx
     py = np.linspace(0, 1, ny, endpoint=False) + 0.5 / ny
 
+    # tiny shift to avoid numerical issues
+    px += 1e-6
+    py += 1e-6
+
     positions = np.array(np.meshgrid(px, py)).T.reshape(-1, 2)
 
     edges_x = np.vstack([np.roll(vertices_array, 1,0).ravel(), vertices_array.ravel()]).T
