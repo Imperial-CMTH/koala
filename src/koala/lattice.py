@@ -90,7 +90,7 @@ class Vertices:
     positions: np.ndarray
     adjacent_edges: np.ndarray
     coordination_numbers: np.ndarray
-    # adjacent_vertices: np.ndarray    TODO - add this feature
+    adjacent_vertices: np.ndarray
 
     # a reference to the parent lattice, has no type because the Lattice class isn't defined yet
     _parent: ...= field(default=None, repr=False)
@@ -149,6 +149,8 @@ class Lattice(object):
         # calculate the list of edges adjacent to each vertex
         vertex_adjacent_edges = _sorted_vertex_adjacent_edges(
             vertices, edge_indices, edge_vectors)
+        
+        vertex_adjacent_vertices = _vertex_adjacent_vertices(edge_indices, vertex_adjacent_edges)
 
         edge_adjacent_edges = _edge_neighbours(edge_indices)
 
@@ -156,6 +158,7 @@ class Lattice(object):
             positions=vertices,
             adjacent_edges=vertex_adjacent_edges,
             coordination_numbers=np.bincount(np.sort(edge_indices.flatten())),
+            adjacent_vertices=vertex_adjacent_vertices,
             _parent=self,
         )
 
@@ -352,6 +355,23 @@ def _sorted_vertex_adjacent_edges(vertex_positions, edge_indices, edge_vectors):
 
     return vertex_adjacent_edges
 
+def _vertex_adjacent_vertices(edges, vertex_adjacent_edges):
+    """
+    Returns a list of adjacent vertices for each vertex in a graph.
+    Args:
+        edges (numpy.ndarray): An array of shape (N, 2) representing the edges of the graph.
+        vertex_adjacent_edges (list): A list of arrays, where each inner list contains the indices of edges adjacent to a vertex.
+    Returns:
+        list: A list of lists, where each inner list contains the indices of adjacent vertices for a vertex.
+    """
+
+    adjacent_vertices = []
+    for vertex, adjacent_edges in enumerate(vertex_adjacent_edges):
+        edge_vertices = edges[adjacent_edges]
+        edge_vertices = edge_vertices[np.where(edge_vertices != vertex)]
+        adjacent_vertices.append(edge_vertices.astype(int))
+
+    return adjacent_vertices
 
 def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     """Given a single edge, and a direction, this code finds the plaquette corresponding to starting in that
