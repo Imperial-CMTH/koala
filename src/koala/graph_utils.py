@@ -446,7 +446,7 @@ def dimerise(lattice: Lattice, n_solutions=1):
 
     Args:
         lattice (Lattice): input lattice
-        n_solutions (int, optional): How many solutions you want to output. Defaults to 1.
+        n_solutions (int, optional): How many solutions you want to output. A value of -1 will output all solutions. Defaults to 1.
 
     Raises:
         ValueError: If the lattice has no valid dimers
@@ -473,6 +473,12 @@ def dimerise(lattice: Lattice, n_solutions=1):
         solveable = s.solve()
 
         if solveable:
+            # give all the solutions
+            if n_solutions == -1:
+                models = s.enum_models()
+                solutions = np.sign(np.array(list(models)))
+                return (solutions + 1) // 2
+
             if n_solutions == 1:
                 model = it.islice(s.enum_models(), 1)
                 solutions = np.sign(np.array(list(model))[0])
