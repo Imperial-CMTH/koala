@@ -443,7 +443,8 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     if len(np.unique(plaquette_edges)) != len(plaquette_edges):
         valid_plaquette = False
 
-    # this bit checks if the loop crosses a PBC boundary once only - if so then it is one of the two edges of a system crossing strip plaquette
+    # this bit checks if the loop crosses a PBC boundary once only - if so then it 
+    # is one of the two edges of a system crossing strip plaquette
     # which means that the system is in strip geometry. We discard the plaquette.
     plaquette_crossings = (plaquette_directions[:, None] *
                            l.edges.crossing[plaquette_edges])

@@ -17,7 +17,8 @@ from koala.graph_utils import (
     tile_unit_cell,
     untile_unit_cell,
     shift_vertex,
-    dimer_collapse
+    dimer_collapse,
+    com_relaxation
 )
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
@@ -102,6 +103,9 @@ def test_dimerisation():
 
 def test_lloyds():
     lloyd_relaxation(lattice)
+
+def test_com():
+    com_relaxation(lattice)
 
 
 def test_tile_unit_cell():

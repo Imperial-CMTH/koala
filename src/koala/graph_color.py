@@ -131,7 +131,7 @@ def edge_color(lattice: Lattice,
     Args:
         adjacency (np.ndarray): A list of pairs of vertex indices representing edges.
         n_colors (int): The maximum number of colors we can use.
-        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the coloring. Defaults to False.. Defaults to False.
+        all_solutions (bool, optional): If True, outputs a list of all possible solutions for the coloring. Defaults to False.
         n_solutions (int, optional): If not None, returns up to this number of solutions. Defaults to None.
         fixed ( list of tuples (label, edge_index), optional): A list of edges indices that are fixed to a particular label. Defaults to [].
 

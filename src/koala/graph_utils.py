@@ -865,3 +865,46 @@ def cut_boundaries(
     lattice_out = remove_vertices(lattice_out, remove_list)
 
     return lattice_out
+
+def com_relaxation(lattice: Lattice, n_steps: int = 10):
+    """Relaxes a lattice which wraps all periodic boundaries by repeatedly moving every 
+    vertex to the center of mass of its neighbours.
+
+    Args:
+        lattice (Lattice): The lattice to relax. Must be in periodic boundaries
+        n_steps (int): How many iterations of the relaxation to perfodm
+
+    Returns:
+        Lattice: The relaxed lattice
+    """
+
+
+    positions = lattice.vertices.positions.copy()
+    edges = lattice.edges.indices.copy()
+    crossing = lattice.edges.crossing.copy()
+    adjacent_edges = lattice.vertices.adjacent_edges
+
+    for n in range(n_steps):
+        shifts = np.zeros_like(positions)
+        for v in range(lattice.n_vertices):
+
+            bonds = adjacent_edges[v]
+            bond_indices = edges[bonds]
+            crossings = crossing[bonds]
+            directions = 1 - 2 * np.where(bond_indices == v)[1]
+
+            neighbouring_vertices = bond_indices[np.where(bond_indices != v)]
+            neighbouring_positions = (
+                positions[neighbouring_vertices] + directions[:, None] * crossings
+            )
+            averaged_position = np.mean(neighbouring_positions, axis=0)
+
+            shifts[v] = averaged_position - positions[v]
+
+        for v in range(lattice.n_vertices):
+
+            data = positions, edges, crossing, adjacent_edges
+
+            positions, edges, crossing = shift_vertex(data, v, shifts[v])
+
+    return Lattice(positions, edges, crossing)
