@@ -170,6 +170,8 @@ class Lattice(object):
             _parent=self,
         )
 
+        self.boundary_conditions = _boundary_conditions(edge_crossing)
+
         # some properties that count edges and vertices etc...
         self.n_vertices = self.vertices.positions.shape[0]
         self.n_edges = self.edges.indices.shape[0]
@@ -310,6 +312,11 @@ def _edge_neighbours(edge_indices):
         edge_adjacent_edges.append(np.where(mask)[0])
     return edge_adjacent_edges
 
+def _boundary_conditions(crossing):
+
+    modded_boundaries = np.abs(crossing)
+    total_bcs = np.sum(modded_boundaries, axis = 0).astype('int')
+    return(total_bcs>0)
 
 def _sorted_vertex_adjacent_edges(vertex_positions, edge_indices, edge_vectors):
     """Gives you an array where the i'th row contains the indices of the edges that connect to the i'th vertex.

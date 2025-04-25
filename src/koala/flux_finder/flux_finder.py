@@ -62,7 +62,7 @@ def ujk_from_fluxes(lattice: Lattice,
         ValueError: find_flux_sector thought that it worked but somehow still didn't, a bug.
 
     Returns:
-        _type_: _description_
+        _type_: _description_ 
     """
 
     if target_flux_sector is None:
@@ -73,9 +73,29 @@ def ujk_from_fluxes(lattice: Lattice,
     ), target_flux_sector.copy()
 
     initial_flux_sector = fluxes_from_ujk(lattice, initial_ujk_guess)
+    fluxes_to_flip = target_flux_sector // initial_flux_sector
 
     # figure out which fluxes need to be flipped
+    
+    # check if the system has an odd number of plaqs that need flipped
+    # if this is the case then the open boundaries also require flipping!
+    if np.sum(fluxes_to_flip == -1) % 2 == 1:
+        if lattice.boundary_conditions.sum() == 2:
+            raise ValueError(
+                "a system with periodic boundaries has an odd number to flip, this is a bug."
+            )
+        
+        # find an edge that connects top the boundary
+        e = lattice.edges.adjacent_plaquettes
+        chosen_edge = np.where(lattice.edges.adjacent_plaquettes == INVALID)[0][0]
+        initial_ujk_guess[chosen_edge] = -1
+
+    initial_flux_sector = fluxes_from_ujk(lattice, initial_ujk_guess)
     fluxes_to_flip = target_flux_sector // initial_flux_sector
+    if np.sum(fluxes_to_flip == -1) % 2 == 1:
+        raise ValueError(
+            "not managing to fix the exact flux sector, this is a bug."
+        )
 
     # step 2) flip edges that join adjacent -1 fluxes
     bonds, fluxes_to_flip = _flip_adjacent_fluxes(lattice, initial_ujk_guess,
@@ -85,14 +105,14 @@ def ujk_from_fluxes(lattice: Lattice,
     bonds, fluxes_to_flip = _flip_isolated_fluxes(lattice, bonds,
                                                   fluxes_to_flip)
 
-    if np.count_nonzero(fluxes_to_flip == -1) > 1:
+    if np.count_nonzero(fluxes_to_flip == -1) > 0:
         raise ValueError(
             "find_flux_sector failed to get rid of all the -1 fluxes, this is a bug."
         )
 
     found_fluxes = fluxes_from_ujk(lattice, bonds)
 
-    if np.count_nonzero(found_fluxes - target_flux_sector) > 1:
+    if np.count_nonzero(found_fluxes - target_flux_sector) > 0:
         raise ValueError(
             "find_flux_sector thought that it worked but somehow still didn't, a bug."
         )
