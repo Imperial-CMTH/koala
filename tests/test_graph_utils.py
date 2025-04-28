@@ -18,7 +18,9 @@ from koala.graph_utils import (
     untile_unit_cell,
     shift_vertex,
     dimer_collapse,
-    com_relaxation
+    com_relaxation,
+    edge_spanning_tree,
+    plquette_spanning_tree
 )
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
@@ -38,6 +40,16 @@ weird_graphs = [
     eg.tutte_graph(),
     eg.n_ladder(6, True),
     eg.bridge_graph(),
+    generate_lattice(points),
+    eg.cut_boundaries(generate_lattice(points), [False, True]),
+    eg.cut_boundaries(generate_lattice(points), [True, True]),
+    eg.honeycomb_lattice(12),
+]
+weird_graphs_simplified = [
+    eg.tri_square_pent(),
+    eg.two_triangles(),
+    eg.tutte_graph(),
+    eg.n_ladder(6, True),
     generate_lattice(points),
     eg.cut_boundaries(generate_lattice(points), [False, True]),
     eg.cut_boundaries(generate_lattice(points), [True, True]),
@@ -157,4 +169,26 @@ def test_collapse_dimer():
         
         dimer = dimerise(lat)
         dimer_collapse(lat, dimer)
+
+def test_spanning_trees():
+    def _sp_tree_test(lattice:Lattice):
+
+        for s_edge in [True, False]:
+            for c_bound in [True, False]:
+                sp = edge_spanning_tree(lattice,s_edge, c_bound)
+                vertices_in_sp = np.unique(lattice.edges.indices[sp])
+                assert len(vertices_in_sp) == lattice.n_vertices
+
+    def _plaq_tree_test(lattice:Lattice):
+
+        for s_edge in [True, False]:
+            for c_bound in [True, False]:
+                sp = plquette_spanning_tree(lattice,s_edge, c_bound)
+                plaqs_in_sp = np.unique(lattice.edges.adjacent_plaquettes[sp])
+                assert len(plaqs_in_sp) == lattice.n_plaquettes
+
+    for graph in weird_graphs_simplified:
+        _sp_tree_test(graph)
+        _plaq_tree_test(graph)
+
 

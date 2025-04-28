@@ -183,7 +183,7 @@ def n_ladder(n_sites: int, wobble=False):
         Lattice: a lattice for the ladder system
     """
 
-    x_positions = np.linspace(0.05, 0.95, n_sites)
+    x_positions = np.linspace(0.06, 0.96, n_sites)
     y_1_positions = 0.3 * np.ones(n_sites)
     y_2_positions = 0.7 * np.ones(n_sites)
 

@@ -13,79 +13,92 @@ from .voronization import generate_lattice
 
 
 
-# TODO - This doesnt work for very small system sizes, 
-# fix this by using dual!
-def plaquette_spanning_tree(lattice: Lattice, shortest_edges_only=True):
-    """Given a lattice this returns a list of edges that form a spanning tree over all the plaquettes (aka a spanning tree of the dual lattice!)
-    The optional argument shortest_edge_only automatically sorts the edges to ensure that only the shortest connections are used
-    (which is kind of a fudgey way of stopping the algorithm from picking edges that connect over the periodic boundaries). If you're hungry for
-    speed you might want to turn it off. The algorith is basically prim's algorithm - so it should run in linear time.
+def _spanning_tree(adjacency: np.ndarray, lengths: np.ndarray = None) -> np.ndarray:
+    """Generates a spanning tree for any graph given only the adjacency.
+    If lengths are provided this is a minimum spanning tree.
 
     Args:
-        lattice (Lattice): the lattice you want the tree on
-        shortest_edges_only (bool, optional): do you want a minimum
-            spanning tree - distance wise, defaults to True
+        adjacency (np.ndarray): List of indices for each edge
+        lengths (np.ndarray, optional): Weight for each edge, a value
+            of -1 means that the edge can never be used. Defaults to None.
 
     Returns:
-        np.ndarray: a list of the edges that form the tree
+        np.ndarray:
     """
-    plaquettes_in = np.full(lattice.n_plaquettes, -1)
-    edges_in = np.full(lattice.n_plaquettes - 1, -1)
 
-    plaquettes_in[0] = 0
+    if lengths is None:
+        lengths = np.arange(adjacency.shape[0])
+    number_of_vertices = np.max(adjacency) + 1
 
-    boundary_edges = np.copy(lattice.plaquettes[0].edges)
+    vertices_in_tree = {0}
+    edges_in_tree = set()
 
-    for n in range(lattice.n_plaquettes - 1):
+    for x in range(number_of_vertices - 1):
+        connections_to_tree = np.sum(np.isin(adjacency, list(vertices_in_tree)), axis=1)
+        candidate_edges = np.where(connections_to_tree == 1)[0]
 
-        # if we want to keep the edges short - sort the available boundaries
-        if shortest_edges_only:
+        mask = lengths[candidate_edges] != -1
+        candidate_edges = candidate_edges[mask]
+        candidate_lengths = lengths[candidate_edges]
+        chosen_edge = candidate_edges[np.argmin(candidate_lengths)]
 
-            def find_plaq_distance(edge):
-                p1, p2 = lattice.edges.adjacent_plaquettes[edge]
-                c1 = 10 if p1 == INVALID else lattice.plaquettes[p1].center
-                c2 = 10 if p2 == INVALID else lattice.plaquettes[p2].center
-                distance = np.sum((c1 - c2)**2)
-                return distance
+        vertices_in_tree |= {*adjacency[chosen_edge]}
+        edges_in_tree |= {int(chosen_edge)}
 
-            distances = np.vectorize(find_plaq_distance)(boundary_edges)
-            order = np.argsort(distances)
-        else:
-            order = np.arange(len(boundary_edges))
+    if len(vertices_in_tree) < number_of_vertices:
+        raise Exception("Spanning tree has not worked")
 
-        for edge_index in boundary_edges[order]:
+    return np.array(list(edges_in_tree))
 
-            edge_plaq = lattice.edges.adjacent_plaquettes[edge_index]
 
-            if INVALID in edge_plaq:
-                continue
+def edge_spanning_tree(
+    lattice: Lattice, shortest_edges_only=True, cross_boundaries=True
+) -> np.ndarray:
+    """Generates a spanning tree over all vertices and edges of a given lattice
 
-            outisde_plaquette_present = [
-                x not in plaquettes_in for x in edge_plaq
-            ]
-            inside_plaquette_present = [x in plaquettes_in for x in edge_plaq]
+    Args:
+        lattice (Lattice): The lattice object
+        shortest_edges_only (bool, optional): If true, produce a minimum spanning tree. Defaults to True.
+        cross_boundaries (bool, optional): If false, avoid boundaries. Defaults to True.
 
-            # if this edge links an inside and outside plaquette
-            if np.any(outisde_plaquette_present) and np.any(
-                    inside_plaquette_present):
+    Returns:
+        np.ndarray: A list of all edges in the tree
+    """
 
-                # add the new plaquette to the list of inside ones
-                position = np.where(outisde_plaquette_present)[0][0]
-                new_plaquette = edge_plaq[position]
-                plaquettes_in[n + 1] = new_plaquette
-                edges_in[n] = edge_index
+    lengths = np.ones(lattice.n_edges)
+    if shortest_edges_only:
+        lengths = np.linalg.norm(lattice.edges.vectors, axis=1)
+    if cross_boundaries == False:
+        crossing_subset = np.any(lattice.edges.crossing != 0, axis=1)
+        lengths[crossing_subset] = -1
 
-                # add the new edges to the boundary edges
-                boundary_edges = np.append(
-                    boundary_edges, lattice.plaquettes[new_plaquette].edges)
+    return _spanning_tree(lattice.edges.indices, lengths)
 
-                # remove any doubled edges - these will be internal
-                a, c = np.unique(boundary_edges, return_counts=True)
-                boundary_edges = a[c == 1]
 
-                break
+def plquette_spanning_tree(
+    lattice: Lattice, shortest_edges_only=True, cross_boundaries=True
+) -> np.ndarray:
+    """Generates a dual spanning tree over all plaquettes of a given lattice
 
-    return edges_in
+    Args:
+        lattice (Lattice): The lattice object
+        shortest_edges_only (bool, optional): If true, produce a minimum spanning tree. Defaults to True.
+        cross_boundaries (bool, optional): If false, avoid boundaries. Defaults to True.
+
+    Returns:
+        np.ndarray: A list of all edges in the tree
+    """
+
+    dual, mapping = make_dual(lattice, return_mapping = True)
+
+    lengths = np.ones(dual.n_edges)
+    if shortest_edges_only:
+        lengths = np.linalg.norm(dual.edges.vectors, axis=1)
+    if cross_boundaries == False:
+        crossing_subset = np.any(dual.edges.crossing != 0, axis=1)
+        lengths[crossing_subset] = -1
+
+    return mapping[_spanning_tree(dual.edges.indices, lengths)]
 
 # backend for remove vertices, operates only on the minimal data required
 def _remove_vertices_backend(positions, edges, crossing, indices: np.ndarray,
@@ -194,7 +207,6 @@ def vertex_neighbours(lattice, vertex_index):
     adjacency = lattice.edges.indices
     edge_indices = np.where(np.any(vertex_index == adjacency, axis=-1))[0]
     edges = adjacency[edge_indices]
-    # print(f"{edges = }, {edge_indices = }")
 
     #the next two lines replaces the simpler vertex_indices = edges[edges != vertex_i] because the allow points to neighbour themselves
     start_or_end = (
@@ -490,7 +502,8 @@ def dimerise(lattice: Lattice, n_solutions=1):
                 return (solutions + 1) // 2
 
         else:
-            raise ValueError("No dimerisation exists for this lattice.")
+            # raise ValueError("No dimerisation exists for this lattice.")
+            return np.array([])
 
 
 def lloyd_relaxation(lattice: Lattice, n_steps: int = 5):
@@ -679,7 +692,7 @@ def shift_vertex(lattice_data, chosen_vertex, shift_vector):
     return new_positions, new_edges, new_crossing
 
 
-def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattice:
+def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5, return_mapping = False) -> Lattice:
     """
     Creates the dual lattice from the given lattice.
 
@@ -692,6 +705,8 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
             Each regularization step moves the vertices to the center of mass of their neighbors.
             This prevents nonplanar graphs from being created.
             Defaults to 5, set to 0 to disable regularization.
+        return_mapping (bool, optional): If true, we return a list of which edge correcponds to which edge 
+            of the new dal lattice. This is helpful in open boundaries where some edges are lost.
 
     Returns:
         Lattice: The dual lattice.
@@ -702,16 +717,18 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
     """
     graph_is_small = lattice.n_vertices <= 60
     boundaries_are_crossed = np.any(lattice.edges.crossing != 0, axis=0)
-    
 
     if not np.all(boundaries_are_crossed):
         reg_steps = 0
+
+    mapping_out = np.where(np.all(lattice.edges.adjacent_plaquettes != INVALID, axis=1))[0]
 
     if graph_is_small and np.any(boundaries_are_crossed):
         n = 2
         if lattice.n_vertices <= 20:
             n = 3
-        n_xy = [n, n]
+
+        n_xy = np.array([n,n]) #-(n-1)*~boundaries_are_crossed
         lattice = tile_unit_cell(
             lattice.vertices.positions,
             lattice.edges.indices,
@@ -744,9 +761,9 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
     combined_edge_crossing = np.concatenate([cleaned_edges, dual_crossing], axis=1)
     unique_rows, counts = np.unique(combined_edge_crossing, axis=0, return_counts=True)
     if np.any(counts > 1):
-        print(counts)
-        print(unique_rows[counts > 1])
-        raise Exception("Duplicate edges in dual lattice, this should not happen")
+        # print(counts)
+        # print(unique_rows[counts > 1])
+        raise Exception(f"Duplicate edges in dual lattice, this should not happen")
 
     # this can sometimes make nonplanar graphs, which we need to
     # fix by moving vertices to the center of mass of their neighbours.
@@ -791,6 +808,8 @@ def make_dual(lattice: Lattice, use_point_averages=False, reg_steps=5) -> Lattic
     # make the lattice
     dual = Lattice(dual_verts, cleaned_edges, dual_crossing)
 
+    if return_mapping:
+        return dual, mapping_out
     return dual
 
 def dimer_collapse(lattice: Lattice, dimer: np.ndarray) -> Lattice:
@@ -887,6 +906,9 @@ def com_relaxation(lattice: Lattice, n_steps: int = 10):
     for n in range(n_steps):
         shifts = np.zeros_like(positions)
         for v in range(lattice.n_vertices):
+
+            if np.any(lattice.vertices.adjacent_plaquettes[v] == INVALID):
+                continue
 
             bonds = adjacent_edges[v]
             bond_indices = edges[bonds]
