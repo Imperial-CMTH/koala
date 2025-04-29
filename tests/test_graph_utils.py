@@ -4,24 +4,7 @@ import pickle as pkl
 from koala.plotting import plot_vertex_indices, plot_degeneracy_breaking, plot_lattice
 from koala import example_graphs as eg
 from koala.pointsets import uniform
-from koala.graph_utils import (
-    lloyd_relaxation,
-    vertex_neighbours,
-    clockwise_edges_about,
-    adjacent_plaquettes,
-    remove_trailing_edges,
-    make_dual,
-    vertices_to_polygon,
-    dimerise,
-    remove_vertices,
-    tile_unit_cell,
-    untile_unit_cell,
-    shift_vertex,
-    dimer_collapse,
-    com_relaxation,
-    edge_spanning_tree,
-    plquette_spanning_tree
-)
+from koala.graph_utils import *
 from koala.lattice import Lattice
 from koala.voronization import generate_lattice
 
@@ -188,7 +171,21 @@ def test_spanning_trees():
                 assert len(plaqs_in_sp) == lattice.n_plaquettes
 
     for graph in weird_graphs_simplified:
+        graph = remove_trailing_edges(graph)
         _sp_tree_test(graph)
         _plaq_tree_test(graph)
 
 
+def test_find_periodic_loop():
+
+    x = find_periodic_loop(lattice, 'x')
+    y = find_periodic_loop(lattice, 'y')
+
+    x_edges = lattice.edges.indices[x]
+    y_edges = lattice.edges.indices[y]
+
+    x_count = Counter(x_edges.flatten())
+    y_count = Counter(y_edges.flatten())
+
+    assert np.all(np.array([*x_count.values()])==2)
+    assert np.all(np.array([*y_count.values()])==2)

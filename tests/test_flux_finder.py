@@ -1,6 +1,6 @@
 import numpy as np
 
-from koala.flux_finder import find_flux_sector, fluxes_from_bonds, ujk_from_fluxes, fluxes_from_ujk
+from koala.flux_finder import find_flux_sector, fluxes_from_bonds, ujk_from_fluxes, fluxes_from_ujk, loop_flux
 from koala import voronization, pointsets, example_graphs
 from koala.flux_finder.pathfinding import path_between_plaquettes, path_between_vertices
 from koala.lattice import Lattice
@@ -46,3 +46,19 @@ def test_flux_finder():
     """find_flux_sector checks for itself if it finds an output within one flux of the input"""
     find_random_flux_sector(honeycomb)
     find_random_flux_sector(amorphous)
+
+
+def test_loop_flux():
+
+
+    def _test_loop_flux(lattice):
+        ujk = 1-2*np.random.choice(2, lattice.n_edges)
+        fluxes = fluxes_from_ujk(lattice, ujk)
+
+        for j, plaq in enumerate(lattice.plaquettes):
+            x = loop_flux(lattice, plaq.edges, ujk)
+            if len(plaq.edges)%2==0:
+                assert x == fluxes[j]
+
+    _test_loop_flux(honeycomb)
+    _test_loop_flux(amorphous)

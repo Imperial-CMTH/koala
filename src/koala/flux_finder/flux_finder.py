@@ -2,6 +2,7 @@ import numpy as np
 from ..lattice import INVALID, Lattice
 from .pathfinding import straight_line_length, path_between_plaquettes
 import functools
+from collections import Counter
 import warnings
 
 
@@ -22,6 +23,35 @@ def deprecated(func):
 
     return new_func
 
+
+
+def _loop_sign(lattice: Lattice, loop_edges: np.ndarray) -> int:
+
+    loop_indices = lattice.edges.indices[loop_edges].copy()
+    sign = 1
+
+    position = [0, 0]
+    for _ in loop_edges[:-1]:
+        ar_head = tuple([position[0], 1 - position[1]])
+        next_site = loop_indices[ar_head]
+        loop_indices[position[0]] = -1
+        position = np.where(loop_indices == next_site)
+        sign *= (-1) ** position[1]
+
+    return sign
+
+def loop_flux(lattice: Lattice, loop_edges: np.ndarray, ujk: np.ndarray) -> int:
+    """Given a loop, calculate the flux through the loop
+
+    Args:
+        lattice (Lattice): The lattice to work on
+        loop_edges (np.ndarray): List of edges that comprise the loop.
+        ujk (np.ndarray): Value of the flux on all edges in the lattice.
+
+    Returns:
+        int: The flux through the loop
+    """
+    return _loop_sign(lattice, loop_edges) * np.prod(ujk[loop_edges])
 
 def fluxes_from_ujk(lattice: Lattice, ujk: np.ndarray, real=True) -> np.ndarray:
     """Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.

@@ -10,10 +10,10 @@ from copy import copy
 from pysat.card import IDPool, CardEnc, EncType
 import itertools as it
 from .voronization import generate_lattice
+from collections import Counter
 
 
-
-def _spanning_tree(adjacency: np.ndarray, lengths: np.ndarray = None) -> np.ndarray:
+def _spanning_tree(adjacency: np.ndarray, lengths: np.ndarray = None, force_forbidden_edges = False) -> np.ndarray:
     """Generates a spanning tree for any graph given only the adjacency.
     If lengths are provided this is a minimum spanning tree.
 
@@ -21,10 +21,16 @@ def _spanning_tree(adjacency: np.ndarray, lengths: np.ndarray = None) -> np.ndar
         adjacency (np.ndarray): List of indices for each edge
         lengths (np.ndarray, optional): Weight for each edge, a value
             of -1 means that the edge can never be used. Defaults to None.
+        force_forbidden_edges (bool): If true, this will throw up an error 
+            when its not possible to abide by avoiding edges with -1. 
 
     Returns:
         np.ndarray:
     """
+
+    if not force_forbidden_edges:
+        max_length = np.max(lengths)
+        lengths[lengths < 0 ] = max_length + 1
 
     if lengths is None:
         lengths = np.arange(adjacency.shape[0])
@@ -40,6 +46,10 @@ def _spanning_tree(adjacency: np.ndarray, lengths: np.ndarray = None) -> np.ndar
         mask = lengths[candidate_edges] != -1
         candidate_edges = candidate_edges[mask]
         candidate_lengths = lengths[candidate_edges]
+
+        if len(candidate_lengths) == 0:
+            raise Exception('It is not possible to create a spanning tree while avoiding edges with length -1')
+
         chosen_edge = candidate_edges[np.argmin(candidate_lengths)]
 
         vertices_in_tree |= {*adjacency[chosen_edge]}
@@ -930,3 +940,51 @@ def com_relaxation(lattice: Lattice, n_steps: int = 10):
             positions, edges, crossing = shift_vertex(data, v, shifts[v])
 
     return Lattice(positions, edges, crossing)
+
+
+def _trim_tree_for_loops(lattice: Lattice, tree: np.ndarray):
+
+    for n in range(len(tree)):
+        adjacent_indices = Counter(lattice.edges.indices[tree].flatten())
+        single_items = np.array([k for k, c in adjacent_indices.items() if c == 1])
+        if len(single_items) == 0:
+            break
+        tree = tree[~np.any(np.isin(lattice.edges.indices[tree], single_items), axis=1)]
+
+    return tree
+
+
+def find_periodic_loop(lattice: Lattice, xy: str) -> np.ndarray:
+    """Create a loop of edges that winds the periodic boundaries
+    in the x or y direction.
+
+    Args:
+        lattice (Lattice): The lattice to work on.
+        xy (str): 'x' or 'y', the axis to wind over.
+
+    Raises:
+        Exception: No edges found with correct crossing.
+        Exception: Trying to add edge that is already there -- a bug.
+
+    Returns:
+        np.ndarray:
+    """
+
+    xy_dict = {"x": np.array([True, False]), "y": np.array([True, False])}
+    xy_arr = xy_dict[xy]
+
+    tree = edge_spanning_tree(lattice, cross_boundaries=False)
+    cross = np.abs(lattice.edges.crossing)
+    edge_arg = np.where(np.all(cross == xy_arr, axis=1))[0]
+
+    if len(edge_arg) == 0:
+        raise Exception(f"No edges found with correct crossing")
+
+    tree = np.append(tree, edge_arg[0])
+
+    if len(np.unique(tree)) != len(tree):
+        raise Exception(f"Trying to add edge that is already there -- a bug")
+
+    loop_edges = _trim_tree_for_loops(lattice, tree)
+
+    return loop_edges
