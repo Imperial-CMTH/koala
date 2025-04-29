@@ -970,7 +970,7 @@ def find_periodic_loop(lattice: Lattice, xy: str) -> np.ndarray:
         np.ndarray:
     """
 
-    xy_dict = {"x": np.array([True, False]), "y": np.array([True, False])}
+    xy_dict = {"x": np.array([True, False]), "y": np.array([False, True])}
     xy_arr = xy_dict[xy]
 
     tree = edge_spanning_tree(lattice, cross_boundaries=False)
