@@ -274,7 +274,7 @@ class Lattice(object):
         Returns:
             np.ndarray[bool] (n_vertices, n_vertices): The adjacency matrix
         """
-        adj = np.zeros((self.n_vertices, self.n_vertices), dtype=np.bool)
+        adj = np.zeros((self.n_vertices, self.n_vertices), dtype = int)
         adj[self.edges.indices[:, 0], self.edges.indices[:, 1]] = True
         adj[self.edges.indices[:, 1], self.edges.indices[:, 0]] = True
         return adj

@@ -977,10 +977,25 @@ def find_periodic_loop(lattice: Lattice, xy: str) -> np.ndarray:
     cross = np.abs(lattice.edges.crossing)
     edge_arg = np.where(np.all(cross == xy_arr, axis=1))[0]
 
+    # edge_mid_points = lattice.vertices.positions[lattice.edges.indices[:,0]] + lattice.edges.vectors/2
+    # edge_relevant_positions = edge_mid_points[:,1] if xy == 'x' else edge_mid_points[:,0]
+    # choice_rel_pos = edge_relevant_positions[edge_arg]
+    # best_choice = np.argmin(np.abs(choice_rel_pos-0.5))
+
+    vertex_bonds = lattice.vertices.adjacent_edges
+    vertex_crossings = [lattice.edges.crossing[i] for i in vertex_bonds]
+    neighbour_cross = [np.sum(x != 0, axis = 1) for x in vertex_crossings]
+    acceptable_vertices = np.array([np.sum(j == 0) !=0 for j in neighbour_cross])
+    
+    edge_connects = acceptable_vertices[lattice.edges.indices]
+    acceptable_edges = np.sum(edge_connects, axis = 1) == 2
+    acceptable_choice = acceptable_edges[edge_arg]
+    best_choice = np.where(acceptable_choice)[0][0]
+
     if len(edge_arg) == 0:
         raise Exception(f"No edges found with correct crossing")
 
-    tree = np.append(tree, edge_arg[0])
+    tree = np.append(tree, edge_arg[best_choice])
 
     if len(np.unique(tree)) != len(tree):
         raise Exception(f"Trying to add edge that is already there -- a bug")
@@ -988,3 +1003,29 @@ def find_periodic_loop(lattice: Lattice, xy: str) -> np.ndarray:
     loop_edges = _trim_tree_for_loops(lattice, tree)
 
     return loop_edges
+
+def distance_matrix(lattice: Lattice) -> np.ndarray:
+    """Creates a distance matrix for the distance from every vertex to
+    every other vertex in the shortest number of steps
+
+    Args:
+        lattice (Lattice): The lattice object
+
+    Returns:
+        np.ndarray: A distance matrix
+    """
+
+    M = lattice.adjacency_matrix
+    distance_matrix = np.full((lattice.n_vertices, lattice.n_vertices), -1)
+    current_power = np.eye(lattice.n_vertices)
+    for u in range(lattice.n_vertices):
+        current_power = current_power @ M
+        spots_to_fill = np.where(distance_matrix == -1)
+        filled_in_m = np.where(current_power != 0)
+
+        new_distances = np.full((lattice.n_vertices, lattice.n_vertices), -1)
+        new_distances[filled_in_m] = u + 1
+        distance_matrix[spots_to_fill] = new_distances[spots_to_fill]
+
+    distance_matrix = (1 - np.eye(lattice.n_vertices, dtype=int)) * distance_matrix
+    return distance_matrix

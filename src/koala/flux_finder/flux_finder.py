@@ -38,7 +38,7 @@ def _loop_sign(lattice: Lattice, loop_edges: np.ndarray) -> int:
         position = np.where(loop_indices == next_site)
         sign *= (-1) ** position[1]
 
-    return sign
+    return int(sign)
 
 def loop_flux(lattice: Lattice, loop_edges: np.ndarray, ujk: np.ndarray) -> int:
     """Given a loop, calculate the flux through the loop
@@ -51,7 +51,7 @@ def loop_flux(lattice: Lattice, loop_edges: np.ndarray, ujk: np.ndarray) -> int:
     Returns:
         int: The flux through the loop
     """
-    return _loop_sign(lattice, loop_edges) * np.prod(ujk[loop_edges])
+    return int(_loop_sign(lattice, loop_edges) * np.prod(ujk[loop_edges]))
 
 def fluxes_from_ujk(lattice: Lattice, ujk: np.ndarray, real=True) -> np.ndarray:
     """Given a lattice l and a set of bonds = +/-1 defined on the edges of the lattice, calculate the fluxes.

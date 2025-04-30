@@ -189,3 +189,12 @@ def test_find_periodic_loop():
 
     assert np.all(np.array([*x_count.values()])==2)
     assert np.all(np.array([*y_count.values()])==2)
+
+def test_distance_matrix():
+    for graph in weird_graphs:
+        dis = distance_matrix(graph)
+        v = dis[0]
+        edge = v[graph.edges.indices]
+        assert(np.all(np.abs(np.diff(edge)) <= 1))
+
+test_distance_matrix()
