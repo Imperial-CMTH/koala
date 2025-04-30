@@ -1018,9 +1018,12 @@ def distance_matrix(lattice: Lattice) -> np.ndarray:
     M = lattice.adjacency_matrix
     distance_matrix = np.full((lattice.n_vertices, lattice.n_vertices), -1)
     current_power = np.eye(lattice.n_vertices)
+
     for u in range(lattice.n_vertices):
         current_power = current_power @ M
         spots_to_fill = np.where(distance_matrix == -1)
+        if len(spots_to_fill[0]) == 0:
+            break
         filled_in_m = np.where(current_power != 0)
 
         new_distances = np.full((lattice.n_vertices, lattice.n_vertices), -1)
