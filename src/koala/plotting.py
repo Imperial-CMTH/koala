@@ -103,8 +103,11 @@ def plot_edges(
 
     labels, colors, color_scheme, subset, ax, transform = _process_plot_args(
         lattice, ax, labels, color_scheme, subset, lattice.n_edges, kwargs)
+    
+    n_dims = len(colors.shape)
+    tile_dim = [9] + [1]*(n_dims-1)
+    edge_colors = np.tile(colors, tile_dim)
 
-    edge_colors = np.tile(colors, 9)
     edge_vertices = lattice.vertices.positions[lattice.edges.indices[subset]]
     edge_vertices[:, 0, :] -= lattice.edges.crossing[subset]
 
