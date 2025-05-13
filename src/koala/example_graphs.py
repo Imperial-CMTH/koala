@@ -676,3 +676,36 @@ def square_lattice(nx: int, ny: int):
     crossing = np.vstack([crossing_x, crossing_y])
 
     return Lattice(positions, edges, crossing)
+
+def triangular_lattice(nx, ny):
+
+    N = nx * ny
+    x = np.linspace(0, 1, nx, endpoint=False) + 0.5 / nx
+    y = np.linspace(0, 1, ny, endpoint=False) + 0.5 / ny
+
+    X, Y = np.meshgrid(x, y)
+
+    # X = (X + np.linspace(0,0.5, ny, endpoint = False)[:, None])%1
+    x_shift = ((X * 0) + np.linspace(0, 0.5, ny, endpoint=False)[:, None]).flatten()
+    x_vals = X.flatten()
+    y_vals = Y.flatten()
+
+    positions = np.array([x_vals, y_vals]).T
+
+    x_bonds = np.array(
+        [np.arange(N), (np.arange(N) + 1) % nx + nx * (np.arange(N) // nx)]
+    ).T
+    x_cross = np.array([(np.arange(N) + 1) % nx == 0, np.arange(N) * 0]).T
+    y_bonds = np.array([np.arange(N), (np.arange(N) + nx) % N]).T
+    y_cross = np.array([np.arange(N) * 0, (np.arange(N) // nx) == (ny - 1)]).T
+
+    diag_bonds = np.array(
+        [np.arange(N), ((np.arange(N) + 1) % nx + nx * (np.arange(N) // nx)+ nx) % N]
+    ).T
+
+    bonds = np.concatenate([x_bonds, y_bonds, diag_bonds])
+    cross = np.concatenate([x_cross, y_cross, x_cross + y_cross])
+
+    l_out = Lattice(positions, bonds, cross)
+
+    return l_out
