@@ -142,6 +142,9 @@ class Lattice(object):
                 crossing.
         """
 
+        # check_for_duplicate_edges
+        _check_for_duplicate_edges(edge_indices, edge_crossing)
+
         # calculate the vector corresponding to each edge
         edge_vectors = (vertices[edge_indices][:, 1] -
                         vertices[edge_indices][:, 0] + edge_crossing)
@@ -289,6 +292,15 @@ class Lattice(object):
         
         return csgraph.csgraph_from_dense(self.adjacency_matrix)
 
+
+def _check_for_duplicate_edges(adjacency, crossing):
+    a = np.sort(adjacency, axis=1)
+    c = np.abs(crossing)
+
+    ac = np.concatenate([a, c], axis=1)
+    u = np.unique(ac, axis=0)
+    if len(u) != len(ac):
+        raise Exception("Lattice has duplicate edges")
 
 def _edge_neighbours(edge_indices):
     """Gives an array where the ith entry labels the edges that share a vertex witht he i'th edge
