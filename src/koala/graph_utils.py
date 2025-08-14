@@ -10,6 +10,7 @@ from copy import copy
 from pysat.card import IDPool, CardEnc, EncType
 import itertools as it
 from .voronization import generate_lattice
+from scipy import linalg as la
 from collections import Counter
 
 
@@ -1032,3 +1033,22 @@ def distance_matrix(lattice: Lattice) -> np.ndarray:
 
     distance_matrix = (1 - np.eye(lattice.n_vertices, dtype=int)) * distance_matrix
     return distance_matrix
+
+def resistance_distance(lattice: Lattice) -> np.ndarray:
+    """Calculates the resistance distance matrix for the lattice.
+    The resistance distance is the effective resistance between two vertices
+    in the lattice, assuming each edge has a resistance of 1.
+
+    Args:
+        lattice (Lattice): The lattice object
+
+    Returns:
+        np.ndarray: A resistance distance matrix
+    """
+    lap = lattice.laplacian_matrix
+    gamma = la.pinv(lap + np.ones(lap.shape) / lap.shape[0])
+    resistance_distance = np.diag(gamma)[:, None] + np.diag(gamma)[None, :] -2 * gamma
+
+    resistance_distance = (1 - np.eye(lattice.n_vertices, dtype=int)) * resistance_distance
+    return resistance_distance
+
