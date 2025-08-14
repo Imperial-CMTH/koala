@@ -283,6 +283,21 @@ class Lattice(object):
         return adj
 
     @property
+    def laplacian_matrix(self):
+        """Return the laplacian matrix of the lattice
+
+        Returns:
+            np.ndarray[bool] (n_vertices, n_vertices): The laplacian matrix
+        """
+        adj = np.zeros((self.n_vertices, self.n_vertices), dtype = int)
+        adj[self.edges.indices[:, 0], self.edges.indices[:, 1]] = True
+        adj[self.edges.indices[:, 1], self.edges.indices[:, 0]] = True
+
+        diag = np.diag(self.vertices.coordination_numbers)
+
+        return diag - adj
+
+    @property
     def as_csgraph(self):
         """Return the lattice as a scipy.sparse.csgraph
 
@@ -291,7 +306,19 @@ class Lattice(object):
         """
         
         return csgraph.csgraph_from_dense(self.adjacency_matrix)
+    
+    def compact_rep(self):
+        """minimal representation of the lattice
 
+        Returns:
+            tuple: bundle of minimal info needed to reproduce the lattice
+        """
+        
+        return (
+            self.vertices.positions,
+            self.edges.indices,
+            self.edges.crossing
+        )
 
 def _check_for_duplicate_edges(adjacency, crossing):
     a = np.sort(adjacency, axis=1)
@@ -459,8 +486,8 @@ def _find_plaquette(starting_edge: int, starting_direction: int, l: Lattice):
     # TODO check --- not sure if this is necessary --- check
     # check if the plaquette contains the same edge twice - if this is true then that edge is a bridge
     # this means the plaquette is not legit!
-    if len(np.unique(plaquette_edges)) != len(plaquette_edges):
-        valid_plaquette = False
+    # if len(np.unique(plaquette_edges)) != len(plaquette_edges):
+    #     valid_plaquette = False
 
     # this bit checks if the loop crosses a PBC boundary once only - if so then it 
     # is one of the two edges of a system crossing strip plaquette
