@@ -307,6 +307,7 @@ class Lattice(object):
         
         return csgraph.csgraph_from_dense(self.adjacency_matrix)
     
+    @property
     def compact_rep(self):
         """minimal representation of the lattice
 
