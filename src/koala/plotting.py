@@ -468,7 +468,7 @@ def _lines_cross_unit_cell(lines: np.ndarray) -> np.ndarray:
     # flip the last axis of start and end so that we use the t that made the x coord cross to compute the y coord
     # t.shape (n_lines, 0/1, x/y) start[..., ::-1].shape (n_lines, 1, y,x)
     other_coord_value_at_t = start[..., ::-1] * t + (1 - t) * end[..., ::-1]
-    cross = ((0 < t) & (t <= 1) & (0 < other_coord_value_at_t) &
+    cross = ((0 <= t) & (t <= 1) & (0 <= other_coord_value_at_t) &
              (other_coord_value_at_t <= 1))
     return np.any(cross, axis=(1, 2))
 
