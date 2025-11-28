@@ -1005,6 +1005,8 @@ def find_periodic_loop(lattice: Lattice, xy: str) -> np.ndarray:
 
     return loop_edges
 
+
+# TODO make this faster >:(
 def distance_matrix(lattice: Lattice) -> np.ndarray:
     """Creates a distance matrix for the distance from every vertex to
     every other vertex in the shortest number of steps

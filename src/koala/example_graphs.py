@@ -246,7 +246,7 @@ def bridge_graph():
 def honeycomb_lattice(n_horizontal_cells: int,
                       return_coloring=False) -> Lattice:
     """Generates a regular honeycomb lattice with n_horizonta_cells number of cells in the x-direction, and a similar amount in the y direction
-    but slightly fudged to fir a square system
+    but slightly fudged to for a square system
 
     Args:
         n_horizontal_cells (int): number of cells wide you want the
@@ -445,44 +445,44 @@ def tri_non_lattice(n_cells, return_coloring=False):
         return lattice
 
 
-# helper function for tile_unit_cell
-def _next_cell_number(n_horizontal, n_vertical, n, shift):
-    """gives you the index of the next unit cell in the list of all unit cells
+# # helper function for tile_unit_cell
+# def _next_cell_number(n_horizontal, n_vertical, n, shift):
+#     """gives you the index of the next unit cell in the list of all unit cells
 
-    Args:
-        n_horizontal (int): number unit cells in x direction
-        n_vertical (int): number of unit cells in y direction
-        n (int): what index you are currently at
-        shift (list): whoch way you want to shift to
-    """
-    y = n // n_horizontal
-    new_y = (y + shift[1]) % n_vertical
-    new_x = (n + shift[0]) % n_horizontal
-    position = new_y * n_horizontal + new_x
-    return position
+#     Args:
+#         n_horizontal (int): number unit cells in x direction
+#         n_vertical (int): number of unit cells in y direction
+#         n (int): what index you are currently at
+#         shift (list): whoch way you want to shift to
+#     """
+#     y = n // n_horizontal
+#     new_y = (y + shift[1]) % n_vertical
+#     new_x = (n + shift[0]) % n_horizontal
+#     position = new_y * n_horizontal + new_x
+#     return position
 
 
-# helper function for tile_unit_cell
-def _crossing(n_x, n_y, n, shift):
-    """tells you if the shift crosses PBC in the x or why direction
+# # helper function for tile_unit_cell
+# def _crossing(n_x, n_y, n, shift):
+#     """tells you if the shift crosses PBC in the x or why direction
 
-    Args:
-        n_x (int): system size in x
-        n_y (int): system_size in y
-        n (int): what index you are currently at
-        shift (list): whoch way you want to shift to
-    """
+#     Args:
+#         n_x (int): system size in x
+#         n_y (int): system_size in y
+#         n (int): what index you are currently at
+#         shift (list): whoch way you want to shift to
+#     """
 
-    x = n % n_x
-    y = n // n_x
+#     x = n % n_x
+#     y = n // n_x
 
-    x_new = x + shift[0]
-    x_looped = x // n_x != x_new // n_x
+#     x_new = x + shift[0]
+#     x_looped = x // n_x != x_new // n_x
 
-    y_new = y + shift[1]
-    y_looped = y // n_y != y_new // n_y
+#     y_new = y + shift[1]
+#     y_looped = y // n_y != y_new // n_y
 
-    return [shift[0] * x_looped, shift[1] * y_looped]
+#     return [shift[0] * x_looped, shift[1] * y_looped]
 
 
 
@@ -686,8 +686,7 @@ def triangular_lattice(nx, ny):
     X, Y = np.meshgrid(x, y)
 
     # X = (X + np.linspace(0,0.5, ny, endpoint = False)[:, None])%1
-    x_shift = ((X * 0) + np.linspace(0, 0.5, ny, endpoint=False)[:, None]).flatten()
-    x_vals = X.flatten()
+    x_vals = X.flatten() + 0.001
     y_vals = Y.flatten()
 
     positions = np.array([x_vals, y_vals]).T
