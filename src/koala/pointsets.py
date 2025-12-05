@@ -161,6 +161,9 @@ def move_point(
     if rng is None:
         rng = np.random.default_rng()
 
+    if np.allclose(sigma, 0):
+        return points
+
     # make a grid of options for where to move it
     max_distance = sigma * move_limit
     pos_grid = np.linspace(-max_distance, max_distance, resolution)
