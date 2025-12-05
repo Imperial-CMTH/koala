@@ -5,6 +5,24 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+def grid(nx: int , ny: int ) -> np.ndarray:
+    """Generates a uniformly spaced grid of points
+
+    Args:
+        nx (int): Number of points in x direction
+        ny (int): Number of points in y direction
+
+    Returns:
+        np.ndarray: List of all the positions.
+    """
+
+    pos_x = np.linspace(0,1,nx, endpoint=False)
+    pos_y = np.linspace(0,1,ny, endpoint=False)
+    pos_x += 0.5*pos_x[0]
+    pos_y += 0.5*pos_y[0]
+    g_out = np.reshape(np.meshgrid(pos_x, pos_y), [2,-1]).T
+    return g_out
+
 
 def bluenoise(k, nx, ny, rng=None):
     if rng is None:
