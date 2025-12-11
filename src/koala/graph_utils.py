@@ -862,7 +862,7 @@ def dimer_collapse(lattice: Lattice, dimer: np.ndarray) -> Lattice:
     return four_connected
 
 def cut_boundaries(
-    lattice: Lattice, boundary_to_cut: list = (True, True)) -> Lattice:
+    lattice: Lattice, boundary_to_cut: list = (True, True), remove_isolated_sites = True) -> Lattice:
     """Removes the x and/or y boundary edges of the lattice.
 
     Args:
@@ -891,8 +891,9 @@ def cut_boundaries(
 
     lattice_out = Lattice(vertices, new_edges, new_crossing)
     
-    remove_list = np.where(lattice_out.vertices.coordination_numbers == 0)
-    lattice_out = remove_vertices(lattice_out, remove_list)
+    if remove_isolated_sites:
+        remove_list = np.where(lattice_out.vertices.coordination_numbers == 0)
+        lattice_out = remove_vertices(lattice_out, remove_list)
 
     return lattice_out
 
