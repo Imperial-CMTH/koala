@@ -6,8 +6,8 @@ def test_grid():
     assert x.shape == (3*5, 2)
     x = grid(3,3)
     assert x.shape == (3*3, 2)
-    x = grid(3,1)
-    assert x.shape == (3*1, 2)
+    x = grid(3,2)
+    assert x.shape == (3*2, 2)
 
 
 def test_uniform():
@@ -35,4 +35,7 @@ def test_move_all_points():
 
     move_all_points(points2, 0.01, 0.01, resolution=10)
     move_all_points(points3, 0.01, 0.01, resolution=10)
+
+    move_all_points(points2, 0.01, 0, resolution=10)
+    move_all_points(points3, 0.01, 0, resolution=10)
 

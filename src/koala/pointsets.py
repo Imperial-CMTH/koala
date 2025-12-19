@@ -18,8 +18,8 @@ def grid(nx: int , ny: int ) -> np.ndarray:
 
     pos_x = np.linspace(0,1,nx, endpoint=False)
     pos_y = np.linspace(0,1,ny, endpoint=False)
-    pos_x += 0.5*pos_x[0]
-    pos_y += 0.5*pos_y[0]
+    pos_x += 0.5*pos_x[1]
+    pos_y += 0.5*pos_y[1]
     g_out = np.reshape(np.meshgrid(pos_x, pos_y), [2,-1]).T
     return g_out
 
@@ -193,6 +193,7 @@ def move_point(
         r = positions - n_pos[:, *[None] * dimensionality]
         r = (r + 0.5) % 1 - 0.5
         r = np.sum(r**2, axis=0)
+        r += 1e-16 # stop it breaking when r vanishes
         h_int += (kappa) / (r**0.5)  # np.sum(r**2, axis = 0)
 
     # find prob dist
@@ -255,9 +256,41 @@ def move_all_points(
         kappa = 1 / np.sqrt(np.pi * len(points))
 
     p = points.copy()
-    random_order = rng.permutation(range(len(p)))
 
+    random_order = rng.permutation(range(len(p)))
     for v in random_order:
-        p = move_point(p, v, sigma, kappa, rng=rng, beta=beta, **kwargs)
+
+        if kappa == 0:
+            p = gaussian_move_point(p, v, sigma, beta, rng)
+        else:
+            p = move_point(p, v, sigma, kappa, rng=rng, beta=beta, **kwargs)
 
     return p
+
+
+def gaussian_move_point(
+    points: np.ndarray,
+    index_to_move: int,
+    sigma: float,
+    beta: float = 1,
+    rng: np.random.Generator = None,
+) -> np.ndarray:
+    """Moves a point to an arbitrary position in a gaissian of sigma,   
+
+    Args:
+        points (np.ndarray): Positions of all vertices
+        index_to_move (int): Index of the vertex to be shifted
+        sigma (float): Step size of the gaussian distribution around the original position
+        beta (float, optional): Temperature, controls the degree of randomness. Defaults to 1.
+        rng (np.random.Generator, optional): rng for all the random stuff. Defaults to None.
+
+    Returns:
+        np.ndarray: The new points with one moved
+    """
+    
+    dim = points.shape[1]
+    rescaled_sigma = sigma/np.sqrt(beta)
+    shift = rng.normal(0, rescaled_sigma, dim)
+    points[index_to_move] = points[index_to_move]+shift
+
+    return points
