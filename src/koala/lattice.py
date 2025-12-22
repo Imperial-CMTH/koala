@@ -246,7 +246,7 @@ class Lattice(object):
 
     def __getstate__(self):
         # define a minimal representation for the lattice
-        for dtype in [np.uint8, np.uint16, np.uint32, np.uint64]:
+        for dtype in [np.uint16, np.uint32, np.uint64]:
             if self.n_vertices <= np.iinfo(dtype).max:
                 edges = self.edges.indices.astype(dtype)
                 break
