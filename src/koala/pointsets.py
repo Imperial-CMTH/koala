@@ -4,6 +4,7 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+from tqdm import trange
 
 def grid(*n_vals):
     """Generates a uniformly spaced grid of points in arbitrary dimensions. 
@@ -235,6 +236,7 @@ def move_all_points(
     kappa: float = None,
     beta: float = 1,
     rng: np.random.Generator = None,
+    verbose = False,
     **kwargs,
 ) -> np.ndarray:
     """A wrapper for move_point. Chooses a random ordeing of all the points in the list, and then moves each one according to the parameters provided.
@@ -259,8 +261,9 @@ def move_all_points(
     p = points.copy()
 
     random_order = rng.permutation(range(len(p)))
-    for v in random_order:
 
+    rand_iter = trange(random_order) if verbose else random_order
+    for v in rand_iter:
         if kappa == 0:
             p = gaussian_move_point(p, v, sigma, beta, rng)
         else:
