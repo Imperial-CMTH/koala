@@ -51,7 +51,8 @@ def plot_lines(ax, lines, **kwargs):
     ax.add_collection(lc)
 
 
-#TODO - Factor out debugging plot code
+#TODO - Factor out debugging plot code 
+#TODO - add unit cell 
 def generate_lattice(original_points: npt.NDArray[np.floating],
                      debug_plot: bool = False,
                      shift_vertices=True) -> Lattice:
@@ -111,9 +112,9 @@ def generate_lattice(original_points: npt.NDArray[np.floating],
                axis=2),  #select points that are in the unit cell
         axis=1)
 
-    #the indices of ridges either fully inside, or half inside the unit cell
+    # the indices of ridges either fully inside, or half inside the unit cell
     # the & np.all(ridge_indices != -1, axis = -1) deals with the case where (-1,-1) into vertices happens to lie within the unit cell
-    #so we have to check for this in both crossing_ridges and outer_ridges
+    # so we have to check for this in both crossing_ridges and outer_ridges
     finite = np.all(
         ridge_indices != -1, axis=-1
     )  #this ignores ridges at the boundary that have no second vertex (scipy puts (-1,-1) instead)
@@ -142,7 +143,7 @@ def generate_lattice(original_points: npt.NDArray[np.floating],
     #record if each edge crossed a cell boundary in the x or y direction
     crossing_ridges = np.sort(
         crossing_ridges, axis=-1
-    )  #this sort has to happen because we need it to set the direction of the adjacency_crossing vector
+    )  # this sort has to happen because we need it to set the direction of the adjacency_crossing vector
     crossing_ridge_vertices = vor.vertices[crossing_ridges]
     adjacency_crossing = np.floor(crossing_ridge_vertices[:, 1, :]) - np.floor(
         crossing_ridge_vertices[:, 0, :])

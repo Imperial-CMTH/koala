@@ -3,6 +3,7 @@
 ############################################################################
 
 import numpy as np
+import scipy as sp
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -190,13 +191,16 @@ def move_point(
     h_int = h_gauss * 0
     positions_unlooped = start_pos[:, *[None] * dimensionality] + a
     positions = positions_unlooped % 1
+
+    n_sphere_sa = 2*np.pi**(dimensionality/2)/sp.special.gamma(dimensionality/2)
+    n_sphere_sa = n_sphere_sa/(2*np.pi) #normalise so that in dim 2 it is 1
     for neighbour in nearest_points:
         n_pos = points[neighbour]
         r = positions - n_pos[:, *[None] * dimensionality]
         r = (r + 0.5) % 1 - 0.5
-        r = np.sum(r**2, axis=0)
+        r = np.sum(r**2, axis=0)**0.5
         r += 1e-16 # stop it breaking when r vanishes
-        h_int += (kappa) / (r**0.5)  # np.sum(r**2, axis = 0)
+        h_int += (kappa/n_sphere_sa) / (r**(dimensionality-1))  # np.sum(r**2, axis = 0)
 
     # find prob dist
     total_energy = h_int + h_gauss
@@ -226,7 +230,7 @@ def move_point(
     chosen_position += rng.uniform(-box_size / 2, box_size / 2, chosen_position.shape)
 
     out = points.copy()
-    out[index_to_move] = chosen_position
+    out[index_to_move] = chosen_position%1
     return out
 
 
@@ -297,4 +301,4 @@ def gaussian_move_point(
     shift = rng.normal(0, rescaled_sigma, dim)
     points[index_to_move] = points[index_to_move]+shift
 
-    return points
+    return points%1
