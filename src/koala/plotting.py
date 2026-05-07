@@ -356,7 +356,7 @@ def plot_vertex_indices(lattice, ax=None, offset=0.01, **kwargs):
     if ax is None:
         ax = plt.gca()
     for i, v in enumerate(lattice.vertices.positions):
-        ax.text(*(v + offset), f"{i}", **kwargs,ha='right', va='center')
+        ax.text(*(v + offset)%1, f"{i}", **kwargs,ha='right', va='center')
 
 
 # TODO: Make this work with edges that cross the boundaries
@@ -375,7 +375,7 @@ def plot_plaquette_indices(lattice, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
     for i, p in enumerate(lattice.plaquettes):
-        ax.text(*p.center, f"{i}", **kwargs)
+        ax.text(*p.center%1, f"{i}", **kwargs)
 
 
 #########################################################################################################

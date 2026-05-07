@@ -241,6 +241,7 @@ def move_all_points(
     beta: float = 1,
     rng: np.random.Generator = None,
     verbose = False,
+    original_points = None,
     **kwargs,
 ) -> np.ndarray:
     """A wrapper for move_point. Chooses a random ordeing of all the points in the list, and then moves each one according to the parameters provided.
@@ -268,6 +269,8 @@ def move_all_points(
 
     rand_iter = tqdm(random_order) if verbose else random_order
     for v in rand_iter:
+        if original_points is not None:
+            p[v] =  original_points[v]
         if kappa == 0:
             p = gaussian_move_point(p, v, sigma, beta, rng)
         else:
