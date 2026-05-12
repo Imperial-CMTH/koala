@@ -897,7 +897,7 @@ def cut_boundaries(
 
     return lattice_out
 
-def com_relaxation(lattice: Lattice, n_steps: int = 10):
+def com_relaxation(lattice: Lattice, n_steps: int = 10, ignore_broken_plaqs = True):
     """Relaxes a lattice which wraps all periodic boundaries by repeatedly moving every 
     vertex to the center of mass of its neighbours.
 
@@ -919,7 +919,7 @@ def com_relaxation(lattice: Lattice, n_steps: int = 10):
         shifts = np.zeros_like(positions)
         for v in range(lattice.n_vertices):
 
-            if np.any(lattice.vertices.adjacent_plaquettes[v] == INVALID):
+            if ignore_broken_plaqs and np.any(lattice.vertices.adjacent_plaquettes[v] == INVALID):
                 continue
 
             bonds = adjacent_edges[v]
@@ -1055,3 +1055,116 @@ def resistance_distance(lattice: Lattice) -> np.ndarray:
     resistance_distance = (1 - np.eye(lattice.n_vertices, dtype=int)) * resistance_distance
     return resistance_distance
 
+def tutte_embedding(lattice: Lattice):
+    """For a given lattice, generate a planar convex embedding using Tutte's algorithm
+
+    Args:
+        lattice (Lattice): A lattice in periodic boundaries
+
+    Returns:
+        Lattice: A lattice with a planar convex embedding
+    """
+    boundary_edges = np.arange(lattice.n_edges)[
+        np.abs(lattice.edges.crossing).sum(axis=1) > 0
+    ]
+    crossing_vertices = np.unique(lattice.edges.indices[boundary_edges].flatten())
+    obc_vertices = np.arange(lattice.n_vertices)[np.sum(lattice.vertices.adjacent_plaquettes == INVALID, axis  =1)>0]
+    
+    boundary_vertices = np.union1d(crossing_vertices, obc_vertices)
+
+
+    degrees = np.sum(lattice.adjacency_matrix, axis=1)
+    scaled_adjacency = lattice.adjacency_matrix / (degrees[:, np.newaxis])
+    scaled_adjacency[boundary_vertices] = 0
+
+    x_positions = np.zeros(lattice.n_vertices)
+    y_positions = np.zeros(lattice.n_vertices)
+    x_positions[boundary_vertices] = lattice.vertices.positions[boundary_vertices, 0]
+    y_positions[boundary_vertices] = lattice.vertices.positions[boundary_vertices, 1]
+
+    x_out = np.linalg.solve(np.eye(lattice.n_vertices) - scaled_adjacency, x_positions)
+    y_out = np.linalg.solve(np.eye(lattice.n_vertices) - scaled_adjacency, y_positions)
+
+    positions = np.array([x_out, y_out]).T
+
+    return Lattice(positions, lattice.edges.indices, lattice.edges.crossing)
+
+def toric_tutte_embedding(lattice: Lattice):
+    """Generate a toroidal Tutte embedding using periodic crossings.
+
+    Args:
+        lattice (Lattice): A lattice in periodic boundaries
+
+    Returns:
+        Lattice: A lattice with a toroidal Tutte embedding
+    """
+
+    fixed_vertex = 0
+
+    degrees = np.sum(lattice.adjacency_matrix, axis=1)
+
+    scaled_adjacency = lattice.adjacency_matrix / degrees[:, np.newaxis]
+
+    matrix = np.eye(lattice.n_vertices) - scaled_adjacency
+
+    matrix[fixed_vertex] = 0
+    matrix[fixed_vertex, fixed_vertex] = 1
+
+    x_rhs = np.zeros(lattice.n_vertices)
+    y_rhs = np.zeros(lattice.n_vertices)
+
+    x_rhs[fixed_vertex] = lattice.vertices.positions[fixed_vertex, 0]
+    y_rhs[fixed_vertex] = lattice.vertices.positions[fixed_vertex, 1]
+
+    for edge_index, (u, v) in enumerate(lattice.edges.indices):
+
+        crossing_x = lattice.edges.crossing[edge_index, 0]
+        crossing_y = lattice.edges.crossing[edge_index, 1]
+
+        # u averages against translated copy of v
+        x_rhs[u] += scaled_adjacency[u, v] * crossing_x
+        y_rhs[u] += scaled_adjacency[u, v] * crossing_y
+
+        # v averages against translated copy of u
+        x_rhs[v] -= scaled_adjacency[v, u] * crossing_x
+        y_rhs[v] -= scaled_adjacency[v, u] * crossing_y
+
+    x_out = np.linalg.solve(matrix, x_rhs)
+    y_out = np.linalg.solve(matrix, y_rhs)
+
+    positions = np.array([x_out, y_out]).T
+
+    return Lattice(
+        *fix_back_to_uc(
+            positions,
+            lattice.edges.indices,
+            lattice.edges.crossing,
+        )
+    )
+
+
+def fix_back_to_uc(
+    positions,
+    indices,
+    crossing,
+):  
+    """Given the data of a lattice that is no longer in the unit cell, shift it back and fix crossings
+
+    Args:
+        positions (np.ndarray): the positions of the vertices, which may be outside the unit cell
+        indices (np.ndarray): the edge indices of the lattice
+        crossing (np.ndarray): the crossing of the lattice, which may be incorrect due to the positions being outside the unit cell
+
+    Returns:         
+        positions_normalised (np.ndarray): the positions of the vertices, shifted back to the unit cell
+        indices (np.ndarray): the edge indices of the lattice, unchanged
+        crossing_fixed (np.ndarray): the crossing of the lattice, fixed to account for the shift
+    """
+
+    positions_normalised = positions % 1
+    shift_back = positions_normalised - positions
+    move_per_edge = shift_back[indices]
+    shift_per_edge = move_per_edge[:, 0, :] - move_per_edge[:, 1, :]
+    crossing_fixed = crossing + shift_per_edge
+
+    return positions_normalised, indices, crossing_fixed

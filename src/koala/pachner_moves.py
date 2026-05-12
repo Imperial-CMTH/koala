@@ -4,22 +4,25 @@ from koala import graph_utils as gu
 from koala import plotting as pl
 from matplotlib import pyplot as plt
 
-def bipartite_1_plus(lattice: Lattice, plaquette: int, central_vertex: int, debug_plot=False):
-    """Performs a 1+ bipartite bistellar flip on a given trivalent bipartite lattice
+
+def bipartite_1_plus(
+    lattice: Lattice, plaquette: int, central_vertex: int, debug_plot=False
+):
+    """Performs a 1+ bipartite bistellar flip on a given trivalent bipartite lattice, adding (at least) a single square or plaquette
 
     Args:
-        lattice (Lattice): _description_
-        plaquette (int): _description_
-        central_vertex (int): _description_
-        debug_plot (bool, optional): _description_. Defaults to False.
+        lattice (Lattice): the lattice to perform the flip on
+        plaquette (int):  the plaquette that the flip will be performed on, must have more than 4 sides
+        central_vertex (int): the vertex that will be the center of the flip
+        debug_plot (bool, optional): whether to plot the flip for debugging purposes. Defaults to False.
 
     Returns:
-        Lattice: _description_
+        Lattice: the resulting lattice after the flip
     """
 
     # make sure the lattice is bipartite
     sides = np.array([p.n_sides for p in lattice.plaquettes])
-    assert np.all(sides%2 == 0)
+    assert np.all(sides % 2 == 0)
 
     plaq = lattice.plaquettes[plaquette]
     assert plaq.n_sides > 4, "You cant contract a square"
@@ -35,8 +38,8 @@ def bipartite_1_plus(lattice: Lattice, plaquette: int, central_vertex: int, debu
     vectors = lattice.edges.vectors[edges_around] * directions_around[:, None]
     crossing_around = lattice.edges.crossing[edges_around] * directions_around[:, None]
 
-    p1 = 0.6 * np.sum(vectors[1:-1], axis=0)
-    p2 = 0.4 * np.sum(vectors, axis=0)
+    p1 = 0.5 * np.sum(vectors[1:-1], axis=0)
+    p2 = 0.5 * np.sum(vectors, axis=0)
 
     i1 = lattice.n_vertices
     i2 = lattice.n_vertices + 1
@@ -91,7 +94,7 @@ def bipartite_1_plus(lattice: Lattice, plaquette: int, central_vertex: int, debu
             subset=edges_around,
             directions=directions_around,
         )
- 
+
         pl.plot_edges(l_out, ax=ax[1], linewidth=1)
         # pl.plot_vertex_indices(lattice, ax=ax[2])
         pl.plot_plaquette_indices(lattice, ax=ax[2])
@@ -100,27 +103,69 @@ def bipartite_1_plus(lattice: Lattice, plaquette: int, central_vertex: int, debu
     return l_out
 
 
-def bipartite_1_minus(lattice: Lattice, plaquette: int, central_vertex: int, debug_plot=False):
+def bipartite_1_minus(lattice: Lattice, edge: int):
+    """Performs a 1- bipartite bistellar flip on a given trivalent bipartite lattice, removing (at least) a single square or plaquette
 
-    #  make sure the lattice is bipartite
-    sides = np.array([p.n_sides for p in lattice.plaquettes])
-    assert np.all(sides%2 == 0)
+    Args:
+        lattice (Lattice): the lattice to perform the flip on
+        edge (int): the edge to remove
 
-    plaq = lattice.plaquettes[plaquette]
-    assert plaq.n_sides == 4, "You must choose a square"
-    assert central_vertex in plaq.vertices, "The vertex must be on the plaquette given"
+    Returns:
+        Lattice: new lattice with the flip performed
+    """
 
-    # find vertices about square
-    _ = np.where(plaq.vertices == central_vertex)[0][0]
-    vertices_around = plaq.vertices[np.arange(_ - 2, _ + 3) % plaq.n_sides]
-    edges_around = plaq.edges[np.arange(_ - 2, _ + 2) % plaq.n_sides]
-    directions_around = plaq.directions[np.arange(_ - 2, _ + 2) % plaq.n_sides]
-    directions_around[:2] *= -1  # make sure they emanate from the central vertex
-    vectors = lattice.edges.vectors[edges_around] * directions_around[:, None]
-    crossing_around = lattice.edges.crossing[edges_around] * directions_around[:, None]
+    adjacent_plaquettes = lattice.edges.adjacent_plaquettes[edge]
+    edge_vertices = lattice.edges.indices[edge]
+    neighbour_vertices = np.concatenate(
+        [lattice.vertices.adjacent_vertices[v] for v in edge_vertices]
+    )
+    starts_ends = np.array(list(set(neighbour_vertices) - set(edge_vertices)))
+
+    edges_out = lattice.edges.indices.copy()
+    crossing_out = lattice.edges.crossing.copy()
+    for i in adjacent_plaquettes:
+        plaq = lattice.plaquettes[i]
+        assert plaq.n_sides > 4, "You cant contract a square"
+
+        bookends = np.where(np.isin(plaq.vertices, starts_ends))[0]
+
+        edges_to_sum = plaq.edges[bookends[0] : bookends[1]]
+        directions_to_sum = plaq.directions[bookends[0] : bookends[1]]
+
+        edge = np.array(
+            [
+                lattice.edges.indices[
+                    edges_to_sum[0], 1 * (directions_to_sum[0] == -1)
+                ],
+                lattice.edges.indices[
+                    edges_to_sum[-1], 1 * (directions_to_sum[-1] == 1)
+                ],
+            ]
+        )
+
+        crossing = np.sum(
+            lattice.edges.crossing[edges_to_sum] * directions_to_sum[:, None], axis=0
+        )
+
+        edges_out = np.concatenate((edges_out, edge[None, :]), axis=0)
+        crossing_out = np.concatenate((crossing_out, crossing[None, :]), axis=0)
+
+    data = gu._remove_vertices_backend(
+        lattice.vertices.positions, edges_out, crossing_out, edge_vertices
+    )
+    return Lattice(*data)
+
+
+# def bipartite_2_plus(lattice: Lattice, edge: int):
+#     """Performs a 2+ bipartite bistellar flip on a given trivalent bipartite lattice, adding two squares
+
+#     Args:
+#         lattice (Lattice): the lattice to perform the flip on
+#         edge (int): the edge to flip
+
+#     Returns:
+#         Lattice: new lattice with the flip performed
+#     """
+
     
-    # find bridge connected one
-    # bridge_
 
-
-    print(directions_around)
